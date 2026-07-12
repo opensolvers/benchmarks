@@ -1,0 +1,31 @@
+HPLinpack benchmark input file
+ICL, UT
+HPL.out
+6
+1  # of N
+20000  Ns
+1  # of NB
+256  NB
+0  PMAP
+1  # grids
+2  Ps
+4  Qs
+16.0  thresh
+1  # pfact
+2  PFACT
+1  # nbmin
+4  NBMIN
+1  # ndiv
+2  NDIV
+1  # rfact
+1  RFACT
+1  # bcast
+1  BCAST
+1  # depth
+1  DEPTH
+2  SWAP
+64  swap thr
+0  L1
+0  U
+1  Equil
+8  align

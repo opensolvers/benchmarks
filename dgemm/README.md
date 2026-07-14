@@ -70,3 +70,29 @@ Performance on the same machine (`bench_dgemm`, 1 core, N=2048, via FlexiBLAS):
 i.e. ~2.3x faster and numerically identical. (Root cause: OpenBLAS 0.3.30
 `kernel/riscv64/gemv_n_vector.c` zeroes an *uninitialized* vector accumulator;
 fixed upstream after 0.3.30.)
+
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+The [Banana Pi BPI-F3](https://www.banana-pi.org/) uses the same SpaceMiT K1
+(8x X60 @ 1.6 GHz, RVV 1.0 VLEN=256) as the Orange Pi RV2 above, so the same
+bug and fix reproduce on a second board - here on EESSI `2025.06-001`, patched
+OpenBLAS 0.3.30 ([easyconfigs #26444](https://github.com/easybuilders/easybuild-easyconfigs/pull/26444))
+via FlexiBLAS.
+
+`difftest` - bit-identical to the RV2:
+
+| backend / dispatch | `dgemv` nan | `dgemm` nan | `dtrsm` nan | `dgemv` sum |
+|---|--:|--:|--:|---|
+| stock CVMFS, **default RVV** (`ZVL256B`) | **192** | 0 | 0 | 198.94 (wrong) |
+| stock CVMFS, forced scalar (`RISCV64_GENERIC`) | 0 | 0 | 0 | 42.06549 (reference) |
+| **patched RVV** (`gemv_n` fix) | 0 | 0 | 0 | 42.06549 (matches reference) |
+
+`bench_dgemm` (1 core, N=2048, via FlexiBLAS):
+
+| backend | GFLOP/s | `C[0]` |
+|---|--:|--:|
+| scalar (`RISCV64_GENERIC`) | 1.26 | 245.24 |
+| patched RVV (`ZVL256B`) | 2.96 | 245.24 |
+
+~2.35x faster and numerically identical - confirming the RV2 result on a second
+K1 board. (Threaded: **17.71 GFLOP/s** at 8 cores, N=4096.)

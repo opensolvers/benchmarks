@@ -45,6 +45,12 @@ static int check(const char *name, const int32_t *got, const int32_t *ref, size_
     return 0;
 }
 
+static int cmp_double(const void *a, const void *b)
+{
+    double x = *(const double *)a, y = *(const double *)b;
+    return (x > y) - (x < y);
+}
+
 int main(int argc, char **argv)
 {
     int M = argc > 1 ? atoi(argv[1]) : 512;
@@ -72,6 +78,34 @@ int main(int argc, char **argv)
     gemm_ref(A, B, Cref, M, N, K);
     t = secs() - t;
     printf("%-12s %s %8.3f GOP/s  (%.4f s)\n", "ref(scalar)", "--  ", ops / t / 1e9, t);
+
+    /* Peak mode (4th arg = rep count): scalar oracle already computed above;
+     * verify ime once, then time `peak` individual ime calls and report the
+     * min/median/max GOP/s. The max (fastest rep) is the contention-free
+     * single-core capability - robust to a neighbor core polluting the shared
+     * cluster L2 during a timed window, unlike inter-process best-of-N. */
+    int peak = argc > 4 ? atoi(argv[4]) : 0;
+    if (peak > 0) {
+#if defined(__riscv) && !defined(GEMM_NO_IME)
+        gemm_ime(A, B, Ctest, M, N, K, Ap, Bp);
+        int bad = check("ime", Ctest, Cref, (size_t)M * N);
+        double *g = malloc((size_t)peak * sizeof(double));
+        for (int r = 0; r < peak; r++) {
+            double t0 = secs();
+            gemm_ime(A, B, Ctest, M, N, K, Ap, Bp);
+            g[r] = ops / (secs() - t0) / 1e9;
+        }
+        qsort(g, peak, sizeof(double), cmp_double);
+        printf("%-12s %s reps=%d  min=%.2f  median=%.2f  max=%.2f GOP/s\n",
+               "ime-peak", bad ? "FAIL" : "ok  ", peak, g[0], g[peak / 2],
+               g[peak - 1]);
+        free(g);
+#else
+        printf("ime-peak: requires the X60 IME build (make board)\n");
+#endif
+        free(A); free(B); free(Ap); free(Bp); free(Cref); free(Ctest);
+        return 0;
+    }
 
 #define RUN(LABEL, REPS, CALL)                                                   \
     do {                                                                         \

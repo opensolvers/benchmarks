@@ -163,6 +163,47 @@ never helps decode. **Takeaway:** the real IME headroom is the ~40 % block-scale
 gap in the kernel's fp path (needs a kernel rewrite, not a driver tweak), and
 even closing it is capped by the cluster-0 constraint on this part.
 
+## Cutting the block-scale tax (kernel optimization)
+
+Following up on that "needs a kernel rewrite": the tax is **measurable and
+reducible**. Rebuilding `libggml-cpu.so` from a patched `ime1_kernels.cpp` and
+A/B-benchmarking on the X60 — correctness gated bit-for-bit by
+[`bench_i8i4.cpp`](bench_i8i4.cpp)'s `chk` mode (a sum/sumsq/max signature vs the
+stock kernel on identical varied inputs, since throughput can't catch a wrong
+rewrite):
+
+**Where the tax lives** (strip parts of the per-block FP reduction, M4 no-zp path):
+
+| M×N×K | stock | −scale-build | −all FP (vmadot only) |
+|---|--:|--:|--:|
+| 512³ | 22.5 | 29.6 | 32.7 |
+| 768³ | 27.5 | 36.7 | 41.3 |
+| 512×512×2048 | 27.5 | 38.7 | 43.6 |
+
+The ~31–37 % FP tax is **dominated by the per-block scale build**
+(`LOAD_SCALE_4x16_FP16`: 16 masked `vfmul.vf` + widening + copies), not the
+`vfcvt`+`vfmacc` convert/accumulate (~10 %). Removal scales ≈ linearly with
+op-count, so the X60 does **not** overlap IME (`smt.vmadot`) with RVV FP — cutting
+FP op-count cuts time.
+
+**The fix** ([`llama-ime1-scalebuild-opt.patch`](llama-ime1-scalebuild-opt.patch)):
+rebuild the combined `A·B` scale with **8 `vfmul.vv`** against two prebuilt
+row-scale vectors instead of **16 split/masked `vfmul.vf` + 4 `vmv`** (also fewer
+`vsetvli` toggles). Identical `v8..v15` layout → **bit-identical** output.
+
+| kernel path | used by | 512³ | 768³ |
+|---|---|--:|--:|
+| M4 no-zero-point | Q4_0 prefill | 23.0→24.1 (+4.8 %) | 27.6→29.2 (+5.8 %) |
+| M4 zero-point | Q4_1-style prefill | 20.6→21.7 (+5.3 %) | 24.7→26.0 (+5.3 %) |
+| M1 / GEMV | decode (`tg`) | 12.1 — N/A | — |
+
+**~5 % on both prefill GEMM paths, verified bit-exact.** M1/GEMV has no equivalent
+tax (its single-row scale build is already 4 `vfmul.vf`, no masking) and is
+memory-bound. The residual block-scale cost is fundamental here: the bigger lever
+— software-pipelining the FP reduction under `vmadot` — is register-blocked (the
+fp output, int accumulator, and scale vectors already fill the register file), and
+IME stays cluster-0-capped end-to-end regardless.
+
 ## Caveats
 
 - **qemu-user cannot run this.** It does not emulate the SpaceMiT custom

@@ -96,6 +96,22 @@ exactly because the eigensolver mixes BLAS-3 with latency-bound BLAS-2
 tridiagonalization - which is the point of using it as a more representative
 probe.
 
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+`na=3000`, 8 threads on a [Banana Pi BPI-F3](https://www.banana-pi.org/)
+(SpaceMiT K1, 8x X60 @ 1.6 GHz), EESSI `2025.06-001` - the same three backends,
+the same story as the RV2:
+
+| Backend | Time | Correctness |
+|---|---:|---|
+| stock CVMFS OpenBLAS 0.3.30, default RVV (`ZVL256B`) | 37.93 s | **`ev0=nan`, finite=0 - FAIL** |
+| scalar (`OPENBLAS_CORETYPE=RISCV64_GENERIC`) | 50.42 s | finite=1 |
+| RVV `ZVL256B` with the `gemv_n` fix backported | **34.83 s** | finite=1 |
+
+Patched vector is **1.45x** faster than scalar (50.42 / 34.83) and returns
+`ev0=-31.44649 evN=1499.70715`, bit-identical to the scalar reference; the stock
+vector backend NaNs the eigensolve. A second K1 board, same conclusion.
+
 ## Files
 
 - `elpa_bench.c` - the benchmark (single source file, MIT licensed).

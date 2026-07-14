@@ -62,3 +62,20 @@ why HPL NaNs while a plain `dgemm` benchmark looks fine).
 Near peak, a squarer grid beats `1x8`: on the fixed build, `HPL-sweep.dat`
 (N=20000, `2x4`) reached ~10.5 GFLOP/s vs ~9.7 at `1x8`. Keep the matrix within
 RAM - N=28672 needs ~6.6 GB, and an 8 GB board with no swap OOMs above ~N=25000.
+
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+Same `xhpl`, `HPL.dat` (N=8000, `1x8`), EESSI `2025.06-001` on a
+[Banana Pi BPI-F3](https://www.banana-pi.org/) (SpaceMiT K1, 8x X60 @ 1.6 GHz):
+
+| backend | GFLOP/s | residual | result |
+|---|--:|---|---|
+| scalar (`RISCV64_GENERIC`) | 6.52 | 4.63e-03 | PASSED |
+| patched RVV (`ZVL256B`, `gemv_n` fix) | 11.52 | 4.04e-03 | PASSED |
+| stock RVV (`ZVL256B`, unpatched) | 11.64 | **nan** | **FAILED** |
+
+**1.77x** scalar->vector, matching the RV2's 1.80x; the patched residual
+(`4.04326757e-03`) is bit-identical to the RV2. The stock vector run is "fast"
+(11.64 GFLOP/s) but NaN - correctness needs the fixed build, exactly as on the
+RV2. `HPL_big.dat` (N=28672, ~6.6 GB) and `HPL-sweep.dat` (N=20000, ~3.2 GB) were
+skipped here: they exceed this BPI-F3's 3.7 GB RAM.

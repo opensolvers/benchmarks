@@ -58,14 +58,26 @@ static void fill_f32(float *p, size_t n, uint32_t s)
 
 /* Replicate forward_mul_mat's single-thread no-TCM tiled loop (ime.cpp:493-540):
  * M tiled by m_stride, N walked in NB_COLS groups, kernel re-called per its
- * rows_handled return. ldc lets us pad the C leading dim for the aliasing test. */
-static double run_gemm(const uint8_t *qa, const uint8_t *qb, float *C, int M, int N, int K, int ldc)
+ * rows_handled return. ldc lets us pad the C leading dim for the aliasing test.
+ * zp!=0 selects the zero-point kernel path (non-null zp flag, 19-byte B blocks);
+ * m1!=0 forces the M1/GEMV kernel (count_m=1 per row). */
+static double run_gemm(const uint8_t *qa, const uint8_t *qb, float *C, int M, int N, int K, int ldc,
+                       int zp, int m1)
 {
+    const long qb_blk = zp ? 19 : 18;
     const long rsa = (long)(K / QK) * QA_BLK;
-    const long rsb = (long)(K / QK) * QB_BLK;
+    const long rsb = (long)(K / QK) * qb_blk;
     const long kblk = K / QK;
-    const long m_stride = ((long)N / (M > 0 ? M : 1) > 64) ? M : 16;
+    const uint8_t *zpp = zp ? qb : nullptr;
     double t0 = secs();
+    if (m1) {
+        for (int m = 0; m < M; m++)
+            spacemit_kernels::ime1::gemm_kernel_i8i4((size_t)BLK, qa + (long)m * rsa, qb, zpp,
+                                                     C + (long)m * ldc, 1, (size_t)N, (size_t)kblk,
+                                                     (size_t)ldc);
+        return secs() - t0;
+    }
+    const long m_stride = ((long)N / (M > 0 ? M : 1) > 64) ? M : 16;
     for (int ms = 0; ms < M; ms += m_stride) {
         int mc = (int)std::min((long)M - ms, m_stride);
         int nblk = (mc == 1) ? N : NBCOLS;
@@ -77,7 +89,7 @@ static double run_gemm(const uint8_t *qa, const uint8_t *qb, float *C, int M, in
             int rem = mc;
             const uint8_t *bcur = bcol;
             while (rem > 0) {
-                size_t rh = spacemit_kernels::ime1::gemm_kernel_i8i4((size_t)BLK, arow, bcur, nullptr,
+                size_t rh = spacemit_kernels::ime1::gemm_kernel_i8i4((size_t)BLK, arow, bcur, zpp,
                                                                      cblk, (size_t)rem, (size_t)nr,
                                                                      (size_t)kblk, (size_t)ldc);
                 if (!rh) break;
@@ -105,36 +117,68 @@ int main(int argc, char **argv)
     int K = argc > 3 ? atoi(argv[3]) : 512;
     int reps = argc > 4 ? atoi(argv[4]) : 0;
     int pad = argc > 5 ? atoi(argv[5]) : 0; /* extra floats on the C row stride */
+    int chk = argc > 6 ? atoi(argv[6]) : 0; /* 1 = varied-finite fill + signature (correctness A/B) */
+    int zp = argc > 7 ? atoi(argv[7]) : 0;  /* 1 = zero-point kernel path (19-byte B blocks) */
+    int m1 = argc > 8 ? atoi(argv[8]) : 0;  /* 1 = M1/GEMV kernel path (count_m=1 per row) */
+    int varied = chk || zp || m1;           /* zp/m1 layouts aren't quantizer-built here -> varied fill */
     if (N % NBCOLS || K % QK || M % 4) {
         printf("need M%%4==0 N%%%d==0 K%%%d==0\n", NBCOLS, QK);
         return 1;
     }
+    const long qb_blk = zp ? 19 : 18;
     const int ldc = N + pad;
     const long rsa = (long)(K / QK) * QA_BLK;
     std::vector<float> X((size_t)M * K);
-    std::vector<uint8_t> qb((size_t)N * (K / QK) * QB_BLK);
+    std::vector<uint8_t> qb((size_t)N * (K / QK) * qb_blk);
     std::vector<uint8_t> qa((size_t)M * rsa);
     std::vector<float> C((size_t)M * ldc);
-    fill_f32(X.data(), X.size(), 1u);
-
-    std::vector<float> W((size_t)N * K, 0.5f); /* constant -> Q4_0 scale bytes stay valid
-        small normals / zero even when read through the (unreproduced) x16 interleave, so
-        the fp path sees no inf/denormal and the data-independent rate is trustworthy. */
-    ggml_quantize_chunk(GGML_TYPE_Q4_0, W.data(), qb.data(), 0, N, K, nullptr);
-    for (int m = 0; m < M; m += 4)
-        spacemit_kernels::ime1::quantize_a_4row_i8((size_t)BLK, X.data() + (size_t)m * K, (size_t)K,
-                                                   qa.data() + (size_t)m * rsa);
+    if (varied) {
+        /* Correctness A/B: bytes in [1,0x3f] keep every fp16/fp32 scale the kernel reads
+         * finite+normal while varying per (row,col,block), so a wrong scale/tile layout in
+         * a rewrite surfaces as a signature mismatch. Bypasses the quantizers so baseline
+         * and modified .so see byte-identical inputs. */
+        uint32_t s = 0x9e3779b9u;
+        auto fillb = [&](uint8_t *p, size_t n) {
+            for (size_t i = 0; i < n; i++) {
+                p[i] = (uint8_t)(((s >> 16) & 0x3fu) | 1u);
+                s = s * 1664525u + 1013904223u;
+            }
+        };
+        fillb(qa.data(), qa.size());
+        fillb(qb.data(), qb.size());
+    } else {
+        fill_f32(X.data(), X.size(), 1u);
+        std::vector<float> W((size_t)N * K, 0.5f); /* constant -> Q4_0 scale bytes stay valid
+            small normals / zero even when read through the (unreproduced) x16 interleave, so
+            the fp path sees no inf/denormal and the data-independent rate is trustworthy. */
+        ggml_quantize_chunk(GGML_TYPE_Q4_0, W.data(), qb.data(), 0, N, K, nullptr);
+        for (int m = 0; m < M; m += 4)
+            spacemit_kernels::ime1::quantize_a_4row_i8((size_t)BLK, X.data() + (size_t)m * K, (size_t)K,
+                                                       qa.data() + (size_t)m * rsa);
+    }
 
     printf("M=%d N=%d K=%d ldc=%d  (%.1f MMAC)\n", M, N, K, ldc, (double)M * N * K / 1e6);
     const double ops = 2.0 * (double)M * N * K;
 
-    run_gemm(qa.data(), qb.data(), C.data(), M, N, K, ldc);
+    run_gemm(qa.data(), qb.data(), C.data(), M, N, K, ldc, zp, m1);
     double amax = 0;
     int finite = 1;
     for (size_t i = 0; i < (size_t)M * ldc; i++) {
         if (!std::isfinite(C[i])) finite = 0;
         amax = std::max(amax, (double)std::fabs(C[i]));
     }
+
+    double sig_sum = 0, sig_sq = 0, sig_max = 0;
+    for (int m = 0; m < M; m++)
+        for (int n = 0; n < N; n++) {
+            double v = C[(size_t)m * ldc + n];
+            sig_sum += v;
+            sig_sq += v * v;
+            sig_max = std::max(sig_max, std::fabs(v));
+        }
+    printf("SIG M=%d N=%d K=%d chk=%d zp=%d m1=%d finite=%d sum=%.6e sumsq=%.6e max=%.6e\n", M, N, K,
+           chk, zp, m1, finite, sig_sum, sig_sq, sig_max);
+    if (chk) return finite ? 0 : 2;
 
     /* gemm[] = kernel only; gemc[] = kernel + copy padded scratch -> contiguous
      * M*N dst (the real cost of the pad fix, since llama.cpp's output is
@@ -144,7 +188,7 @@ int main(int argc, char **argv)
     std::vector<double> g(reps), gc(reps);
     for (int r = 0; r < reps; r++) {
         double t0 = secs();
-        run_gemm(qa.data(), qb.data(), C.data(), M, N, K, ldc);
+        run_gemm(qa.data(), qb.data(), C.data(), M, N, K, ldc, zp, m1);
         double t1 = secs();
         for (int m = 0; m < M; m++)
             memcpy(Cout.data() + (size_t)m * N, C.data() + (size_t)m * ldc, (size_t)N * sizeof(float));
@@ -154,8 +198,8 @@ int main(int argc, char **argv)
     }
     qsort(g.data(), reps, sizeof(double), cmp_double);
     qsort(gc.data(), reps, sizeof(double), cmp_double);
-    printf("i8i4 %s reps=%d ldc=%d  gemm=%.1f/%.1f/%.1f  gemm+copy=%.1f/%.1f/%.1f GOP/s  (|C|max=%.1f)\n",
-           finite ? "finite" : "NONFIN", reps, ldc, g[0], g[reps / 2], g[reps - 1], gc[0],
+    printf("i8i4 %s zp=%d m1=%d reps=%d ldc=%d  gemm=%.1f/%.1f/%.1f  gemm+copy=%.1f/%.1f/%.1f GOP/s  (|C|max=%.1f)\n",
+           finite ? "finite" : "NONFIN", zp, m1, reps, ldc, g[0], g[reps / 2], g[reps - 1], gc[0],
            gc[reps / 2], gc[reps - 1], amax);
     return 0;
 }

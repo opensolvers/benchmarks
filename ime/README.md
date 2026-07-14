@@ -204,6 +204,18 @@ memory-bound. The residual block-scale cost is fundamental here: the bigger leve
 fp output, int accumulator, and scale vectors already fill the register file), and
 IME stays cluster-0-capped end-to-end regardless.
 
+**End-to-end (`llama-bench`, Qwen2.5-0.5B Q4_0, `-t4` on cluster 0, stock vs patched
+`.so`).** Correctness holds — the model answers correctly (*"The capital of France
+is Paris."*) and `tg128` is bit-stable at **7.25 t/s** on both (decode is the
+untouched M1/GEMV path). But the prefill gain is **not resolvable above the board's
+noise**: over 13 interleaved A/B rounds `pp512` came out statistically tied (stock
+mean 79.8 / peak 91.3 vs patched 79.5 / peak 86.3 t/s), because `pp512` swings
+±15–20 % run-to-run from shared-L2 contention and the `malloc`-placement aliasing
+noted above — far larger than the ~3–4 % a +5 % GEMM kernel can add to a prefill
+that is only partly matmul. So the kernel win is real and bit-exact but sits below
+the application-level noise floor on this multi-tenant part; it would surface on a
+quieter board or an IME part whose matrix unit spans more cores.
+
 ## Caveats
 
 - **qemu-user cannot run this.** It does not emulate the SpaceMiT custom

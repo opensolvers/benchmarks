@@ -123,6 +123,52 @@ there under estimate (171 vs 138) **and** under MEASURE (717 vs 664). The lesson
 — pin the planner and use ≥1 s timing before trusting any single FFT A/B point —
 is the real portable takeaway here.
 
+## (3) End-to-end reality check — Quantum ESPRESSO gets ~0% from RVV FFTW
+
+The micro-benchmark above shows the RVV codelets are real (1.06–1.60×). The
+obvious next question: **does that survive into a real DFT run?** The BLAS-axis
+QE A/B in [`../qe/`](../qe) deliberately left the FFT half untouched; this closes
+that gap by swapping *only* the FFT.
+
+Setup: a **serial** `pw.x` (QE 7.5, no MPI/OpenMP/ScaLAPACK) built on the Orange
+Pi RV2 against the EESSI external FFTW. Because `pw.x` links `libfftw3.so.3`
+dynamically, the two backends are swapped by `LD_PRELOAD` alone — BLAS is pinned
+to scalar OpenBLAS via FlexiBLAS so the FFT axis is the *only* variable. Runner:
+[`run-qe-fft-ab.sh`](run-qe-fft-ab.sh). Two Si cells: a 2-atom correctness probe
+and a 64-atom cell (`ecutwfc=22`, 136 bands, 7 SCF iters) where `fftw` dominates.
+
+**Correctness:** total energy is bit-identical across backends on both cells
+(2-atom `-14.57861334 Ry`; 64-atom `-506.67991945 Ry`).
+
+64-atom SCF, WALL seconds (FlexiBLAS→scalar OpenBLAS held constant):
+
+| timer | calls | scalar FFTW | r5v (RVV) FFTW | r5v speedup |
+|---|---|---|---|---|
+| `fftw`     | 3260 | 112.24 | 110.09 | **1.019×** |
+| `vloc_psi` |   41 | 105.29 | 103.08 | 1.021× |
+| `h_psi`    |   41 | 146.23 | 143.80 | 1.017× |
+| `c_bands`  |    7 | 205.25 | 198.44 | 1.034× |
+| **`PWSCF` (total)** | — | **248.49** | **248.10** | **1.002×** |
+
+**The RVV FFTW backend delivers essentially nothing end-to-end (~0.2% wall,
+~1.9% inside `fftw` itself)** — even though `fftw` is ~45% of runtime, exactly
+the fraction the BLAS-axis A/B could not reach.
+
+Why the 1.6× micro-win evaporates:
+
+- **QE plans with `FFTW_ESTIMATE`, not `MEASURE`.** Section (2) showed the RVV
+  advantage is largely a *planner* effect — under `estimate` the two libs are
+  near-parity, and `estimate` is exactly what QE uses (it cannot afford
+  `MEASURE`'s planning cost across thousands of transient transforms).
+- **3260 small mixed-radix transforms**, not the cache-resident power-of-two
+  sizes where RVV codelets shine (1.6× was @ N=256). Real charge-density grids
+  are odd composite sizes and memory-bandwidth-bound, the ~1.06× tail.
+
+Takeaway: on the X60, **neither the BLAS axis nor the FFT axis moves a real QE
+SCF** with these drop-in vectorized libraries — the win requires honest FFT
+planning (unavailable to QE) and BLAS kernels the generic RVV OpenBLAS does not
+yet provide. A microbenchmark speedup is not an application speedup.
+
 ## EasyBuild easyconfig
 
 `FFTW-3.3.10-GCC-14.3.0-r5v.eb` packages the `r5v` half of the A/B as a proper

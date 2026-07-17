@@ -1,0 +1,60 @@
+name = 'FFTW'
+version = '3.3.10'
+versionsuffix = '-r5v'
+
+homepage = 'https://www.fftw.org'
+description = """FFTW is a C subroutine library for computing the discrete Fourier transform (DFT)
+in one or more dimensions, of arbitrary input size, and of both real and complex data.
+
+This build enables the RISC-V Vector (RVV) SIMD backend via --enable-r5v, from
+rdolbeau's r5v-test-release-005 fork of FFTW 3.3.10, targeting the SpaceMiT
+X60/K1 (rv64imafdcv, VLEN=256). Double precision, shared, single-threaded."""
+
+# Compiler-only toolchain (EESSI 2025.06-001 GCC 14.3.0). pic:True makes the
+# FFTW easyblock add --with-pic + --enable-shared automatically per precision.
+# The K1 vector -march is pinned in configopts below (see comment there).
+toolchain = {'name': 'GCC', 'version': '14.3.0'}
+toolchainopts = {'pic': True}
+
+# The r5v source is NOT the stock www.fftw.org tarball: it is rdolbeau's
+# r5v-test-release-005 fork, repackaged with a stock fftw-3.3.10/ top dir.
+# Place fftw-r5v.tar.gz in your sourcepath (or next to this .eb) before building.
+sources = ['fftw-r5v.tar.gz']
+checksums = ['65f81f8072c640d5b3da4b11f6da39b20370d4040971be0797d8f7aeae9f8fd3']
+
+# Match the validated A/B build (see fftw/build-fftw-r5v.sh): double precision
+# only, shared, no fortran wrapper lib / doc / mpi / threads / openmp.
+with_double_prec = True
+with_single_prec = False
+with_long_double_prec = False
+with_quad_prec = False
+
+with_shared = True
+with_threads = False
+with_openmp = False
+with_mpi = False
+
+# The FFTW easyblock auto-detects x86/ARM/POWER SIMD (avx/sse/neon/sve/...) but
+# has NO RVV entry, so detection is a no-op on riscv64. Turn it off to keep the
+# configure line deterministic; --enable-r5v is what actually enables RVV.
+auto_detect_cpu_features = False
+
+# --enable-r5v is the ONLY functional delta vs a stock scalar build; the -march
+# string is what makes the r5v codelets emit RVV 1.0 (VLEN>=256). configopts is
+# appended verbatim to each precision's ./configure line by the easyblock, so
+# passing CFLAGS= here is the supported pattern (cf. the easyblock's Fujitsu
+# branch). --disable-fortran skips only the Fortran wrapper LIB; the fftw3.f /
+# fftw3.f03 headers the easyblock sanity-checks are still installed.
+configopts = '--enable-r5v --disable-fortran '
+configopts += 'CFLAGS="-O3 -march=rv64imafdcv_zvl256b"'
+
+# stock FFTW 'make check'. On the X60 this is slow; run with --skip-test-step
+# (or set runtest to False) if you only want the libraries.
+runtest = 'check'
+
+# NOTE: sanity_check_paths is intentionally NOT set here. The FFTW easyblock
+# generates a precision-aware custom sanity check (fftw3.h, fftw3.f/.f03,
+# bin/fftw-wisdom, lib/libfftw3.a + .so, lib/pkgconfig) and passes it to the
+# generic step, overriding any list given in this easyconfig.
+
+moduleclass = 'numlib'

@@ -151,3 +151,24 @@ eb FFTW-3.3.10-GCC-14.3.0-r5v.eb    # -> module FFTW/3.3.10-GCC-14.3.0-r5v
 Verified to parse cleanly against EasyBuild 5.3.1 (all parameters recognized by
 the framework + `EB_FFTW` easyblock). `runtest = 'check'` runs FFTW's own test
 suite, which is slow on the X60 — build with `--skip-test-step` for libs only.
+
+### Not upstream-ready (lives on a fork)
+
+This easyconfig is **experimental** and is intentionally *not* proposed to
+[`easybuilders/easybuild-easyconfigs`](https://github.com/easybuilders/easybuild-easyconfigs).
+It is tracked on a fork instead:
+[hmeiland/easybuild-easyconfigs#3](https://github.com/hmeiland/easybuild-easyconfigs/pull/3).
+
+Three things block upstreaming, all documented in that PR:
+
+1. **The source is a fork, not an official release** — rdolbeau's
+   `r5v-test-release-005` repackaged as a local `fftw-r5v.tar.gz`; there is no
+   permanent public `source_urls` for upstream CI to fetch.
+2. **`--enable-r5v` is not supported by the upstream FFTW easyblock** (which
+   only knows avx/sse/neon/sve/vsx/altivec) — here it is passed as a raw
+   `configopts` string rather than proper easyblock / `use_*` handling.
+3. **`-march` is hardcoded in `CFLAGS`**, bypassing the `--optarch` contract
+   upstream easyconfigs are required to respect.
+
+Upstreaming would require a published r5v source, RVV support added to the FFTW
+easyblock, and dropping the pinned `-march`.

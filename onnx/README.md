@@ -100,6 +100,48 @@ The bespoke fast path was **28 % slower** than the code it meant to beat — the
 `smt.vmadot` tile path (see [`../ime`](../ime)) handles the gemv shape better.
 It was reverted; the shipped kernel is byte-identical to upstream.
 
+## Isolated kernel microbenchmark (`bench_qnbit_mlas.cpp`)
+
+To measure the MLAS `SQNBit` int4 `CompInt8` kernel in isolation — without ORT's
+graph, threadpool, or the fp32-fallback confound — [`bench_qnbit_mlas.cpp`](bench_qnbit_mlas.cpp)
+links directly against the build tree's `libonnxruntime_mlas.a` and calls the
+public MLAS entry points exactly as `matmul_nbits.cc` does:
+
+- `MlasQNBitGemmPackQuantBData` to pack B (nbits=4, `BlkLen=32`, no zero-point),
+- `MlasQNBitGemmBatch<float>` for the GEMM,
+
+mirroring the convention of [`../ime/bench_i8i4.cpp`](../ime). It measures a
+**single-thread** kernel rate (`thread_pool=nullptr`), reports GOP/s
+(min/median/max over N reps), and guards every output element with an
+`isfinite` check so a wrong pack layout can't masquerade as a fast run.
+
+**Single-thread results** (X60, one core; end-to-end 8-thread scaling lives in
+the perftest table above, not here):
+
+| Shape (M×K×N)        | Kernel rate | packed-B |
+|----------------------|------------:|---------:|
+| 1 × 4096 × 11008     | 0.47 GOP/s  | 22.5 MB  |
+| 1 × 11008 × 4096     | 0.39 GOP/s  | 22.5 MB  |
+| 1 × 4096 × 4096      | 0.48 GOP/s  | 8.4 MB   |
+
+These are deliberately *single-core* numbers isolating kernel efficiency; the
+production path fans this across 8 cores (~6× — see the perftest table).
+
+### One backend gotcha worth recording
+
+This RISC-V IME build registers **only** the plain `SQ4BitGemmPackQuantBData`
+(a `memcpy`), not the x64-style `...AndBlkSum` variant — scales stay *external*
+and are handed to the kernel at compute time via `QuantBScale`. Porting the x64
+two-call pack recipe verbatim (a second "finalize" call with `QuantBData=nullptr`
+to fold block-sums) therefore `memcpy`s from `NULL` and segfaults. The harness
+does the single data-only pack and passes scales through `MLAS_QNBIT_GEMM_DATA_PARAMS`.
+
+```sh
+# build + run on the X60 (see Makefile header for the GCC 14 toolchain note)
+make board CXX=$GCC14/bin/g++
+LD_LIBRARY_PATH=$GCC14/lib64:$LD_LIBRARY_PATH ./qnbit-mlas-bench 1 4096 11008 50
+```
+
 ## Reproduce
 
 ```sh

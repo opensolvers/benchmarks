@@ -27,6 +27,7 @@ correctness (finite / bit-identical results) is checked in every case.
 | [`scalapack/`](scalapack) | Distributed dense eigensolver (ScaLAPACK `PDSYEV`, pure-MPI) | BLAS | microbench (MPI) |
 | [`qe/`](qe) | Quantum ESPRESSO `pw.x` plane-wave DFT SCF, end-to-end | **BLAS** (FlexiBLAS) | real-application A/B |
 | [`fftw/`](fftw) | FFTW 3.3.10 RVV (`r5v`) vs scalar, **and** the FFT axis inside a QE SCF | **FFT** (`--enable-r5v`, `LD_PRELOAD`) | microbench + real-application A/B |
+| [`gromacs/`](gromacs) | GROMACS `mdrun` PME molecular dynamics, end-to-end | **FFT** (single-prec `libfftw3f`, `LD_PRELOAD`) | real-application A/B |
 | [`ime/`](ime) | int8 (`s8s8s32`) GEMM microkernel on the X60 **IME** (`smt.vmadot`) vs RVV | int8 kernel | microkernel + verification |
 | [`onnx/`](onnx) | int4 `MatMulNBits` LLM-FFN inference via ONNX Runtime MLAS | int4 kernel | application + root-cause writeup |
 | [`papers/`](papers) | Longer-form writeups (e.g. X60 IME block-scale optimization) | — | prose / PDF |
@@ -41,8 +42,10 @@ disagree — and that disagreement is the interesting result:
   → [`hpl`](hpl)/[`qe`](qe) (whole application).
 - **FFT axis:** [`fftw`](fftw) standalone microbench (RVV wins **1.06–1.60×**)
   → the same RVV FFTW dropped into a Quantum ESPRESSO SCF (**~0% end-to-end**,
-  documented in [`fftw/README.md`](fftw/README.md)). A microbenchmark speedup is
-  not an application speedup.
+  documented in [`fftw/README.md`](fftw/README.md)), and into a
+  [`gromacs`](gromacs) PME MD run (RVV wins **1.23×** on the isolated
+  `PME 3D-FFT`, but that step is a small fraction of a scalar-`Force`-dominated
+  run). A microbenchmark speedup is not an application speedup.
 - **int8/int4 axis:** [`ime`](ime) microkernel → [`onnx`](onnx) real inference.
 
 ## How to use / replicate

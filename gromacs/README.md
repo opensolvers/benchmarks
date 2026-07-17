@@ -112,6 +112,38 @@ FFT; GROMACS speeds up the FFT and is diluted by its scalar `Force` kernels
 (`SIMD: None` on this build). Both show the same lesson - a whole real
 application only moves by the fraction its swapped backend actually owns.
 
+## Can the `Force` kernel be optimized?
+
+The FFT swap only moves ~2 % of the run because `Force` (90 %) is scalar. Two
+distinct levers exist for that scalar bottleneck - one free, one a real port:
+
+**1. Threading (free, ~6.9x).** The A/B runs serial (`-ntmpi 1 -ntomp 1`) *by
+design*, to isolate the FFT. For actual throughput that wastes 7 of 8 cores. A
+thread scan on the same system (SPC water PME, this box's 8 X60 cores):
+
+| layout | ns/day | note |
+|---|--:|---|
+| 1 rank x 1 omp | 0.377 | the serial A/B baseline |
+| 1 rank x 8 omp | 2.595 | ~6.9x |
+| 8 rank x 1 omp | **2.610** | fastest, but within noise of 1x8 |
+| 2 rank x 4 omp | 2.389 | hybrid splits ~8 % slower |
+| 4 rank x 2 omp | 2.404 | " |
+
+So for real runs just use all 8 cores (`-ntomp 8` is simplest); the rank/thread
+decomposition is layout-insensitive here (endpoints tie at ~2.60 ns/day). This
+is a run-parameter fix, not a kernel fix.
+
+**2. RVV `Force` kernels (a genuine upstream port).** GROMACS 2026.2 has **no
+RISC-V RVV SIMD backend** - `cmake/gmxManageSimd.cmake` accepts only x86
+(SSE/AVX), ARM (NEON/SVE), IBM VSX, REFERENCE, NONE. The shipped
+`libgromacs_mpi.so` contains **0 vector instructions** and is built for base
+`rv64...c` (no `v` extension). So `SIMD: None` is not a misconfigured flag - the
+RVV kernels do not exist. GROMACS's nonbonded kernels are written against an
+abstract SIMD wrapper, so adding RVV means implementing an `impl_riscv_rvv/`
+backend (~9 files / ~3k LOC, ARM SVE is the closest VLA template), estimated
+**~6-10 person-weeks**. That is the only path to vectorizing the `Force` term,
+and it is a contribution project rather than a tuning task.
+
 ## Gotchas
 
 - **GROMACS mixed precision links the *single*-precision `libfftw3f.so.3`**, not

@@ -13,6 +13,7 @@ faster than scalar — and what actually moves the needle on this hardware.
 |---|---|
 | `build-fftw-r5v.sh` | Builds both libs (`src-r5v` + `src-scalar`) from one tarball, identical flags; counts RVV mnemonics in each `.so` as an inline sanity check. |
 | `bench-fftw-ab.sh` | Runs FFTW's own `tests/bench` across sizes × planners (`estimate` / `measure` / `patient`) on both libs, reports median MFLOPS. |
+| `FFTW-3.3.10-GCC-14.3.0-r5v.eb` | EasyBuild easyconfig that reproduces the `r5v` lib as a module (see below). |
 
 Both are single shell scripts; the only inputs are the FFTW `r5v` source
 tarball and an EESSI-provided GCC 14.
@@ -121,3 +122,32 @@ and appeared to show a **2× RVV *regression* at N=262144** (r5v 316 vs scalar
 there under estimate (171 vs 138) **and** under MEASURE (717 vs 664). The lesson
 — pin the planner and use ≥1 s timing before trusting any single FFT A/B point —
 is the real portable takeaway here.
+
+## EasyBuild easyconfig
+
+`FFTW-3.3.10-GCC-14.3.0-r5v.eb` packages the `r5v` half of the A/B as a proper
+module, so the RVV lib is reproducible via the EESSI toolchain rather than a
+hand-run script. It uses the stock `EB_FFTW` easyblock (no custom easyblock
+needed) with three deltas from an upstream FFTW easyconfig:
+
+- `configopts = '--enable-r5v --disable-fortran CFLAGS="-O3 -march=rv64imafdcv_zvl256b"'`
+  — the RVV backend plus the pinned K1 vector ISA. The easyblock appends this
+  verbatim to each precision's `./configure` line, so `CFLAGS=` here is the
+  supported override pattern.
+- `auto_detect_cpu_features = False` — the easyblock only knows x86/ARM/POWER
+  SIMD (avx/sse/neon/sve/…); there is no RVV entry, so detection is a no-op on
+  riscv64. Pinned off to keep the configure line deterministic.
+- double precision / shared only (`with_single_prec`, `with_*` threads/openmp/mpi
+  all `False`), matching the benchmarked build.
+
+The source is rdolbeau's `r5v-test-release-005` repackaged with a stock
+`fftw-3.3.10/` top dir; drop `fftw-r5v.tar.gz`
+(`sha256:65f81f80…9f8fd3`) into your sourcepath first.
+
+```bash
+eb FFTW-3.3.10-GCC-14.3.0-r5v.eb    # -> module FFTW/3.3.10-GCC-14.3.0-r5v
+```
+
+Verified to parse cleanly against EasyBuild 5.3.1 (all parameters recognized by
+the framework + `EB_FFTW` easyblock). `runtest = 'check'` runs FFTW's own test
+suite, which is slow on the X60 — build with `--skip-test-step` for libs only.

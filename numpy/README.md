@@ -61,3 +61,21 @@ through real LAPACK). The pure `dgemm` speedup (2.4x) is larger than the
 eigensolver's (1.6x) because the eigensolver mixes BLAS-3 with latency-bound
 BLAS-2 tridiagonalization - the same reason a full eigensolver (see `elpa/`) is a
 more conservative, more representative probe than raw `dgemm`.
+
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+Same benchmark on a [Banana Pi BPI-F3](https://www.banana-pi.org/) (SpaceMiT K1,
+8x X60 @ 1.6 GHz) - EESSI `2025.06-001`, SciPy-bundle 2025.07 (numpy 2.3.2),
+8 threads:
+
+| Kernel | scalar (`RISCV64_GENERIC`) | RVV `ZVL256B` (patched) | speedup |
+|---|---:|---:|---:|
+| DGEMM N=4096 | 4.91 GFLOP/s | 17.51 GFLOP/s | **3.6x** |
+| EIGH N=2048 | 9.59 s | 5.94 s | **1.6x** |
+
+Both scalar and patched-vector are finite. The **unpatched** stock RVV backend
+is worse than a silent NaN here: `eigvalsh` aborts with
+`LinAlgError: Eigenvalues did not converge` (the `gemv_n` NaN propagating through
+LAPACK `dsyevd`), so only scalar and the patched vector build return an answer at
+all. (DGEMM stays finite on stock RVV - 10.94 GFLOP/s - because only `gemv`, not
+`gemm`, is affected; see [`../OpenBLAS/`](../OpenBLAS).)

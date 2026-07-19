@@ -1,0 +1,11 @@
+label	params	size_MiB	coherent	use_ime1	pp128_ime	tg32_ime	pp128_rvv	tg32_rvv
+qwen2.5-0.5b	0.5B	408	yes	1	69.03	1.47	100.60	12.18
+tinyllama-1.1b	1.1B	608	yes	1	37.72	1.72	34.95	9.47
+qwen2.5-1.5b	1.5B	1016	yes	1	27.14	1.19	22.77	6.10
+llama-3.2-1b	1.2B	737	yes	1	38.87	2.00	25.27	7.74
+gemma-2-2b-it	2.6B	1554	yes	1	17.56	1.01	10.04	3.15
+qwen2.5-3b	3.1B	1905	yes	1	14.13	0.85	7.85	3.12
+llama-3.2-3b	3.2B	1832	yes	1	13.99	1.05	6.95	3.09
+phi-3.5-mini	3.8B	2081	yes	1	11.37	1.11	4.59	2.02
+mistral-7b-v0.3	7.2B	3922	yes	1	5.84	0.73	2.35	1.38
+qwen2.5-7b	7.6B	3798	yes	1	6.06	0.73	2.52	1.38

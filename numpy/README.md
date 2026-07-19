@@ -78,4 +78,4 @@ is worse than a silent NaN here: `eigvalsh` aborts with
 `LinAlgError: Eigenvalues did not converge` (the `gemv_n` NaN propagating through
 LAPACK `dsyevd`), so only scalar and the patched vector build return an answer at
 all. (DGEMM stays finite on stock RVV - 10.94 GFLOP/s - because only `gemv`, not
-`gemm`, is affected; see [`../dgemm/`](../dgemm).)
+`gemm`, is affected; see [`../OpenBLAS/`](../OpenBLAS).)

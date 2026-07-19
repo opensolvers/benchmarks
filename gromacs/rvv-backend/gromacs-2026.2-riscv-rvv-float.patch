@@ -1,0 +1,1668 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 92f8a60..28ad8e3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -277,7 +277,7 @@ gmx_option_multichoice(
+     GMX_SIMD
+     "SIMD instruction set for CPU kernels and compiler optimization"
+     "AUTO"
+-    AUTO None SSE2 SSE4.1 AVX_128_FMA AVX_256 AVX2_256 AVX2_128 AVX_512 ARM_NEON_ASIMD ARM_SVE IBM_VSX Reference)
++    AUTO None SSE2 SSE4.1 AVX_128_FMA AVX_256 AVX2_256 AVX2_128 AVX_512 ARM_NEON_ASIMD ARM_SVE RISCV_RVV IBM_VSX Reference)
+ 
+ if (GMX_INTEL_LLVM)
+     set(GMX_FFT_LIBRARY_DEFAULT "mkl")
+diff --git a/cmake/gmxManageSimd.cmake b/cmake/gmxManageSimd.cmake
+index 911cfc5..190abdc 100644
+--- a/cmake/gmxManageSimd.cmake
++++ b/cmake/gmxManageSimd.cmake
+@@ -253,6 +253,30 @@ elseif(GMX_SIMD_ACTIVE STREQUAL "ARM_SVE")
+     set(SIMD_STATUS_MESSAGE "Enabling ARM (AArch64) SVE Advanced SIMD instructions using CXX flags: ${SIMD_ARM_SVE_CXX_FLAGS}")
+     set(GMX_SIMD_ENUM_VALUE "gmx::SimdType::Arm_Sve")
+ 
++elseif(GMX_SIMD_ACTIVE STREQUAL "RISCV_RVV")
++
++    gmx_option_multichoice(
++        GMX_SIMD_RISCV_RVV_LENGTH
++        "RVV vector length in bits (VLEN)"
++        "256"
++        128 256 512 1024)
++
++    set(GMX_SIMD_RISCV_RVV_LENGTH_VALUE ${GMX_SIMD_RISCV_RVV_LENGTH})
++
++    gmx_find_simd_riscv_rvv_flags(SIMD_RISCV_RVV_C_SUPPORTED SIMD_RISCV_RVV_CXX_SUPPORTED
++                                  SIMD_RISCV_RVV_C_FLAGS SIMD_RISCV_RVV_CXX_FLAGS)
++
++    if(NOT SIMD_RISCV_RVV_C_SUPPORTED OR NOT SIMD_RISCV_RVV_CXX_SUPPORTED)
++        gmx_give_fatal_error_when_simd_support_not_found("RISC-V RVV SIMD" "particularly gcc version 14 or later with a fixed-length RVV target (-mrvv-vector-bits=zvl), or disable SIMD support (slower)" "${SUGGEST_BINUTILS_UPDATE}")
++    endif()
++
++    # If multiple flags are needed, make them into a list
++    string(REPLACE " " ";" SIMD_C_FLAGS ${SIMD_RISCV_RVV_C_FLAGS})
++    string(REPLACE " " ";" SIMD_CXX_FLAGS ${SIMD_RISCV_RVV_CXX_FLAGS})
++    set(GMX_SIMD_${GMX_SIMD_ACTIVE} 1)
++    set(SIMD_STATUS_MESSAGE "Enabling RISC-V RVV SIMD instructions using CXX flags: ${SIMD_RISCV_RVV_CXX_FLAGS}")
++    set(GMX_SIMD_ENUM_VALUE "gmx::SimdType::Riscv_Rvv")
++
+ elseif(GMX_SIMD_ACTIVE STREQUAL "IBM_VSX")
+ 
+     gmx_find_simd_ibm_vsx_flags(SIMD_IBM_VSX_C_SUPPORTED SIMD_IBM_VSX_CXX_SUPPORTED
+diff --git a/cmake/gmxSimdFlags.cmake b/cmake/gmxSimdFlags.cmake
+index a264132..d89673f 100644
+--- a/cmake/gmxSimdFlags.cmake
++++ b/cmake/gmxSimdFlags.cmake
+@@ -309,6 +309,29 @@ function(gmx_find_simd_arm_sve_flags C_FLAGS_RESULT CXX_FLAGS_RESULT C_FLAGS_VAR
+     set(${CXX_FLAGS_RESULT} ${SIMD_ARM_SVE_CXX_FLAGS_RESULT} CACHE INTERNAL "Result of test for Arm SVE C++ flags" FORCE)
+ endfunction()
+ 
++function(gmx_find_simd_riscv_rvv_flags C_FLAGS_RESULT CXX_FLAGS_RESULT C_FLAGS_VARIABLE CXX_FLAGS_VARIABLE)
++
++    gmx_find_flags(SIMD_RISCV_RVV_C_FLAGS_RESULT SIMD_RISCV_RVV_CXX_FLAGS_RESULT
++        "#include <riscv_vector.h>
++         /* Fixed-length RVV: requires -mrvv-vector-bits=zvl and a zvlNNNb target.
++            The __riscv_ intrinsic prefix is mandatory on GCC 14.x. */
++         typedef vfloat32m1_t float32_vec_t __attribute__((riscv_rvv_vector_bits(${GMX_SIMD_RISCV_RVV_LENGTH_VALUE})));
++         int main(){float32_vec_t x = __riscv_vfmv_v_f_f32m1(0.5f, ${GMX_SIMD_RISCV_RVV_LENGTH_VALUE} / 32); return 0;}"
++        TOOLCHAIN_C_FLAGS TOOLCHAIN_CXX_FLAGS
++        SIMD_RISCV_RVV_C_FLAGS SIMD_RISCV_RVV_CXX_FLAGS
++        "-march=rv64gcv_zvl${GMX_SIMD_RISCV_RVV_LENGTH_VALUE}b -mrvv-vector-bits=zvl"
++        "-march=rv64gcv -mrvv-vector-bits=zvl")
++
++    if(${SIMD_RISCV_RVV_C_FLAGS_RESULT})
++        set(${C_FLAGS_VARIABLE} "${TOOLCHAIN_C_FLAGS} ${SIMD_RISCV_RVV_C_FLAGS}" CACHE INTERNAL "C flags required for RISC-V RVV instructions")
++    endif()
++    if(${SIMD_RISCV_RVV_CXX_FLAGS_RESULT})
++        set(${CXX_FLAGS_VARIABLE} "${TOOLCHAIN_CXX_FLAGS} ${SIMD_RISCV_RVV_CXX_FLAGS}" CACHE INTERNAL "C++ flags required for RISC-V RVV instructions")
++    endif()
++    set(${C_FLAGS_RESULT} ${SIMD_RISCV_RVV_C_FLAGS_RESULT} CACHE INTERNAL "Result of test for RISC-V RVV C flags" FORCE)
++    set(${CXX_FLAGS_RESULT} ${SIMD_RISCV_RVV_CXX_FLAGS_RESULT} CACHE INTERNAL "Result of test for RISC-V RVV C++ flags" FORCE)
++endfunction()
++
+ # IBM VSX (power7 and later)
+ function(gmx_find_simd_ibm_vsx_flags C_FLAGS_RESULT CXX_FLAGS_RESULT C_FLAGS_VARIABLE CXX_FLAGS_VARIABLE)
+     find_power_vsx_toolchain_flags(TOOLCHAIN_C_FLAGS TOOLCHAIN_CXX_FLAGS)
+diff --git a/src/config.h.cmakein b/src/config.h.cmakein
+index 5f46046..822d2e6 100644
+--- a/src/config.h.cmakein
++++ b/src/config.h.cmakein
+@@ -135,6 +135,12 @@
+ /* SVE vector length */
+ #define GMX_SIMD_ARM_SVE_LENGTH_VALUE @GMX_SIMD_ARM_SVE_LENGTH_VALUE@
+ 
++/* RISC-V RVV Vector extension was selected */
++#cmakedefine01 GMX_SIMD_RISCV_RVV
++
++/* RVV vector length (VLEN) in bits */
++#define GMX_SIMD_RISCV_RVV_LENGTH_VALUE @GMX_SIMD_RISCV_RVV_LENGTH_VALUE@
++
+ /* IBM VSX was selected as SIMD instructions (Power 7 and later) */
+ #cmakedefine01 GMX_SIMD_IBM_VSX
+ 
+diff --git a/src/gromacs/hardware/simd_support.cpp b/src/gromacs/hardware/simd_support.cpp
+index 93792bf..928de21 100644
+--- a/src/gromacs/hardware/simd_support.cpp
++++ b/src/gromacs/hardware/simd_support.cpp
+@@ -82,7 +82,8 @@ static const std::string& simdString(SimdType s)
+                                                           { SimdType::Arm_NeonAsimd,
+                                                             "ARM_NEON_ASIMD" },
+                                                           { SimdType::Arm_Sve, "ARM_SVE" },
+-                                                          { SimdType::Ibm_Vsx, "IBM_VSX" } };
++                                                          { SimdType::Ibm_Vsx, "IBM_VSX" },
++                                                          { SimdType::Riscv_Rvv, "RISCV_RVV" } };
+ 
+     return name.at(s);
+ }
+@@ -213,6 +214,8 @@ static SimdType simdCompiled()
+     return SimdType::Arm_Sve;
+ #elif GMX_SIMD_IBM_VSX
+     return SimdType::Ibm_Vsx;
++#elif GMX_SIMD_RISCV_RVV
++    return SimdType::Riscv_Rvv;
+ #elif GMX_SIMD_REFERENCE
+     return SimdType::Reference;
+ #else
+diff --git a/src/gromacs/hardware/simd_support.h b/src/gromacs/hardware/simd_support.h
+index 39debb8..0f76adb 100644
+--- a/src/gromacs/hardware/simd_support.h
++++ b/src/gromacs/hardware/simd_support.h
+@@ -71,7 +71,8 @@ enum class SimdType
+     X86_Avx512,    //!< AVX_512
+     Arm_NeonAsimd, //!< 64-bit ARM AArch64 Advanced SIMD
+     Arm_Sve,       //!< ARM Scalable Vector Extensions
+-    Ibm_Vsx        //!< IBM VSX SIMD (Power7 and later)
++    Ibm_Vsx,       //!< IBM VSX SIMD (Power7 and later)
++    Riscv_Rvv      //!< RISC-V RVV Vector extension (fixed-length)
+ };
+ 
+ /*! \libinternal \brief Return the SIMD type that would fit this hardware best */
+diff --git a/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv.h b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv.h
+new file mode 100644
+index 0000000..2bba056
+--- /dev/null
++++ b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv.h
+@@ -0,0 +1,64 @@
++/*
++ * This file is part of the GROMACS molecular simulation package.
++ *
++ * Copyright 2026- The GROMACS Authors
++ * and the project initiators Erik Lindahl, Berk Hess and David van der Spoel.
++ * Consult the AUTHORS/COPYING files and https://www.gromacs.org for details.
++ *
++ * GROMACS is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public License
++ * as published by the Free Software Foundation; either version 2.1
++ * of the License, or (at your option) any later version.
++ *
++ * GROMACS is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with GROMACS; if not, see
++ * https://www.gnu.org/licenses, or write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
++ *
++ * If you want to redistribute modifications to GROMACS, please
++ * consider that scientific software is very special. Version
++ * control is crucial - bugs must be traceable. We will be happy to
++ * consider code for inclusion in the official distribution, but
++ * derived work must not be called official GROMACS. Details are found
++ * in the README & COPYING files - if they are missing, get the
++ * official version at https://www.gromacs.org.
++ *
++ * To help us fund GROMACS development, we humbly ask that you cite
++ * the research papers on the package. Check out https://www.gromacs.org.
++ */
++
++#ifndef GMX_SIMD_IMPL_RISCV_RVV_H
++#define GMX_SIMD_IMPL_RISCV_RVV_H
++
++/*
++ * RISC-V RVV 1.0 backend include router. Translated from impl_arm_sve.h.
++ *
++ * RVV support is implemented via the RVV C intrinsics (spec v1.0, __riscv_-
++ * prefixed forms). Like SVE, RVV vectors are natively sizeless (vfloat32m1_t
++ * etc.), which does not fit GROMACS's requirement to know the vector width at
++ * CMake time. GCC 14+ provides -mrvv-vector-bits=zvl, and the
++ * __attribute__((riscv_rvv_vector_bits(N))) type attribute fixes the width, so
++ * we use fixed-size RVV types the same way the SVE backend uses
++ * arm_sve_vector_bits(...). Confirmed on the SpaceMiT X60 at VLEN=256
++ * (kickoff sec.6 probe 1: sizeof(fixed vfloat32m1_t)==32).
++ *
++ * Milestone 1 ships float32 only. The double, simd4, and util (gather/scatter/
++ * transpose) headers are added in later phases; their #includes are commented
++ * out until those files exist so the M1 build configures cleanly.
++ */
++
++#include "impl_riscv_rvv_definitions.h"
++#include "impl_riscv_rvv_general.h"
++#include "impl_riscv_rvv_simd_float.h"
++#include "impl_riscv_rvv_simd4_float.h"
++// #include "impl_riscv_rvv_simd_double.h"   // Phase 2 (double)
++// #include "impl_riscv_rvv_simd4_double.h"  // Phase 2 (double)
++#include "impl_riscv_rvv_util_float.h"
++// #include "impl_riscv_rvv_util_double.h"   // Phase 3 (gather/scatter/transpose)
++
++#endif // GMX_SIMD_IMPL_RISCV_RVV_H
+diff --git a/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_definitions.h b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_definitions.h
+new file mode 100644
+index 0000000..90bfa62
+--- /dev/null
++++ b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_definitions.h
+@@ -0,0 +1,106 @@
++/*
++ * This file is part of the GROMACS molecular simulation package.
++ *
++ * Copyright 2026- The GROMACS Authors
++ * and the project initiators Erik Lindahl, Berk Hess and David van der Spoel.
++ * Consult the AUTHORS/COPYING files and https://www.gromacs.org for details.
++ *
++ * GROMACS is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public License
++ * as published by the Free Software Foundation; either version 2.1
++ * of the License, or (at your option) any later version.
++ *
++ * GROMACS is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with GROMACS; if not, see
++ * https://www.gnu.org/licenses, or write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
++ *
++ * If you want to redistribute modifications to GROMACS, please
++ * consider that scientific software is very special. Version
++ * control is crucial - bugs must be traceable. We will be happy to
++ * consider code for inclusion in the official distribution, but
++ * derived work must not be called official GROMACS. Details are found
++ * in the README & COPYING files - if they are missing, get the
++ * official version at https://www.gromacs.org.
++ *
++ * To help us fund GROMACS development, we humbly ask that you cite
++ * the research papers on the package. Check out https://www.gromacs.org.
++ */
++
++/*
++ * RISC-V RVV 1.0 support for GROMACS.
++ * Target: SpaceMiT X60, VLEN=256 (zvl256b), GCC 14.3, RVV intrinsic spec v1.0.
++ * Translated from the ARM SVE backend (the only pre-existing VLA backend).
++ * Fixed vector length is set at CMake time via -mrvv-vector-bits=zvl and the
++ * riscv_rvv_vector_bits(256) type attribute (confirmed on hardware; kickoff sec.6).
++ */
++
++#ifndef GMX_SIMD_IMPL_RISCV_RVV_DEFINITIONS_H
++#define GMX_SIMD_IMPL_RISCV_RVV_DEFINITIONS_H
++
++#include "config.h"
++
++#define GMX_SIMD 1
++#define GMX_SIMD_HAVE_FLOAT 1
++// Double precision is Phase 2; disabled for the Milestone-1 float backend.
++#define GMX_SIMD_HAVE_DOUBLE 0
++#define GMX_SIMD_HAVE_LOADU 1
++#define GMX_SIMD_HAVE_STOREU 1
++#define GMX_SIMD_HAVE_LOGICAL 1
++#define GMX_SIMD_HAVE_FMA 1
++#define GMX_SIMD_HAVE_FINT32_EXTRACT 1
++#define GMX_SIMD_HAVE_FINT32_LOGICAL 1
++#define GMX_SIMD_HAVE_FINT32_ARITHMETICS 1
++#define GMX_SIMD_HAVE_DINT32_EXTRACT 0
++#define GMX_SIMD_HAVE_DINT32_LOGICAL 0
++#define GMX_SIMD_HAVE_DINT32_ARITHMETICS 0
++#define GMX_SIMD_HAVE_NATIVE_COPYSIGN_FLOAT 0
++// RVV has vfrsqrt7 but GROMACS-grade refinement is deferred to M2; use generic.
++#define GMX_SIMD_HAVE_NATIVE_RSQRT_ITER_FLOAT 0
++#define GMX_SIMD_HAVE_NATIVE_RCP_ITER_FLOAT 0
++#define GMX_SIMD_HAVE_NATIVE_LOG_FLOAT 0
++#define GMX_SIMD_HAVE_NATIVE_EXP2_FLOAT 0
++#define GMX_SIMD_HAVE_NATIVE_EXP_FLOAT 0
++#define GMX_SIMD_HAVE_NATIVE_COPYSIGN_DOUBLE 0
++#define GMX_SIMD_HAVE_NATIVE_RSQRT_ITER_DOUBLE 0
++#define GMX_SIMD_HAVE_NATIVE_RCP_ITER_DOUBLE 0
++#define GMX_SIMD_HAVE_NATIVE_LOG_DOUBLE 0
++#define GMX_SIMD_HAVE_NATIVE_EXP2_DOUBLE 0
++#define GMX_SIMD_HAVE_NATIVE_EXP_DOUBLE 0
++// Gather/scatter/transpose (util_*.h) is Phase 3. Strategy decided (kickoff sec.6,
++// probe 3): scalar-load loop -> unit-stride vle32, NOT vluxei32 (measured 1.00x
++// on X60 -- no hardware gather advantage). Disabled until implemented.
++#define GMX_SIMD_HAVE_GATHER_LOADU_BYSIMDINT_TRANSPOSE_FLOAT 0
++#define GMX_SIMD_HAVE_GATHER_LOADU_BYSIMDINT_TRANSPOSE_DOUBLE 0
++#define GMX_SIMD_HAVE_HSIMD_UTIL_FLOAT 0
++#define GMX_SIMD_HAVE_HSIMD_UTIL_DOUBLE 0
++
++#define GMX_SIMD_ALIGNMENT (GMX_SIMD_RISCV_RVV_LENGTH_VALUE / 8)
++
++// Implementation details. GMX_SIMD_RISCV_RVV_LENGTH_VALUE is set by CMake
++// (256 on the X60). At VLEN=256: FLOAT_WIDTH=8, DOUBLE_WIDTH=4.
++#define GMX_SIMD_FLOAT_WIDTH (GMX_SIMD_RISCV_RVV_LENGTH_VALUE / 32)
++#define GMX_SIMD_DOUBLE_WIDTH (GMX_SIMD_RISCV_RVV_LENGTH_VALUE / 64)
++#define GMX_SIMD_FINT32_WIDTH GMX_SIMD_FLOAT_WIDTH
++#define GMX_SIMD_DINT32_WIDTH GMX_SIMD_DOUBLE_WIDTH
++#define GMX_SIMD4_WIDTH 4
++#define GMX_SIMD_RSQRT_BITS 7 // vfrsqrt7 gives 7 bits; refinement in simd_math.h
++#define GMX_SIMD_RCP_BITS 7   // vfrec7 gives 7 bits
++
++#if GMX_SIMD_FLOAT_WIDTH > 4
++#    define GMX_SIMD_HAVE_4NSIMD_UTIL_FLOAT 0
++#endif
++
++#if GMX_SIMD_DOUBLE_WIDTH > 4
++#    define GMX_SIMD_HAVE_4NSIMD_UTIL_DOUBLE 0
++#endif
++
++#define GMX_SIMD4_HAVE_FLOAT 1
++#define GMX_SIMD4_HAVE_DOUBLE 0 // Phase 2
++
++#endif // GMX_SIMD_IMPL_RISCV_RVV_DEFINITIONS_H
+diff --git a/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_general.h b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_general.h
+new file mode 100644
+index 0000000..83439eb
+--- /dev/null
++++ b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_general.h
+@@ -0,0 +1,61 @@
++/*
++ * This file is part of the GROMACS molecular simulation package.
++ *
++ * Copyright 2026- The GROMACS Authors
++ * and the project initiators Erik Lindahl, Berk Hess and David van der Spoel.
++ * Consult the AUTHORS/COPYING files and https://www.gromacs.org for details.
++ *
++ * GROMACS is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public License
++ * as published by the Free Software Foundation; either version 2.1
++ * of the License, or (at your option) any later version.
++ *
++ * GROMACS is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with GROMACS; if not, see
++ * https://www.gnu.org/licenses, or write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
++ *
++ * If you want to redistribute modifications to GROMACS, please
++ * consider that scientific software is very special. Version
++ * control is crucial - bugs must be traceable. We will be happy to
++ * consider code for inclusion in the official distribution, but
++ * derived work must not be called official GROMACS. Details are found
++ * in the README & COPYING files - if they are missing, get the
++ * official version at https://www.gromacs.org.
++ *
++ * To help us fund GROMACS development, we humbly ask that you cite
++ * the research papers on the package. Check out https://www.gromacs.org.
++ */
++
++/*
++ * RISC-V RVV 1.0 support for GROMACS. Translated from impl_arm_sve_general.h.
++ *
++ * NOTE: the SVE backend defined a family of SVE_*_MASK macros
++ * (svptrue_bN, svwhilelt_bN, svptrue_pat_bN) because SVE predicates every op.
++ * RVV does not need them: element counts are carried by an explicit vl
++ * argument on every intrinsic, and conditional predication uses masked-op
++ * variants (_m / _mu suffixes) with vbool*_t masks (kickoff sec.3a). So none of
++ * those SVE mask macros translate -- only simdPrefetch carries over.
++ */
++
++#ifndef GMX_SIMD_IMPL_RISCV_RVV_GENERAL_H
++#define GMX_SIMD_IMPL_RISCV_RVV_GENERAL_H
++
++namespace gmx
++{
++
++static inline void simdPrefetch(void* m)
++{
++#ifdef __GNUC__
++    __builtin_prefetch(m);
++#endif
++}
++
++} // namespace gmx
++
++#endif // GMX_SIMD_IMPL_RISCV_RVV_GENERAL_H
+diff --git a/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_simd4_float.h b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_simd4_float.h
+new file mode 100644
+index 0000000..104c4e3
+--- /dev/null
++++ b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_simd4_float.h
+@@ -0,0 +1,356 @@
++/*
++ * This file is part of the GROMACS molecular simulation package.
++ *
++ * Copyright 2020- The GROMACS Authors
++ * and the project initiators Erik Lindahl, Berk Hess and David van der Spoel.
++ * Consult the AUTHORS/COPYING files and https://www.gromacs.org for details.
++ *
++ * GROMACS is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public License
++ * as published by the Free Software Foundation; either version 2.1
++ * of the License, or (at your option) any later version.
++ *
++ * GROMACS is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with GROMACS; if not, see
++ * https://www.gnu.org/licenses, or write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
++ *
++ * If you want to redistribute modifications to GROMACS, please
++ * consider that scientific software is very special. Version
++ * control is crucial - bugs must be traceable. We will be happy to
++ * consider code for inclusion in the official distribution, but
++ * derived work must not be called official GROMACS. Details are found
++ * in the README & COPYING files - if they are missing, get the
++ * official version at https://www.gromacs.org.
++ *
++ * To help us fund GROMACS development, we humbly ask that you cite
++ * the research papers on the package. Check out https://www.gromacs.org.
++ */
++
++/*
++ * RISC-V RVV 1.0 SIMD4 (fixed 4-lane) float support. Translated from
++ * impl_arm_sve_simd4_float.h.
++ *
++ * SIMD4 is a hardware-independent fixed width of 4 float32 lanes. On the X60
++ * (VLEN=256) the full vfloat32m1_t holds 8 lanes, so every SIMD4 op runs with
++ * vl=4: lanes 0..3 are the SIMD4 value and lanes 4..7 are garbage. This is safe
++ * as long as EVERY consumer of a Simd4Float uses vl=4 (or narrower), which this
++ * header enforces. Masks follow the same sized-vuint32m1_t storage strategy as
++ * the main float header (see impl_riscv_rvv_simd_float.h): vbool32_t is sizeless
++ * and cannot be a class member, so Simd4FBool stores 0x0/0xFFFFFFFF lane values
++ * and converts to an ephemeral vbool32_t only at intrinsic boundaries.
++ */
++
++#ifndef GMX_SIMD_IMPL_RISCV_RVV_SIMD4_FLOAT_H
++#define GMX_SIMD_IMPL_RISCV_RVV_SIMD4_FLOAT_H
++
++#include "config.h"
++
++#include <riscv_vector.h>
++
++#include <cassert>
++#include <cstddef>
++#include <cstdint>
++
++#include "gromacs/math/utilities.h"
++
++namespace gmx
++{
++
++// SIMD4 operates on exactly 4 float32 lanes regardless of hardware VLEN.
++static const size_t gmxRvvVl4 = 4;
++
++// Belongs in util_float (SVE reference); hoisted here so simd.h can define
++// c_simdBestPairAlignment before the util phase lands.
++static const int c_simdBestPairAlignmentFloat = 2;
++
++class Simd4Float
++{
++private:
++    typedef vfloat32m1_t simdInternalType_ __attribute__((riscv_rvv_vector_bits(GMX_SIMD_RISCV_RVV_LENGTH_VALUE)));
++
++public:
++    Simd4Float() {}
++
++    Simd4Float(float f) { this->simdInternal_ = __riscv_vfmv_v_f_f32m1(f, gmxRvvVl4); }
++
++    Simd4Float(vfloat32m1_t simd) : simdInternal_(simd) {}
++
++    simdInternalType_ simdInternal_;
++};
++
++// Same sized-mask storage as the main float header. Lanes are 0x0 (false) or
++// 0xFFFFFFFF (true); a vbool32_t is materialized ephemerally when a mask is
++// consumed. NOTE: never vreinterpret between vbool32_t and vuint32m1_t.
++class Simd4FBool
++{
++private:
++    typedef vuint32m1_t simdBoolStore_ __attribute__((riscv_rvv_vector_bits(GMX_SIMD_RISCV_RVV_LENGTH_VALUE)));
++
++public:
++    Simd4FBool() {}
++
++    Simd4FBool(bool b)
++    {
++        this->simdInternal_ = __riscv_vmv_v_x_u32m1(b ? 0xFFFFFFFFu : 0u, gmxRvvVl4);
++    }
++
++    Simd4FBool(vbool32_t m)
++    {
++        vuint32m1_t zero    = __riscv_vmv_v_x_u32m1(0u, gmxRvvVl4);
++        this->simdInternal_ = __riscv_vmerge_vxm_u32m1(zero, 0xFFFFFFFFu, m, gmxRvvVl4);
++    }
++
++    Simd4FBool(simdBoolStore_ store) : simdInternal_(store) {}
++
++    simdBoolStore_ simdInternal_;
++};
++
++// Simd4FBool sized-store -> ephemeral vbool32_t (nonzero lane => true).
++static inline vbool32_t gmx_simdcall simd4BoolToMask(Simd4FBool a)
++{
++    return __riscv_vmsne_vx_u32m1_b32(a.simdInternal_, 0u, gmxRvvVl4);
++}
++
++static inline Simd4Float gmx_simdcall load4(const float* m)
++{
++    assert(std::size_t(m) % (GMX_SIMD4_WIDTH * sizeof(float)) == 0);
++    return { __riscv_vle32_v_f32m1(m, gmxRvvVl4) };
++}
++
++static inline void gmx_simdcall store4(float* m, Simd4Float a)
++{
++    assert(std::size_t(m) % (GMX_SIMD4_WIDTH * sizeof(float)) == 0);
++    __riscv_vse32_v_f32m1(m, a.simdInternal_, gmxRvvVl4);
++}
++
++static inline Simd4Float gmx_simdcall load4U(const float* m)
++{
++    return { __riscv_vle32_v_f32m1(m, gmxRvvVl4) };
++}
++
++static inline void gmx_simdcall store4U(float* m, Simd4Float a)
++{
++    __riscv_vse32_v_f32m1(m, a.simdInternal_, gmxRvvVl4);
++}
++
++static inline Simd4Float gmx_simdcall simd4SetZeroF()
++{
++    return { __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVl4) };
++}
++
++// Bitwise logic on floats goes through the integer reinterpretation intrinsics
++// (bit-preserving; distinct from the forbidden vbool<->vuint reinterpret).
++static inline Simd4Float gmx_simdcall operator&(Simd4Float a, Simd4Float b)
++{
++    vuint32m1_t ia = __riscv_vreinterpret_v_f32m1_u32m1(a.simdInternal_);
++    vuint32m1_t ib = __riscv_vreinterpret_v_f32m1_u32m1(b.simdInternal_);
++    return { __riscv_vreinterpret_v_u32m1_f32m1(__riscv_vand_vv_u32m1(ia, ib, gmxRvvVl4)) };
++}
++
++static inline Simd4Float gmx_simdcall andNot(Simd4Float a, Simd4Float b)
++{
++    // andNot(a, b) == (~a) & b
++    vuint32m1_t ia  = __riscv_vreinterpret_v_f32m1_u32m1(a.simdInternal_);
++    vuint32m1_t ib  = __riscv_vreinterpret_v_f32m1_u32m1(b.simdInternal_);
++    vuint32m1_t nia = __riscv_vnot_v_u32m1(ia, gmxRvvVl4);
++    return { __riscv_vreinterpret_v_u32m1_f32m1(__riscv_vand_vv_u32m1(nia, ib, gmxRvvVl4)) };
++}
++
++static inline Simd4Float gmx_simdcall operator|(Simd4Float a, Simd4Float b)
++{
++    vuint32m1_t ia = __riscv_vreinterpret_v_f32m1_u32m1(a.simdInternal_);
++    vuint32m1_t ib = __riscv_vreinterpret_v_f32m1_u32m1(b.simdInternal_);
++    return { __riscv_vreinterpret_v_u32m1_f32m1(__riscv_vor_vv_u32m1(ia, ib, gmxRvvVl4)) };
++}
++
++static inline Simd4Float gmx_simdcall operator^(Simd4Float a, Simd4Float b)
++{
++    vuint32m1_t ia = __riscv_vreinterpret_v_f32m1_u32m1(a.simdInternal_);
++    vuint32m1_t ib = __riscv_vreinterpret_v_f32m1_u32m1(b.simdInternal_);
++    return { __riscv_vreinterpret_v_u32m1_f32m1(__riscv_vxor_vv_u32m1(ia, ib, gmxRvvVl4)) };
++}
++
++static inline Simd4Float gmx_simdcall operator+(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vfadd_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall operator-(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vfsub_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall operator-(Simd4Float a)
++{
++    return { __riscv_vfneg_v_f32m1(a.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall operator*(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vfmul_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++// GROMACS fma(a,b,c) = a*b + c. RVV vfmacc(acc,x,y) = acc + x*y => acc=c, x=a, y=b.
++static inline Simd4Float gmx_simdcall fma(Simd4Float a, Simd4Float b, Simd4Float c)
++{
++    return { __riscv_vfmacc_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++// fms(a,b,c) = a*b - c. vfmsac(acc,x,y) = x*y - acc => acc=c, x=a, y=b.
++static inline Simd4Float gmx_simdcall fms(Simd4Float a, Simd4Float b, Simd4Float c)
++{
++    return { __riscv_vfmsac_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++// fnma(a,b,c) = -a*b + c = c - a*b. vfnmsac(acc,x,y) = acc - x*y => acc=c, x=a, y=b.
++static inline Simd4Float gmx_simdcall fnma(Simd4Float a, Simd4Float b, Simd4Float c)
++{
++    return { __riscv_vfnmsac_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++// fnms(a,b,c) = -a*b - c. vfnmacc(acc,x,y) = -(acc + x*y) => acc=c, x=a, y=b.
++static inline Simd4Float gmx_simdcall fnms(Simd4Float a, Simd4Float b, Simd4Float c)
++{
++    return { __riscv_vfnmacc_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall rsqrt(Simd4Float x)
++{
++    // 7-bit seed only (matches main float header; refined by Newton-Raphson in the caller).
++    return { __riscv_vfrsqrt7_v_f32m1(x.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall abs(Simd4Float x)
++{
++    return { __riscv_vfabs_v_f32m1(x.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall max(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vfmax_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall min(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vfmin_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall round(Simd4Float x)
++{
++    // Round to nearest even: convert to int (RNE is the default rounding mode) and back.
++    vint32m1_t i = __riscv_vfcvt_x_f_v_i32m1(x.simdInternal_, gmxRvvVl4);
++    return { __riscv_vfcvt_f_x_v_f32m1(i, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall trunc(Simd4Float x)
++{
++    // Round toward zero: use the rtz convert variant.
++    vint32m1_t i = __riscv_vfcvt_rtz_x_f_v_i32m1(x.simdInternal_, gmxRvvVl4);
++    return { __riscv_vfcvt_f_x_v_f32m1(i, gmxRvvVl4) };
++}
++
++static inline float gmx_simdcall reduce(Simd4Float a)
++{
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVl4);
++    vfloat32m1_t r    = __riscv_vfredusum_vs_f32m1_f32m1(a.simdInternal_, zero, gmxRvvVl4);
++    return __riscv_vfmv_f_s_f32m1_f32(r);
++}
++
++static inline Simd4FBool gmx_simdcall operator==(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vmfeq_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4FBool gmx_simdcall operator!=(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vmfne_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4FBool gmx_simdcall operator<(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vmflt_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4FBool gmx_simdcall operator<=(Simd4Float a, Simd4Float b)
++{
++    return { __riscv_vmfle_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4FBool gmx_simdcall operator&&(Simd4FBool a, Simd4FBool b)
++{
++    return { __riscv_vand_vv_u32m1(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline Simd4FBool gmx_simdcall operator||(Simd4FBool a, Simd4FBool b)
++{
++    return { __riscv_vor_vv_u32m1(a.simdInternal_, b.simdInternal_, gmxRvvVl4) };
++}
++
++static inline bool gmx_simdcall anyTrue(Simd4FBool a)
++{
++    vbool32_t mb = simd4BoolToMask(a);
++    return __riscv_vcpop_m_b32(mb, gmxRvvVl4) != 0;
++}
++
++static inline Simd4Float gmx_simdcall selectByMask(Simd4Float a, Simd4FBool m)
++{
++    vbool32_t    mb   = simd4BoolToMask(m);
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVl4);
++    // mask true => keep a, mask false => 0.
++    return { __riscv_vmerge_vvm_f32m1(zero, a.simdInternal_, mb, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall selectByNotMask(Simd4Float a, Simd4FBool m)
++{
++    vbool32_t    mb   = simd4BoolToMask(m);
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVl4);
++    // mask true => 0, mask false => keep a.
++    return { __riscv_vmerge_vvm_f32m1(a.simdInternal_, zero, mb, gmxRvvVl4) };
++}
++
++static inline Simd4Float gmx_simdcall blend(Simd4Float a, Simd4Float b, Simd4FBool sel)
++{
++    vbool32_t mb = simd4BoolToMask(sel);
++    // vmerge_vvm(a, b, mask) => mask ? b : a.
++    return { __riscv_vmerge_vvm_f32m1(a.simdInternal_, b.simdInternal_, mb, gmxRvvVl4) };
++}
++
++static inline float gmx_simdcall dotProduct(Simd4Float a, Simd4Float b)
++{
++    // 3-component dot product: multiply and reduce only lanes 0..2 (vl=3), so
++    // lane 3 never participates (matches the NEON reference which zeroes it).
++    const size_t vl3  = 3;
++    vfloat32m1_t prod = __riscv_vfmul_vv_f32m1(a.simdInternal_, b.simdInternal_, vl3);
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, vl3);
++    vfloat32m1_t r    = __riscv_vfredusum_vs_f32m1_f32m1(prod, zero, vl3);
++    return __riscv_vfmv_f_s_f32m1_f32(r);
++}
++
++static inline void gmx_simdcall transpose(Simd4Float* v0, Simd4Float* v1, Simd4Float* v2, Simd4Float* v3)
++{
++    // RVV has no NEON-style vtrn/vuzp. Store the four rows into row-major
++    // scratch, then reload each column with a strided load (stride 4 floats).
++    alignas(GMX_SIMD_ALIGNMENT) float tmp[16];
++
++    __riscv_vse32_v_f32m1(tmp + 0, v0->simdInternal_, gmxRvvVl4);
++    __riscv_vse32_v_f32m1(tmp + 4, v1->simdInternal_, gmxRvvVl4);
++    __riscv_vse32_v_f32m1(tmp + 8, v2->simdInternal_, gmxRvvVl4);
++    __riscv_vse32_v_f32m1(tmp + 12, v3->simdInternal_, gmxRvvVl4);
++
++    const ptrdiff_t stride = 4 * static_cast<ptrdiff_t>(sizeof(float));
++
++    v0->simdInternal_ = __riscv_vlse32_v_f32m1(tmp + 0, stride, gmxRvvVl4);
++    v1->simdInternal_ = __riscv_vlse32_v_f32m1(tmp + 1, stride, gmxRvvVl4);
++    v2->simdInternal_ = __riscv_vlse32_v_f32m1(tmp + 2, stride, gmxRvvVl4);
++    v3->simdInternal_ = __riscv_vlse32_v_f32m1(tmp + 3, stride, gmxRvvVl4);
++}
++
++} // namespace gmx
++
++#endif // GMX_SIMD_IMPL_RISCV_RVV_SIMD4_FLOAT_H
+diff --git a/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_simd_float.h b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_simd_float.h
+new file mode 100644
+index 0000000..2e8e4c5
+--- /dev/null
++++ b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_simd_float.h
+@@ -0,0 +1,620 @@
++/*
++ * This file is part of the GROMACS molecular simulation package.
++ *
++ * Copyright 2026- The GROMACS Authors
++ * and the project initiators Erik Lindahl, Berk Hess and David van der Spoel.
++ * Consult the AUTHORS/COPYING files and https://www.gromacs.org for details.
++ *
++ * GROMACS is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public License
++ * as published by the Free Software Foundation; either version 2.1
++ * of the License, or (at your option) any later version.
++ *
++ * GROMACS is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with GROMACS; if not, see
++ * https://www.gnu.org/licenses, or write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
++ *
++ * If you want to redistribute modifications to GROMACS, please
++ * consider that scientific software is very special. Version
++ * control is crucial - bugs must be traceable. We will be happy to
++ * consider code for inclusion in the official distribution, but
++ * derived work must not be called official GROMACS. Details are found
++ * in the README & COPYING files - if they are missing, get the
++ * official version at https://www.gromacs.org.
++ *
++ * To help us fund GROMACS development, we humbly ask that you cite
++ * the research papers on the package. Check out https://www.gromacs.org.
++ */
++
++/*
++ * RISC-V RVV 1.0 support for GROMACS. Translated from impl_arm_sve_simd_float.h.
++ *
++ * Target: SpaceMiT X60, VLEN=256 (zvl256b) => 8 float32 lanes at LMUL=1.
++ * Milestone 1 scope: float32 load/store/arith/logic/compare/select/convert.
++ * rsqrt/rcp accuracy refinement, gather/scatter (util), double, and simd4 are
++ * out of M1 (kickoff sec.5); rsqrt/rcp here give the 7-bit seed only.
++ *
++ * SVE->RVV translation notes (kickoff sec.3):
++ *  (a) SVE predicates every op with an all-true svptrue_b32(); RVV carries the
++ *      element count in an explicit vl and uses plain (unmasked) ops for the
++ *      all-active case. We drop the always-true predicate and pass vl=GMX_...
++ *      _FLOAT_WIDTH. Only genuinely conditional SVE predication maps to RVV
++ *      masked variants.
++ *  (b) Comparisons produce an ephemeral vbool32_t (SEW/LMUL ratio 32 => 1 mask
++ *      bit per f32 lane, 8 active bits at VLEN=256), but SimdFBool/SimdFIBool
++ *      store the mask as a sized vuint32m1_t (see the mask-storage note below),
++ *      since GCC 14.3 cannot make vbool32_t a class member. Off-by-one on mask
++ *      width is a silent-corruptness bug; the simd.cpp mask tests are the guardrail.
++ *
++ * Fixed-length types via riscv_rvv_vector_bits(256) require -mrvv-vector-bits=zvl
++ * (confirmed on hardware: sizeof==32, kickoff sec.6 probe 1).
++ */
++
++#ifndef GMX_SIMD_IMPL_RISCV_RVV_SIMD_FLOAT_H
++#define GMX_SIMD_IMPL_RISCV_RVV_SIMD_FLOAT_H
++
++#include "config.h"
++
++#include <riscv_vector.h>
++
++#include <cassert>
++#include <cstddef>
++#include <cstdint>
++
++#include "gromacs/math/utilities.h"
++
++namespace gmx
++{
++
++// Fixed vector length at VLEN=256. GMX_SIMD_FLOAT_WIDTH == 8. Using a named
++// constant (rather than a runtime vsetvl) keeps every intrinsic's vl argument a
++// compile-time constant, which the fixed-vector-bits ABI requires.
++static const size_t gmxRvvVlF = GMX_SIMD_FLOAT_WIDTH;
++
++class SimdFloat
++{
++private:
++    typedef vfloat32m1_t simdInternalType_ __attribute__((riscv_rvv_vector_bits(GMX_SIMD_RISCV_RVV_LENGTH_VALUE)));
++
++public:
++    SimdFloat() {}
++
++    SimdFloat(const float f) { this->simdInternal_ = __riscv_vfmv_v_f_f32m1(f, gmxRvvVlF); }
++
++    SimdFloat(vfloat32m1_t simd) : simdInternal_(simd) {}
++
++    simdInternalType_ simdInternal_;
++};
++
++class SimdFInt32
++{
++private:
++    typedef vint32m1_t simdInternalType_ __attribute__((riscv_rvv_vector_bits(GMX_SIMD_RISCV_RVV_LENGTH_VALUE)));
++
++public:
++    SimdFInt32() {}
++
++    SimdFInt32(const int32_t i) { this->simdInternal_ = __riscv_vmv_v_x_i32m1(i, gmxRvvVlF); }
++
++    SimdFInt32(vint32m1_t simd) : simdInternal_(simd) {}
++
++    simdInternalType_ simdInternal_;
++};
++
++// Mask storage strategy (Oracle option A): vbool32_t is a *sizeless* type and
++// GCC 14.3 does NOT apply riscv_rvv_vector_bits() to it, so it cannot be a class
++// member. We instead store a SIZED lane mask as vuint32m1_t with each lane set to
++// 0x0 (false) or 0xFFFFFFFF (true). vbool32_t masks are treated as ephemeral,
++// living only at intrinsic call boundaries. Helpers below convert between the
++// two representations. NOTE: never vreinterpret between vbool32_t and vuint32m1_t
++// (a vbool32_t is a packed predicate bitmap, NOT a lane vector).
++typedef vuint32m1_t simdBoolStore_ __attribute__((riscv_rvv_vector_bits(GMX_SIMD_RISCV_RVV_LENGTH_VALUE)));
++
++// vbool32_t (ephemeral) -> sized lane mask (0x0 / 0xFFFFFFFF per lane).
++static inline simdBoolStore_ gmx_simdcall rvvMaskToStore(vbool32_t m)
++{
++    vuint32m1_t zero = __riscv_vmv_v_x_u32m1(0u, gmxRvvVlF);
++    return __riscv_vmerge_vxm_u32m1(zero, 0xFFFFFFFFu, m, gmxRvvVlF);
++}
++
++// sized lane mask -> vbool32_t (ephemeral): true where lane != 0.
++static inline vbool32_t gmx_simdcall rvvStoreToMask(simdBoolStore_ s)
++{
++    return __riscv_vmsne_vx_u32m1_b32(s, 0u, gmxRvvVlF);
++}
++
++class SimdFBool
++{
++public:
++    SimdFBool() {}
++
++    SimdFBool(const bool b)
++    {
++        this->simdInternal_ = __riscv_vmv_v_x_u32m1(b ? 0xFFFFFFFFu : 0u, gmxRvvVlF);
++    }
++
++    SimdFBool(vbool32_t simd) : simdInternal_(rvvMaskToStore(simd)) {}
++
++    SimdFBool(simdBoolStore_ store) : simdInternal_(store) {}
++
++    simdBoolStore_ simdInternal_;
++};
++
++class SimdFIBool
++{
++public:
++    SimdFIBool() {}
++
++    SimdFIBool(const bool b)
++    {
++        this->simdInternal_ = __riscv_vmv_v_x_u32m1(b ? 0xFFFFFFFFu : 0u, gmxRvvVlF);
++    }
++
++    SimdFIBool(vbool32_t simd) : simdInternal_(rvvMaskToStore(simd)) {}
++
++    SimdFIBool(simdBoolStore_ store) : simdInternal_(store) {}
++
++    simdBoolStore_ simdInternal_;
++};
++
++static inline SimdFloat gmx_simdcall simdLoad(const float* m, SimdFloatTag = {})
++{
++    assert(0 == (std::size_t(m) % GMX_SIMD_ALIGNMENT));
++    return { __riscv_vle32_v_f32m1(m, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall simdLoadFloat(const float* m)
++{
++    assert(0 == (std::size_t(m) % GMX_SIMD_ALIGNMENT));
++    return { __riscv_vle32_v_f32m1(m, gmxRvvVlF) };
++}
++
++static inline void gmx_simdcall store(float* m, SimdFloat a)
++{
++    assert(0 == (std::size_t(m) % GMX_SIMD_ALIGNMENT));
++    __riscv_vse32_v_f32m1(m, a.simdInternal_, gmxRvvVlF);
++}
++
++// X60 has no unaligned-access penalty, so loadU/storeU are the same as the
++// aligned forms (kickoff sec.2). No alignment assert.
++static inline SimdFloat gmx_simdcall simdLoadU(const float* m, SimdFloatTag = {})
++{
++    return { __riscv_vle32_v_f32m1(m, gmxRvvVlF) };
++}
++
++static inline void gmx_simdcall storeU(float* m, SimdFloat a)
++{
++    __riscv_vse32_v_f32m1(m, a.simdInternal_, gmxRvvVlF);
++}
++
++static inline SimdFloat gmx_simdcall setZeroF()
++{
++    return { __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall simdLoad(const std::int32_t* m, SimdFInt32Tag)
++{
++    assert(0 == (std::size_t(m) % GMX_SIMD_ALIGNMENT));
++    return { __riscv_vle32_v_i32m1(m, gmxRvvVlF) };
++}
++
++static inline void gmx_simdcall store(std::int32_t* m, SimdFInt32 a)
++{
++    assert(0 == (std::size_t(m) % GMX_SIMD_ALIGNMENT));
++    __riscv_vse32_v_i32m1(m, a.simdInternal_, gmxRvvVlF);
++}
++
++static inline SimdFInt32 gmx_simdcall simdLoadU(const std::int32_t* m, SimdFInt32Tag)
++{
++    return { __riscv_vle32_v_i32m1(m, gmxRvvVlF) };
++}
++
++static inline void gmx_simdcall storeU(std::int32_t* m, SimdFInt32 a)
++{
++    __riscv_vse32_v_i32m1(m, a.simdInternal_, gmxRvvVlF);
++}
++
++static inline SimdFInt32 gmx_simdcall setZeroFI()
++{
++    return { __riscv_vmv_v_x_i32m1(0, gmxRvvVlF) };
++}
++
++// extract lane <index>: slide the wanted lane down to position 0, then read it.
++template<int index>
++gmx_simdcall static inline std::int32_t extract(SimdFInt32 a)
++{
++    vint32m1_t d = __riscv_vslidedown_vx_i32m1(a.simdInternal_, index, gmxRvvVlF);
++    return __riscv_vmv_x_s_i32m1_i32(d);
++}
++
++template<int index>
++gmx_simdcall static inline float extract(SimdFloat a)
++{
++    vfloat32m1_t d = __riscv_vslidedown_vx_f32m1(a.simdInternal_, index, gmxRvvVlF);
++    return __riscv_vfmv_f_s_f32m1_f32(d);
++}
++
++// ---- Bitwise ops on floats: reinterpret to int, operate, reinterpret back ----
++static inline SimdFloat gmx_simdcall operator&(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vreinterpret_v_i32m1_f32m1(__riscv_vand_vv_i32m1(
++            __riscv_vreinterpret_v_f32m1_i32m1(a.simdInternal_),
++            __riscv_vreinterpret_v_f32m1_i32m1(b.simdInternal_),
++            gmxRvvVlF)) };
++}
++
++// andNot(a,b) = (~a) & b. No Zvbb vandn on base X60 -> vnot then vand (verified
++// pattern; vandn is #ifdef __riscv_zvbb-gated in the wild).
++static inline SimdFloat gmx_simdcall andNot(SimdFloat a, SimdFloat b)
++{
++    vint32m1_t ai = __riscv_vreinterpret_v_f32m1_i32m1(a.simdInternal_);
++    vint32m1_t bi = __riscv_vreinterpret_v_f32m1_i32m1(b.simdInternal_);
++    return { __riscv_vreinterpret_v_i32m1_f32m1(
++            __riscv_vand_vv_i32m1(__riscv_vnot_v_i32m1(ai, gmxRvvVlF), bi, gmxRvvVlF)) };
++}
++
++static inline SimdFloat gmx_simdcall operator|(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vreinterpret_v_i32m1_f32m1(__riscv_vor_vv_i32m1(
++            __riscv_vreinterpret_v_f32m1_i32m1(a.simdInternal_),
++            __riscv_vreinterpret_v_f32m1_i32m1(b.simdInternal_),
++            gmxRvvVlF)) };
++}
++
++static inline SimdFloat gmx_simdcall operator^(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vreinterpret_v_i32m1_f32m1(__riscv_vxor_vv_i32m1(
++            __riscv_vreinterpret_v_f32m1_i32m1(a.simdInternal_),
++            __riscv_vreinterpret_v_f32m1_i32m1(b.simdInternal_),
++            gmxRvvVlF)) };
++}
++
++// ---- Arithmetic ----
++static inline SimdFloat gmx_simdcall operator+(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vfadd_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall operator-(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vfsub_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall operator-(SimdFloat a)
++{
++    return { __riscv_vfneg_v_f32m1(a.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall operator*(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vfmul_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++// GROMACS FMA semantics vs RVV vf*acc (accumulator is the FIRST arg, dest=acc):
++//   fma (a,b,c) =  a*b + c  -> vfmacc (acc=c, a, b):  c + a*b
++//   fms (a,b,c) =  a*b - c  -> vfmsac (acc=c, a, b):  a*b - c
++//   fnma(a,b,c) = -a*b + c  -> vfnmsac(acc=c, a, b):  c - a*b
++//   fnms(a,b,c) = -a*b - c  -> vfnmacc(acc=c, a, b): -(a*b) - c
++static inline SimdFloat gmx_simdcall fma(SimdFloat a, SimdFloat b, SimdFloat c)
++{
++    return { __riscv_vfmacc_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall fms(SimdFloat a, SimdFloat b, SimdFloat c)
++{
++    return { __riscv_vfmsac_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall fnma(SimdFloat a, SimdFloat b, SimdFloat c)
++{
++    return { __riscv_vfnmsac_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall fnms(SimdFloat a, SimdFloat b, SimdFloat c)
++{
++    return { __riscv_vfnmacc_vv_f32m1(c.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++// 7-bit reciprocal-sqrt / reciprocal seed. Newton refinement to GROMACS ULP is
++// done generically in simd_math.h (NATIVE_*_ITER flags are 0 in definitions.h).
++static inline SimdFloat gmx_simdcall rsqrt(SimdFloat x)
++{
++    return { __riscv_vfrsqrt7_v_f32m1(x.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall rcp(SimdFloat x)
++{
++    return { __riscv_vfrec7_v_f32m1(x.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall maskzRsqrt(SimdFloat x, SimdFBool m)
++{
++    vbool32_t    mb   = rvvStoreToMask(m.simdInternal_);
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF);
++    return { __riscv_vfrsqrt7_v_f32m1_mu(mb, zero, x.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall maskzRcp(SimdFloat x, SimdFBool m)
++{
++    vbool32_t    mb   = rvvStoreToMask(m.simdInternal_);
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF);
++    return { __riscv_vfrec7_v_f32m1_mu(mb, zero, x.simdInternal_, gmxRvvVlF) };
++}
++
++// ---- Masked arithmetic ----
++static inline SimdFloat gmx_simdcall maskAdd(SimdFloat a, SimdFloat b, SimdFBool m)
++{
++    vbool32_t mb = rvvStoreToMask(m.simdInternal_);
++    return { __riscv_vfadd_vv_f32m1_mu(mb, a.simdInternal_, a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall maskzMul(SimdFloat a, SimdFloat b, SimdFBool m)
++{
++    vbool32_t    mb   = rvvStoreToMask(m.simdInternal_);
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF);
++    return { __riscv_vfmul_vv_f32m1_mu(mb, zero, a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall maskzFma(SimdFloat a, SimdFloat b, SimdFloat c, SimdFBool m)
++{
++    vbool32_t    mb   = rvvStoreToMask(m.simdInternal_);
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF);
++    vfloat32m1_t acc  = __riscv_vmerge_vvm_f32m1(zero, c.simdInternal_, mb, gmxRvvVlF);
++    return { __riscv_vfmacc_vv_f32m1_mu(mb, acc, a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++// ---- abs / min / max ----
++static inline SimdFloat gmx_simdcall abs(SimdFloat x)
++{
++    return { __riscv_vfabs_v_f32m1(x.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall max(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vfmax_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall min(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vfmin_vv_f32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++template<MathOptimization opt = MathOptimization::Safe>
++static inline SimdFloat gmx_simdcall frexp(SimdFloat value, SimdFInt32* exponent)
++{
++    const vint32m1_t vi = __riscv_vreinterpret_v_f32m1_i32m1(value.simdInternal_);
++    // IEEE754 binary32: extract biased exponent (bits 30:23), rebias to frexp
++    // convention (mantissa in [0.5,1)) by subtracting 126; keep sign+mantissa
++    // and force exponent field to 0x3F (0.5) via the mantissa mask + 0.5 bits.
++    vint32m1_t iExponent = __riscv_vand_vx_i32m1(vi, 0x7F800000, gmxRvvVlF);
++    iExponent            = __riscv_vreinterpret_v_u32m1_i32m1(__riscv_vsrl_vx_u32m1(
++            __riscv_vreinterpret_v_i32m1_u32m1(iExponent), 23u, gmxRvvVlF));
++    iExponent            = __riscv_vsub_vx_i32m1(iExponent, 126, gmxRvvVlF);
++
++    const vint32m1_t half = __riscv_vreinterpret_v_f32m1_i32m1(__riscv_vfmv_v_f_f32m1(0.5f, gmxRvvVlF));
++    vfloat32m1_t     result = __riscv_vreinterpret_v_i32m1_f32m1(
++            __riscv_vor_vv_i32m1(__riscv_vand_vx_i32m1(vi, 0x807FFFFF, gmxRvvVlF), half, gmxRvvVlF));
++
++    if (opt == MathOptimization::Safe)
++    {
++        vbool32_t valueIsZero = __riscv_vmfeq_vf_f32m1_b32(value.simdInternal_, 0.0f, gmxRvvVlF);
++        iExponent = __riscv_vmerge_vxm_i32m1(iExponent, 0, valueIsZero, gmxRvvVlF);
++        result    = __riscv_vmerge_vvm_f32m1(result, value.simdInternal_, valueIsZero, gmxRvvVlF);
++    }
++
++    exponent->simdInternal_ = iExponent;
++    return { result };
++}
++
++template<MathOptimization opt = MathOptimization::Safe>
++static inline SimdFloat gmx_simdcall ldexp(SimdFloat value, SimdFInt32 exponent)
++{
++    vint32m1_t iExponent = __riscv_vadd_vx_i32m1(exponent.simdInternal_, 127, gmxRvvVlF);
++
++    if (opt == MathOptimization::Safe)
++    {
++        iExponent = __riscv_vmax_vx_i32m1(iExponent, 0, gmxRvvVlF);
++    }
++
++    iExponent = __riscv_vsll_vx_i32m1(iExponent, 23u, gmxRvvVlF);
++
++    return { __riscv_vfmul_vv_f32m1(
++            value.simdInternal_, __riscv_vreinterpret_v_i32m1_f32m1(iExponent), gmxRvvVlF) };
++}
++
++// ---- reduce: horizontal sum via ordered reduction, extract lane 0 ----
++static inline float gmx_simdcall reduce(SimdFloat a)
++{
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF);
++    vfloat32m1_t sum  = __riscv_vfredosum_vs_f32m1_f32m1(a.simdInternal_, zero, gmxRvvVlF);
++    return __riscv_vfmv_f_s_f32m1_f32(sum);
++}
++
++// ---- float comparisons -> SimdFBool ----
++static inline SimdFBool gmx_simdcall operator==(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vmfeq_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFBool gmx_simdcall operator!=(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vmfne_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFBool gmx_simdcall operator<(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vmflt_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFBool gmx_simdcall operator<=(SimdFloat a, SimdFloat b)
++{
++    return { __riscv_vmfle_vv_f32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFBool gmx_simdcall testBits(SimdFloat a)
++{
++    vint32m1_t ai = __riscv_vreinterpret_v_f32m1_i32m1(a.simdInternal_);
++    return { __riscv_vmsne_vx_i32m1_b32(ai, 0, gmxRvvVlF) };
++}
++
++// ---- boolean logic ----
++static inline SimdFBool gmx_simdcall operator&&(SimdFBool a, SimdFBool b)
++{
++    return { __riscv_vand_vv_u32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFBool gmx_simdcall operator||(SimdFBool a, SimdFBool b)
++{
++    return { __riscv_vor_vv_u32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline bool gmx_simdcall anyTrue(SimdFBool a)
++{
++    return __riscv_vcpop_m_b32(rvvStoreToMask(a.simdInternal_), gmxRvvVlF) != 0;
++}
++
++// ---- select / blend ----
++static inline SimdFloat gmx_simdcall selectByMask(SimdFloat a, SimdFBool m)
++{
++    return { __riscv_vmerge_vvm_f32m1(__riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF), a.simdInternal_, rvvStoreToMask(m.simdInternal_), gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall selectByNotMask(SimdFloat a, SimdFBool m)
++{
++    return { __riscv_vmerge_vvm_f32m1(a.simdInternal_, __riscv_vfmv_v_f_f32m1(0.0f, gmxRvvVlF), rvvStoreToMask(m.simdInternal_), gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall blend(SimdFloat a, SimdFloat b, SimdFBool sel)
++{
++    return { __riscv_vmerge_vvm_f32m1(a.simdInternal_, b.simdInternal_, rvvStoreToMask(sel.simdInternal_), gmxRvvVlF) };
++}
++
++// ---- integer (FInt32) bitwise/arith ----
++static inline SimdFInt32 gmx_simdcall operator&(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vand_vv_i32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall andNot(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vand_vv_i32m1(__riscv_vnot_v_i32m1(a.simdInternal_, gmxRvvVlF), b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall operator|(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vor_vv_i32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall operator^(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vxor_vv_i32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall operator+(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vadd_vv_i32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall operator-(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vsub_vv_i32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall operator*(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vmul_vv_i32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFIBool gmx_simdcall operator==(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vmseq_vv_i32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFIBool gmx_simdcall testBits(SimdFInt32 a)
++{
++    return { __riscv_vmsne_vx_i32m1_b32(a.simdInternal_, 0, gmxRvvVlF) };
++}
++
++static inline SimdFIBool gmx_simdcall operator<(SimdFInt32 a, SimdFInt32 b)
++{
++    return { __riscv_vmslt_vv_i32m1_b32(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFIBool gmx_simdcall operator&&(SimdFIBool a, SimdFIBool b)
++{
++    return { __riscv_vand_vv_u32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFIBool gmx_simdcall operator||(SimdFIBool a, SimdFIBool b)
++{
++    return { __riscv_vor_vv_u32m1(a.simdInternal_, b.simdInternal_, gmxRvvVlF) };
++}
++
++static inline bool gmx_simdcall anyTrue(SimdFIBool a)
++{
++    return __riscv_vcpop_m_b32(rvvStoreToMask(a.simdInternal_), gmxRvvVlF) != 0;
++}
++
++static inline SimdFInt32 gmx_simdcall selectByMask(SimdFInt32 a, SimdFIBool m)
++{
++    return { __riscv_vmerge_vvm_i32m1(__riscv_vmv_v_x_i32m1(0, gmxRvvVlF), a.simdInternal_, rvvStoreToMask(m.simdInternal_), gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall selectByNotMask(SimdFInt32 a, SimdFIBool m)
++{
++    return { __riscv_vmerge_vvm_i32m1(a.simdInternal_, __riscv_vmv_v_x_i32m1(0, gmxRvvVlF), rvvStoreToMask(m.simdInternal_), gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall blend(SimdFInt32 a, SimdFInt32 b, SimdFIBool sel)
++{
++    return { __riscv_vmerge_vvm_i32m1(a.simdInternal_, b.simdInternal_, rvvStoreToMask(sel.simdInternal_), gmxRvvVlF) };
++}
++
++// ---- conversions ----
++// FRM pinned explicitly (not ambient frm): SVE reference uses svrinta =
++// round-to-nearest ties-AWAY, so RMM here; a naive RNE mismatches on .5 ties.
++static inline SimdFInt32 gmx_simdcall cvtR2I(SimdFloat a)
++{
++    return { __riscv_vfcvt_x_f_v_i32m1_rm(a.simdInternal_, __RISCV_FRM_RMM, gmxRvvVlF) };
++}
++
++static inline SimdFInt32 gmx_simdcall cvttR2I(SimdFloat a)
++{
++    return { __riscv_vfcvt_x_f_v_i32m1_rm(a.simdInternal_, __RISCV_FRM_RTZ, gmxRvvVlF) };
++}
++
++static inline SimdFloat gmx_simdcall cvtI2R(SimdFInt32 a)
++{
++    return { __riscv_vfcvt_f_x_v_f32m1(a.simdInternal_, gmxRvvVlF) };
++}
++
++static inline SimdFIBool gmx_simdcall cvtB2IB(SimdFBool a)
++{
++    return { a.simdInternal_ };
++}
++
++static inline SimdFBool gmx_simdcall cvtIB2B(SimdFIBool a)
++{
++    return { a.simdInternal_ };
++}
++
++// round to nearest integer (as float), trunc toward zero (as float).
++static inline SimdFloat gmx_simdcall round(SimdFloat x)
++{
++    return cvtI2R(cvtR2I(x));
++}
++
++static inline SimdFloat gmx_simdcall trunc(SimdFloat x)
++{
++    return cvtI2R(cvttR2I(x));
++}
++
++} // namespace gmx
++
++#endif // GMX_SIMD_IMPL_RISCV_RVV_SIMD_FLOAT_H
+diff --git a/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_util_float.h b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_util_float.h
+new file mode 100644
+index 0000000..9ac4a7e
+--- /dev/null
++++ b/src/gromacs/simd/include/gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_util_float.h
+@@ -0,0 +1,276 @@
++/*
++ * This file is part of the GROMACS molecular simulation package.
++ *
++ * Copyright 2020- The GROMACS Authors
++ * and the project initiators Erik Lindahl, Berk Hess and David van der Spoel.
++ * Consult the AUTHORS/COPYING files and https://www.gromacs.org for details.
++ *
++ * GROMACS is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public License
++ * as published by the Free Software Foundation; either version 2.1
++ * of the License, or (at your option) any later version.
++ *
++ * GROMACS is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with GROMACS; if not, see
++ * https://www.gnu.org/licenses, or write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
++ *
++ * If you want to redistribute modifications to GROMACS, please
++ * consider that scientific software is very special. Version
++ * control is crucial - bugs must be traceable. We will be happy to
++ * consider code for inclusion in the official distribution, but
++ * derived work must not be called official GROMACS. Details are found
++ * in the README & COPYING files - if they are missing, get the
++ * official version at https://www.gromacs.org.
++ *
++ * To help us fund GROMACS development, we humbly ask that you cite
++ * the research papers on the package. Check out https://www.gromacs.org.
++ */
++
++/*
++ * RISC-V RVV 1.0 float util support (gather/scatter/transpose). Translated from
++ * impl_arm_sve_util_float.h.
++ *
++ * HSIMD util (GMX_SIMD_HAVE_HSIMD_UTIL_FLOAT==0) and the gather-loadU-by-simdint
++ * variants (flag==0) are out of scope, so their SVE functions are not ported.
++ *
++ * SVE->RVV notes: RVV indexed load/store (vluxei32/vsuxei32) take BYTE offsets
++ * relative to the typed base pointer, so element offsets are scaled by
++ * align*sizeof(float) and stepped by sizeof(float) between transposed columns.
++ * The += / -= scatters (transposeScatterIncrU/DecrU) must use a scalar
++ * read-modify-write loop, since a vector scatter is not collision-correct when
++ * two lanes target the same address.
++ */
++
++#ifndef GMX_SIMD_IMPL_RISCV_RVV_UTIL_FLOAT_H
++#define GMX_SIMD_IMPL_RISCV_RVV_UTIL_FLOAT_H
++
++#include "config.h"
++
++#include <riscv_vector.h>
++
++#include <cassert>
++#include <cstddef>
++#include <cstdint>
++
++#include "gromacs/simd/impl_riscv_rvv/impl_riscv_rvv_simd_float.h"
++#include "gromacs/utility/basedefinitions.h"
++
++namespace gmx
++{
++
++// Element offsets -> byte offsets for the indexed load/store intrinsics, scaled
++// by the compile-time struct stride `align` and sizeof(float).
++template<int align>
++static inline vuint32m1_t gmxRvvScaledByteOffsets(SimdFInt32 offset)
++{
++    static_assert(align > 0, "align must be positive");
++    vuint32m1_t uoffset = __riscv_vreinterpret_v_i32m1_u32m1(offset.simdInternal_);
++    return __riscv_vmul_vx_u32m1(uoffset, static_cast<uint32_t>(align * 4), gmxRvvVlF);
++}
++
++template<int align>
++static inline vuint32m1_t gmxRvvLoadScaledByteOffsets(const std::int32_t offset[])
++{
++    SimdFInt32 simdOffset{ __riscv_vle32_v_i32m1(offset, gmxRvvVlF) };
++    return gmxRvvScaledByteOffsets<align>(simdOffset);
++}
++
++// Horizontal sum of the active lanes; scalar accumulator lives in lane 0.
++static inline float gmxRvvReduceF32(vfloat32m1_t v, size_t vl)
++{
++    vfloat32m1_t zero = __riscv_vfmv_v_f_f32m1(0.0f, 1);
++    vfloat32m1_t sum  = __riscv_vfredusum_vs_f32m1_f32m1(v, zero, vl);
++    return __riscv_vfmv_f_s_f32m1_f32(sum);
++}
++
++template<int align>
++static inline void gmx_simdcall
++gatherLoadBySimdIntTranspose(const float* base, SimdFInt32 offset, SimdFloat* v0, SimdFloat* v1, SimdFloat* v2, SimdFloat* v3)
++{
++    assert(std::size_t(base) % (std::min(GMX_SIMD_FLOAT_WIDTH, 4) * sizeof(float)) == 0);
++    assert(align % std::min(GMX_SIMD_FLOAT_WIDTH, 4) == 0);
++
++    vuint32m1_t byteOffsets = gmxRvvScaledByteOffsets<align>(offset);
++
++    *v0        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    *v1        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    *v2        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    *v3        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++}
++
++template<int align>
++static inline void gmx_simdcall
++gatherLoadBySimdIntTranspose(const float* base, SimdFInt32 offset, SimdFloat* v0, SimdFloat* v1)
++{
++    assert(std::size_t(base) % (std::min(GMX_SIMD_FLOAT_WIDTH, 2) * sizeof(float)) == 0);
++    assert(align % std::min(GMX_SIMD_FLOAT_WIDTH, 2) == 0);
++
++    vuint32m1_t byteOffsets = gmxRvvScaledByteOffsets<align>(offset);
++
++    *v0        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    *v1        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++}
++
++template<int align>
++static inline void gmx_simdcall gatherLoadTranspose(const float*       base,
++                                                    const std::int32_t offset[],
++                                                    SimdFloat*         v0,
++                                                    SimdFloat*         v1,
++                                                    SimdFloat*         v2,
++                                                    SimdFloat*         v3)
++{
++    assert(std::size_t(offset) % (GMX_SIMD_FINT32_WIDTH * sizeof(std::int32_t)) == 0);
++
++    SimdFInt32 simdOffset{ __riscv_vle32_v_i32m1(offset, gmxRvvVlF) };
++    gatherLoadBySimdIntTranspose<align>(base, simdOffset, v0, v1, v2, v3);
++}
++
++template<int align>
++static inline void gmx_simdcall
++gatherLoadTranspose(const float* base, const std::int32_t offset[], SimdFloat* v0, SimdFloat* v1)
++{
++    assert(std::size_t(offset) % (GMX_SIMD_FINT32_WIDTH * sizeof(std::int32_t)) == 0);
++
++    SimdFInt32 simdOffset{ __riscv_vle32_v_i32m1(offset, gmxRvvVlF) };
++    gatherLoadBySimdIntTranspose<align>(base, simdOffset, v0, v1);
++}
++
++// c_simdBestPairAlignmentFloat is defined in impl_riscv_rvv_simd4_float.h (hoisted
++// there to break an include cycle).
++
++template<int align>
++static inline void gmx_simdcall gatherLoadUTranspose(const float*       base,
++                                                     const std::int32_t offset[],
++                                                     SimdFloat*         v0,
++                                                     SimdFloat*         v1,
++                                                     SimdFloat*         v2)
++{
++    assert(std::size_t(offset) % (GMX_SIMD_FINT32_WIDTH * sizeof(std::int32_t)) == 0);
++
++    vuint32m1_t byteOffsets = gmxRvvLoadScaledByteOffsets<align>(offset);
++
++    *v0        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    *v1        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    *v2        = { __riscv_vluxei32_v_f32m1(base, byteOffsets, gmxRvvVlF) };
++}
++
++template<int align>
++static inline void gmx_simdcall
++transposeScatterStoreU(float* base, const std::int32_t offset[], SimdFloat v0, SimdFloat v1, SimdFloat v2)
++{
++    assert(std::size_t(offset) % (GMX_SIMD_FINT32_WIDTH * sizeof(std::int32_t)) == 0);
++
++    vuint32m1_t byteOffsets = gmxRvvLoadScaledByteOffsets<align>(offset);
++
++    __riscv_vsuxei32_v_f32m1(base, byteOffsets, v0.simdInternal_, gmxRvvVlF);
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    __riscv_vsuxei32_v_f32m1(base, byteOffsets, v1.simdInternal_, gmxRvvVlF);
++    byteOffsets = __riscv_vadd_vx_u32m1(byteOffsets, uint32_t{ 4 }, gmxRvvVlF);
++    __riscv_vsuxei32_v_f32m1(base, byteOffsets, v2.simdInternal_, gmxRvvVlF);
++}
++
++// += scatter: scalar read-modify-write, since duplicate offsets would make a
++// vector scatter lose updates.
++template<int align>
++static inline void gmx_simdcall
++transposeScatterIncrU(float* base, const std::int32_t offset[], SimdFloat v0, SimdFloat v1, SimdFloat v2)
++{
++    assert(std::size_t(offset) % (GMX_SIMD_FINT32_WIDTH * sizeof(std::int32_t)) == 0);
++
++    alignas(GMX_SIMD_ALIGNMENT) float s0[GMX_SIMD_FLOAT_WIDTH];
++    alignas(GMX_SIMD_ALIGNMENT) float s1[GMX_SIMD_FLOAT_WIDTH];
++    alignas(GMX_SIMD_ALIGNMENT) float s2[GMX_SIMD_FLOAT_WIDTH];
++
++    __riscv_vse32_v_f32m1(s0, v0.simdInternal_, gmxRvvVlF);
++    __riscv_vse32_v_f32m1(s1, v1.simdInternal_, gmxRvvVlF);
++    __riscv_vse32_v_f32m1(s2, v2.simdInternal_, gmxRvvVlF);
++
++    for (std::size_t i = 0; i < GMX_SIMD_FLOAT_WIDTH; ++i)
++    {
++        const std::int32_t j = align * offset[i];
++        base[j + 0] += s0[i];
++        base[j + 1] += s1[i];
++        base[j + 2] += s2[i];
++    }
++}
++
++// -= scatter: scalar read-modify-write (see transposeScatterIncrU).
++template<int align>
++static inline void gmx_simdcall
++transposeScatterDecrU(float* base, const std::int32_t offset[], SimdFloat v0, SimdFloat v1, SimdFloat v2)
++{
++    assert(std::size_t(offset) % (GMX_SIMD_FINT32_WIDTH * sizeof(std::int32_t)) == 0);
++
++    alignas(GMX_SIMD_ALIGNMENT) float s0[GMX_SIMD_FLOAT_WIDTH];
++    alignas(GMX_SIMD_ALIGNMENT) float s1[GMX_SIMD_FLOAT_WIDTH];
++    alignas(GMX_SIMD_ALIGNMENT) float s2[GMX_SIMD_FLOAT_WIDTH];
++
++    __riscv_vse32_v_f32m1(s0, v0.simdInternal_, gmxRvvVlF);
++    __riscv_vse32_v_f32m1(s1, v1.simdInternal_, gmxRvvVlF);
++    __riscv_vse32_v_f32m1(s2, v2.simdInternal_, gmxRvvVlF);
++
++    for (std::size_t i = 0; i < GMX_SIMD_FLOAT_WIDTH; ++i)
++    {
++        const std::int32_t j = align * offset[i];
++        base[j + 0] -= s0[i];
++        base[j + 1] -= s1[i];
++        base[j + 2] -= s2[i];
++    }
++}
++
++static inline void gmx_simdcall expandScalarsToTriplets(SimdFloat  scalar,
++                                                        SimdFloat* triplets0,
++                                                        SimdFloat* triplets1,
++                                                        SimdFloat* triplets2)
++{
++    assert(GMX_SIMD_FLOAT_WIDTH <= 16);
++    // Lane i of triplets{0,1,2} pulls scalar lane i/3 across the three vectors,
++    // so gather index = floor(globalTripletIndex / 3).
++    static const uint32_t ind[3 * GMX_SIMD_FLOAT_WIDTH] = {
++        0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5,
++        5, 5, 6, 6, 6, 7, 7, 7
++    };
++
++    vuint32m1_t i0 = __riscv_vle32_v_u32m1(ind + 0, gmxRvvVlF);
++    vuint32m1_t i1 = __riscv_vle32_v_u32m1(ind + GMX_SIMD_FLOAT_WIDTH, gmxRvvVlF);
++    vuint32m1_t i2 = __riscv_vle32_v_u32m1(ind + 2 * GMX_SIMD_FLOAT_WIDTH, gmxRvvVlF);
++
++    triplets0->simdInternal_ = __riscv_vrgather_vv_f32m1(scalar.simdInternal_, i0, gmxRvvVlF);
++    triplets1->simdInternal_ = __riscv_vrgather_vv_f32m1(scalar.simdInternal_, i1, gmxRvvVlF);
++    triplets2->simdInternal_ = __riscv_vrgather_vv_f32m1(scalar.simdInternal_, i2, gmxRvvVlF);
++}
++
++static inline float gmx_simdcall reduceIncr4ReturnSum(float* m, SimdFloat v0, SimdFloat v1, SimdFloat v2, SimdFloat v3)
++{
++    assert(std::size_t(m) % (std::min(GMX_SIMD_FLOAT_WIDTH, 4) * sizeof(float)) == 0);
++
++    alignas(GMX_SIMD_ALIGNMENT) float s[GMX_SIMD4_WIDTH] = {
++        gmxRvvReduceF32(v0.simdInternal_, gmxRvvVlF),
++        gmxRvvReduceF32(v1.simdInternal_, gmxRvvVlF),
++        gmxRvvReduceF32(v2.simdInternal_, gmxRvvVlF),
++        gmxRvvReduceF32(v3.simdInternal_, gmxRvvVlF)
++    };
++
++    const size_t vl4  = GMX_SIMD4_WIDTH;
++    vfloat32m1_t mVec = __riscv_vle32_v_f32m1(m, vl4);
++    vfloat32m1_t sVec = __riscv_vle32_v_f32m1(s, vl4);
++    __riscv_vse32_v_f32m1(m, __riscv_vfadd_vv_f32m1(mVec, sVec, vl4), vl4);
++
++    return gmxRvvReduceF32(sVec, vl4);
++}
++
++} // namespace gmx
++
++#endif // GMX_SIMD_IMPL_RISCV_RVV_UTIL_FLOAT_H
+diff --git a/src/gromacs/simd/include/gromacs/simd/simd.h b/src/gromacs/simd/include/gromacs/simd/simd.h
+index 99521ec..547b549 100644
+--- a/src/gromacs/simd/include/gromacs/simd/simd.h
++++ b/src/gromacs/simd/include/gromacs/simd/simd.h
+@@ -143,6 +143,8 @@ CLANG_DIAGNOSTIC_IGNORE("-Wundefined-reinterpret-cast")
+ #    include "impl_arm_neon_asimd/impl_arm_neon_asimd.h"
+ #elif GMX_SIMD_ARM_SVE
+ #    include "impl_arm_sve/impl_arm_sve.h"
++#elif GMX_SIMD_RISCV_RVV
++#    include "impl_riscv_rvv/impl_riscv_rvv.h"
+ #elif GMX_SIMD_IBM_VSX
+ #    include "impl_ibm_vsx/impl_ibm_vsx.h"
+ #elif (GMX_SIMD_REFERENCE || defined DOXYGEN)

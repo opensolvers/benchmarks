@@ -53,7 +53,7 @@ the `ZVL256B` RVV kernels on the X60 - and its RVV `gemv_n` has a NaN bug, so th
 ```
 
 Swapping in an OpenBLAS with the `gemv_n` fix backported gives residual
-4.04e-03, **PASSED**. See [`../dgemm/`](../dgemm) for the differential test that
+4.04e-03, **PASSED**. See [`../OpenBLAS/`](../OpenBLAS) for the differential test that
 isolated the bug to `dgemv` (HPL's panel factorization leans on `dgemv`, which is
 why HPL NaNs while a plain `dgemm` benchmark looks fine).
 

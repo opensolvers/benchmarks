@@ -20,7 +20,7 @@ correctness (finite / bit-identical results) is checked in every case.
 
 | Dir | What it measures | Axis swapped | Kind |
 |---|---|---|---|
-| [`dgemm/`](dgemm) | BLAS DGEMM performance **and** numerical correctness; localizes a broken kernel | BLAS | microbench + verification |
+| [`OpenBLAS/`](OpenBLAS) | OpenBLAS on RISC-V: DGEMM performance + differential correctness + TRSM sweep; localizes two broken RVV kernels (`gemv_n` NaN, `_rvv_v1` TRSM VLEN bug) | BLAS | microbench + verification |
 | [`numpy/`](numpy) | BLAS/LAPACK backend as seen through NumPy/SciPy | BLAS | application proxy |
 | [`hpl/`](hpl) | High-Performance Linpack, end-to-end | BLAS (FlexiBLAS) | application A/B |
 | [`elpa/`](elpa) | Dense real-symmetric eigensolver (ELPA, 1-stage) | BLAS | microbench |
@@ -38,7 +38,7 @@ Several directories deliberately pair a **microbenchmark** with a
 **real-application** measurement of the *same* backend, because they often
 disagree — and that disagreement is the interesting result:
 
-- **BLAS axis:** [`dgemm`](dgemm)/[`numpy`](numpy)/[`elpa`](elpa) (kernel level)
+- **BLAS axis:** [`OpenBLAS`](OpenBLAS)/[`numpy`](numpy)/[`elpa`](elpa) (kernel level)
   → [`hpl`](hpl)/[`qe`](qe) (whole application).
 - **FFT axis:** [`fftw`](fftw) standalone microbench (RVV wins **1.06–1.60×**)
   → the same RVV FFTW dropped into a Quantum ESPRESSO SCF (**~0% end-to-end**,

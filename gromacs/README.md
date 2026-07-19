@@ -112,6 +112,72 @@ FFT; GROMACS speeds up the FFT and is diluted by its scalar `Force` kernels
 (`SIMD: None` on this build). Both show the same lesson - a whole real
 application only moves by the fraction its swapped backend actually owns.
 
+## Can the `Force` kernel be optimized?
+
+The FFT swap only moves ~2 % of the run because `Force` (90 %) is scalar. Two
+distinct levers exist for that scalar bottleneck - one free, one a real port:
+
+**1. Threading (free, ~6.9x).** The A/B runs serial (`-ntmpi 1 -ntomp 1`) *by
+design*, to isolate the FFT. For actual throughput that wastes 7 of 8 cores. A
+thread scan on the same system (SPC water PME, this box's 8 X60 cores):
+
+| layout | ns/day | note |
+|---|--:|---|
+| 1 rank x 1 omp | 0.377 | the serial A/B baseline |
+| 1 rank x 8 omp | 2.595 | ~6.9x |
+| 8 rank x 1 omp | **2.610** | fastest, but within noise of 1x8 |
+| 2 rank x 4 omp | 2.389 | hybrid splits ~8 % slower |
+| 4 rank x 2 omp | 2.404 | " |
+
+So for real runs just use all 8 cores (`-ntomp 8` is simplest); the rank/thread
+decomposition is layout-insensitive here (endpoints tie at ~2.60 ns/day). This
+is a run-parameter fix, not a kernel fix.
+
+**2. RVV `Force` kernels (a genuine upstream port).** GROMACS 2026.2 has **no
+RISC-V RVV SIMD backend** - `cmake/gmxManageSimd.cmake` accepts only x86
+(SSE/AVX), ARM (NEON/SVE), IBM VSX, REFERENCE, NONE. The shipped
+`libgromacs_mpi.so` contains **0 vector instructions** and is built for base
+`rv64...c` (no `v` extension). So `SIMD: None` is not a misconfigured flag - the
+RVV kernels do not exist. GROMACS's nonbonded kernels are written against an
+abstract SIMD wrapper, so adding RVV means implementing an `impl_riscv_rvv/`
+backend (~9 files / ~3k LOC, ARM SVE is the closest VLA template), estimated
+**~6-10 person-weeks**. That is the only path to vectorizing the `Force` term,
+and it is a contribution project rather than a tuning task.
+
+### Why not just compile with `-march=...v`? (measured: it doesn't help)
+
+Before committing to the ~6-10 week port, we tested the cheap alternative: does
+simply telling the compiler the vector unit exists let GCC **auto-vectorize** the
+scalar `Force` kernels? We rebuilt GROMACS 2026.2 from source on the X60 with
+EESSI **GCC 14.3** and `-O3 -march=rv64gcv_zvl256b -funroll-all-loops` (vs the
+stock EESSI build's base `rv64...c`), then A/B'd it against the stock binary on
+the same `md.tpr`, serial (1 rank x 1 thread), `-nb cpu -pme cpu`.
+
+**The compiler did emit RVV - abundantly:**
+
+| binary | RVV instrs in `libgromacs.so` | in `kernel_ref_4x4` (Force hot path) |
+|---|--:|--:|
+| stock EESSI (`rv64...c`) | **0** | **0** |
+| rebuilt (`rv64gcv_zvl256b`, GCC 14.3) | **164 519** | **4 834** |
+
+**...but it ran ~2 % *slower*, not faster:**
+
+| metric (1000 steps, 1 core, `SIMD: None`) | stock | auto-vec | Δ |
+|---|--:|--:|--:|
+| `Force` wall time (501 calls) | 205.7 s | 209.6 s | **+1.9 % (slower)** |
+| total wall | 228.1 s | 232.8 s | +2.1 % |
+| performance | 0.380 ns/day | 0.372 ns/day | -2.1 % |
+| conserved energy | -196 667 | -196 670 | correct (matches to 5 s.f.) |
+
+Conserved energy agrees to 5 significant figures, so the auto-vectorized build is
+**numerically correct** - the win simply isn't there. GROMACS's `kernel_ref_4x4`
+is not a clean SIMD loop: it is gather-heavy `j`-atom access with per-pair cutoff
+branches and exclusion masks. GCC vectorizes the surrounding arithmetic (hence
+the 4 834 RVV instrs) but wraps it in setup/gather/scatter overhead that cancels
+the gain on the in-order X60. **A compiler flag cannot usefully vectorize this
+kernel.** This is the empirical confirmation that a meaningful `Force` speedup
+requires the hand-written `impl_riscv_rvv/` backend above, not `-march`.
+
 ## Gotchas
 
 - **GROMACS mixed precision links the *single*-precision `libfftw3f.so.3`**, not
@@ -121,7 +187,11 @@ application only moves by the fraction its swapped backend actually owns.
 - **`SIMD instructions: None`.** This GROMACS build has no RVV force kernels, so
   the 90 %-of-runtime `Force` term is scalar and unaffected - which is exactly
   what makes `PME 3D-FFT` the one clean variable, but also caps the
-  whole-application speedup.
+  whole-application speedup. Rebuilding with `-march=rv64gcv_zvl256b` (GCC 14.3)
+  *does* make GCC auto-emit RVV into the Force kernels (164k vector instrs) but
+  yields **no speedup** (~2 % slower) - see "Why not just compile with
+  `-march=...v`?" above. `SIMD: None` still reports because GROMACS has no
+  hand-written RVV backend to register, regardless of the compiler `-march`.
 - **Fixed `-nsteps` matters.** The A/B relies on identical FFT work per run; a
   fixed step count (not an energy-minimization / convergence-based stop) keeps
   the `PME 3D-FFT` call count identical (4002 here) between backends.

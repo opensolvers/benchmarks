@@ -1,0 +1,79 @@
+#  -*- makefile -*-
+#  Make.rv64_blis - HPL 2.3 for the SpaceMiT X60 / K1 (rv64gcv, RVV 1.0,
+#  VLEN=256), linking xhpl DIRECTLY against a static BLIS libblis.a as the
+#  BLAS provider. No FlexiBLAS on the board, so - unlike the FlexiBLAS
+#  backend-swap runner (run-hpl-ab.sh) - the BLAS choice is baked in at link
+#  time. Built with the EESSI GCC 14.3.0 toolchain via the MPI compiler wrappers.
+#
+#  HPL uses BLIS's CBLAS interface (-DHPL_CALL_CBLAS); libblis.a exports the
+#  cblas_* symbols because it was configured --enable-cblas --enable-blas.
+#
+#  Env expected at build time (see build-hpl-blis.sh):
+#    BLIS_HOME  BLIS install prefix (has lib/libblis.a, include/blis/cblas.h)
+#    GCC14      EESSI GCCcore/14.3.0 prefix (for -L/-B/-rpath, see gotchas)
+#    TOPdir     HPL 2.3 source root
+#
+SHELL        = /bin/sh
+CD           = cd
+CP           = cp
+LN_S         = ln -s
+MKDIR        = mkdir
+RM           = /bin/rm -f
+TOUCH        = touch
+
+ARCH         = rv64_blis
+
+TOPdir       = $(HOME)/hpl-2.3
+INCdir       = $(TOPdir)/include
+BINdir       = $(TOPdir)/bin/$(ARCH)
+LIBdir       = $(TOPdir)/lib/$(ARCH)
+HPLlib       = $(LIBdir)/libhpl.a
+
+# --- MPI: use the module's mpicc wrapper; it already knows -I/-L/-lmpi ---
+# (leave MPdir/MPlib empty so we don't force a static libmpi.a path that may
+#  not exist in the EESSI OpenMPI layout - the mpicc LINKER handles it)
+MPdir        =
+MPinc        =
+MPlib        =
+
+# --- BLIS (static) as the BLAS/CBLAS provider -------------------------------
+BLIS_PREFIX  = $(BLIS_HOME)
+# headers install under include/blis/ on this build (cblas.h, blis.h)
+LAinc        = -I$(BLIS_PREFIX)/include/blis
+# static libblis.a needs -lm -lpthread; threaded (OpenMP) build also pulls in
+# libgomp, so -fopenmp + the GCC14 -L/-B/-rpath flags are required (see README).
+LAlib        = $(BLIS_PREFIX)/lib/libblis.a -lm -lpthread
+
+# --- Fortran/C interface: CBLAS path, so no F2C name-mangling defines -------
+F2CDEFS      =
+
+HPL_INCLUDES = -I$(INCdir) -I$(INCdir)/$(ARCH) $(LAinc) $(MPinc)
+HPL_LIBS     = $(HPLlib) $(LAlib) $(MPlib)
+
+# --- use BLIS's CBLAS interface (NOT Fortran BLAS) --------------------------
+HPL_OPTS     = -DHPL_CALL_CBLAS
+
+HPL_DEFS     = $(F2CDEFS) $(HPL_OPTS) $(HPL_INCLUDES)
+
+# --- compilers: MPI wrappers over EESSI GCC 14.3.0 --------------------------
+# GCC14's libgcc_s / libatomic / libgomp.spec live in $(GCC14)/lib, off the
+# default search path. -L finds the libs, -B lets the driver read libgomp.spec
+# for -fopenmp, and -rpath lets xhpl find libgomp.so.1 at run time. Same two
+# EESSI GCC14 link gotchas documented in ../BLIS/README.md.
+CC           = mpicc
+CCNOOPT      = $(HPL_DEFS)
+CCFLAGS      = $(HPL_DEFS) -O3 -march=rv64imafdcv_zvl256b -fopenmp \
+               -L$(GCC14)/lib -B$(GCC14)/lib -Wl,-rpath,$(GCC14)/lib \
+               -fomit-frame-pointer
+LINKER       = mpicc
+# EESSI OpenMPI 5.x: libmpi.so / libopen-pal.so carry undefined refs to their
+# OWN transitive deps (UCX uct_*/ucp_*, UCC ucc_*, PMIx, hwloc). Those .so's are
+# on LIBRARY_PATH and resolve at run time via DT_NEEDED, but ld refuses to leave
+# them undefined while linking an executable. --allow-shlib-undefined defers
+# indirect shared-lib symbols to run time (correct: they are provided by the
+# libs' own NEEDED entries, not by xhpl).
+LINKFLAGS    = $(CCFLAGS) -Wl,--allow-shlib-undefined
+
+ARCHIVER     = ar
+ARFLAGS      = r
+RANLIB       = echo

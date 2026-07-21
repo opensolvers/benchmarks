@@ -10,6 +10,13 @@ This is the model-coverage companion to [`../ime`](../ime) (the IME kernel
 A/B): where `ime/` isolates the `smt.vmadot` kernel, this directory answers
 "which real models fit and run, and where does IME actually help?"
 
+> **See also — second study (Q4_K_M, 17 models):**
+> [`results_17model_m1gemv_vs_rvv.md`](results_17model_m1gemv_vs_rvv.md) extends
+> this to 17 models on **Q4_K_M** with the M=1-GEMV-tuned `m1gemv` IME build.
+> Key finding: on K-quants the IME `smt.vmadot` fast path does **not** engage,
+> so `m1gemv` is a **net regression** vs plain RVV (RVV wins tg by 2.9–6.5× on
+> every model). The IME-wins-prefill result below is **Q4_0-specific**.
+
 ## Contents
 
 | File | Purpose |
@@ -18,6 +25,10 @@ A/B): where `ime/` isolates the `smt.vmadot` kernel, this directory answers
 | `model_validation.tsv` | raw results (10 rows: pp128/tg32 for IME and RVV) |
 | `validate_model.sh` | per-model harness: download → coherence (IME) → bench IME + RVV → append TSV row → reclaim RAM |
 | `run_all.sh` | driver: runs all 10 models (verified HF Q4_0 sources baked in) |
+| [`results_17model_m1gemv_vs_rvv.md`](results_17model_m1gemv_vs_rvv.md) | **second study**: 17 models, Q4_K_M, `m1gemv` IME build vs RVV control (full write-up + finding) |
+| `results_17model_m1gemv.tsv` | raw results for the second study (17 rows: pp512/tg64 for IME and RVV) |
+| `bench_suite.sh` | second-study IME arm: fd-3 manifest read, force-killed timeouts, writes `results.md` |
+| `bench_suite_rvv.sh` | second-study RVV control arm: same 17 models on `~/x60-rvv`, writes `results_rvv.md` |
 
 ## Headline results (all 10 validated, no OOM)
 

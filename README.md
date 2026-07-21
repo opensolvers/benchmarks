@@ -32,6 +32,7 @@ correctness (finite / bit-identical results) is checked in every case.
 | [`ime/`](ime) | int8 (`s8s8s32`) GEMM microkernel on the X60 **IME** (`smt.vmadot`) vs RVV | int8 kernel | microkernel + verification |
 | [`onnx/`](onnx) | int4 `MatMulNBits` LLM-FFN inference via ONNX Runtime MLAS | int4 kernel | application + root-cause writeup |
 | [`papers/`](papers) | Longer-form writeups (e.g. X60 IME block-scale optimization) | — | prose / PDF |
+| [`gpu/`](gpu) | PowerVR BXE-2-32 GPU compute: why the vendor stack is closed + the open Mesa `pvr` / `drm/imagination` route (deferred R&D) | GPU | characterization / negative result |
 
 ### Two views of the same question
 

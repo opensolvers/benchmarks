@@ -120,6 +120,47 @@ LAMMPS's own end-of-run `Loop time` and `Performance:` throughput, on 8x X60 @
 > a serial-vs-serial comparison, which was out of scope here. Read the 6–7x as
 > "the vectorized build scales to 6–7x across 8 cores", not "RVV is worth 6–7x".
 
+### Where the RVV work actually lives (measured attribution)
+
+The RVV verification above (ELF `Tag_RISCV_arch`, `vsetvli`/`vf*` counts) proves
+the vector instructions are *present*; the question of which kernel *spends the
+time running them* is answered here by measurement. `perf` is unavailable on the
+board's vendor kernel (`6.6.63-ky`: no packaged `perf`, no kernel source/headers,
+none in apt), so two install-free methods were used on a single-thread `lj`
+Kokkos run (`-k on t 1 -sf kk`, 32000 atoms / 100 steps) — and they agree.
+
+**Method 1 — LAMMPS's own per-phase timer breakdown** (`MPI task timing`):
+
+| phase | % of wall | what runs there |
+|---|--:|---|
+| **Pair** | **84.4%** | `PairLJCutKokkos` — the autovectorized lj/cut force kernel |
+| Neigh | 11.8% | `NeighborKokkosExecute::build_Item` (neighbor-list build) |
+| Comm | 1.8% | ghost-atom packing (`AtomVec::pack_comm`) |
+| Modify | 1.5% | NVE time integration |
+| Output / Other | 0.5% | — |
+
+**Method 2 — gdb stack sampling** (poor-man's profiler: attach, `bt`, tally the
+leaf frame `#0`; 39 samples across two runs):
+
+| leaf function (`#0`) | samples | % |
+|---|--:|--:|
+| `PairComputeFunctor<PairLJCutKokkos>::operator()` | 18 | **46%** |
+| stripped Kokkos/libc leaves under the Pair path (`??`) | 13 | 33% |
+| `NeighborKokkosExecute::build_Item` | 5 | 13% |
+| `AtomVec::pack_comm` | 2 | 5% |
+| Kokkos `ParallelFor` dispatch | 1 | 3% |
+
+Both methods put **the LAMMPS KOKKOS pair kernel (`PairLJCutKokkos`) on the hot
+path** — ~84% of runtime by the timer, the single dominant leaf (46%, plus the
+`??` leaves that unwind into the same Pair call path) by sampling. That kernel is
+where the `-march=…v` autovectorization lands: Kokkos is header-only and inherits
+the vector `-march`, so the RVV FMAs counted in the ELF are executed *inside this
+functor*, not in a math library. For `lj` **no FFT/BLAS symbol appears at all** —
+consistent with the earlier structural reading that FFTW matters only to `rhodo`
+(PPPM long-range) and OpenBLAS is irrelevant throughout (no GEMM in these force
+styles). This is a cycles/time attribution, not a vector-vs-scalar A/B — it shows
+*which* kernel carries the vectorized work, not the pure RVV uplift.
+
 `rhodo` is the absolute-cost outlier: at 321.8 s serial it is ~20x slower than
 the `lj` melt for the same atom count, reflecting the full CHARMM force field
 (bonds/angles/dihedrals) plus PPPM Ewald — and even so the vector build brings it

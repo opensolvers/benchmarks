@@ -108,6 +108,18 @@ LAMMPS's own end-of-run `Loop time` and `Performance:` throughput, on 8x X60 @
   biomolecular `rhodo` (bonds + PPPM long-range) both top out under 8 ranks
   (5.67x / 5.94x).
 
+> **What these speedups are — and are not.** Every run in the table, *including the
+> serial baseline*, uses the same RVV-vectorized binary (see the RVV verification
+> above). The `speedup vs serial` column therefore measures **parallel scaling**
+> — how well the Kokkos-OpenMP and MPI back-ends recover the 1→8-core gap — **not
+> the RVV vectorization uplift**, which cancels out of a vector-on ÷ vector-on
+> ratio. RVV is confirmed *active and doing work* structurally (the hot path
+> carries ~53k `vsetvli` and ~12k `vf*` FMAs), but this page does not isolate a
+> vector-on-vs-scalar A/B: quantifying the pure RVV uplift would require a second
+> build with the vector extension disabled (`-march=rv64gc`, Kokkos SIMD off) and
+> a serial-vs-serial comparison, which was out of scope here. Read the 6–7x as
+> "the vectorized build scales to 6–7x across 8 cores", not "RVV is worth 6–7x".
+
 `rhodo` is the absolute-cost outlier: at 321.8 s serial it is ~20x slower than
 the `lj` melt for the same atom count, reflecting the full CHARMM force field
 (bonds/angles/dihedrals) plus PPPM Ewald — and even so the vector build brings it

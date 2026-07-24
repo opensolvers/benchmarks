@@ -215,9 +215,29 @@ RISC-V SBCs that ship a **BXM** GPU (both purchasable now):
 - Prefer the **`dev.eessi.io/riscv 2025.06-001` (foss-2025b)** modules where an
   app exists there (GROMACS, ESPResSo, HPL, PLUMED, OSU, MUMPS, ScaLAPACK,
   ScaFaCoS, waLBerla, ELPA) — matches the repo's existing build environment.
-- Apps that exist **only** in `riscv.eessi.io 20240402 (foss-2023b)** — LAMMPS,
+- Apps that exist **only** in `riscv.eessi.io 20240402 (foss-2023b)** —
   MetalWalls, MODFLOW, PETSc, SLEPc, SuperLU_DIST, SuiteSparse, scikit-learn, R,
   Armadillo, VTK/ParaView — run against the 2023b stack; note the toolchain
   difference in each benchmark's README so results aren't cross-compared naively.
+  (**LAMMPS** was moved off this list — it now has a working **foss-2025b** build
+  path via a custom easyconfig against `dev.eessi.io/riscv 2025.06-001`; see
+  [`lammps/`](lammps/).)
 - **QuantumESPRESSO has no RISC-V module in either repo** — the `qe/` benchmark
   needs a from-easyconfig build before it can run end-to-end.
+
+---
+
+## LAMMPS page — DONE → see [`lammps/`](lammps/) (PR #31)
+
+The `lammps/` benchmark page now exists: `lammps/README.md` +
+`run-lammps-bench.sh`, opened as PR #31 to `opensolvers/benchmarks`. It carries
+the full 5-workload x 3-mode RVV-Kokkos matrix (32000 atoms / 100 steps; lj/eam
+best on Kokkos at 6.2x/7.2x, chain/chute/rhodo best on MPI), the RVV-verification
+evidence (`Tag_RISCV_arch` v1p0/zve64d, ~53k `vsetvli`), and all five
+RISC-V-specific easyconfig fixes (`kokkos_arch=EASYBUILD_GENERIC`; CVMFS
+readlinkat-storm allowlist; pinned binutils; `-DUSE_SPGLIB=OFF`; `MDI` removed)
+plus the ctest-gate caveat — so the build recipe is documented in the page rather
+than here. The custom foss-2025b build (LAMMPS 22Jul2025-u4, Kokkos 4.6.2, GCC
+14.3.0, OpenMPI 5.0.8) can be swapped for a plain `module load` once the
+`dev.eessi.io/riscv` easyconfig lands upstream. Full build resume state remains in
+`LAMMPS_RV2_STATUS.md` in the riscv workspace.

@@ -174,6 +174,42 @@ from-scratch port. High scientific impact, high effort.
    each a toolchain rebump, high impact, tackle after the QE build proves the
    easyconfig-bump workflow on the X60.
 
+## Part D — GPU compute: hardware landscape (RVV boards vs Imagination BXM)
+
+Context for a future GPU-compute benchmark column (Vulkan/OpenCL). The RV2's
+GPU is **entry-tier**, so any GPU-offload probe wants a higher-tier board.
+
+- **Orange Pi RV2 (SpaceMiT K1/X60)** — GPU **Imagination PowerVR BXE-2-32**
+  (BXE = *entry* tier). Fine for UI, weak for compute offload.
+- Imagination B/C-series tier order: **BXE (entry) < BXM (mid) < BXT/AXT/CXT
+  (premium)**. Only **BXM-4-64** variants ship in SBCs today — no board with a
+  larger BXM (BXM-8-256) yet.
+
+RISC-V SBCs that ship a **BXM** GPU (both purchasable now):
+
+| Board | SoC | GPU | Cores | RVV | Note |
+|---|---|---|---|---|---|
+| **Milk-V Jupiter2** | SpacemiT K3 | BXM-4-64 MC1 | 8× X100 @2.4GHz | **RVV 1.0 / RVA23** | best RISC-V ecosystem fit; both BXM GPU *and* standard vector |
+| **Lichee Pi 4A** / BeagleV Ahead | T-Head TH1520 | BXM-4-64 MC1 | 4× C910 @1.5GHz | **RVV 0.7.1 (draft)** | GPU upgrade but non-standard vector — see caveat |
+
+- **C910 vector caveat:** TH1520's C910 implements **RVV 0.7.1 (draft)**, NOT
+  ratified RVV 1.0 — binary-incompatible, needs T-Head's `v0p7` toolchain fork.
+  A step back from the RV2's RVV 1.0 for our vectorized HPC apps. → **For a
+  GPU-compute bench that must ALSO keep RVV 1.0 parity with the RV2 column,
+  Jupiter2 (K3) is the only good option.**
+- ARM aside (not RISC-V): Allwinner A733 (Radxa Cubie A7S/A7A) also has BXM-4-64.
+- Higher tiers: Sophgo SG2380 (RISC-V) uses IMG **AXT-16-512** (premium, not BXM);
+  no shipping RISC-V board uses BXT/CXT.
+- **Not BXM (ruled out):** StarFive JH7110 = BXE-4-32; ESWIN EIC7700 / Ky X1 /
+  Sophgo SG2044 = no confirmed BXM.
+- Sources: [Phoronix TH1520 BXM-4-64 fw](https://www.phoronix.com/news/IMG-PowerVR-BXM-4-64-FW),
+  [Milk-V Jupiter2](https://milkv.io/jupiter2),
+  [SpacemiT K3 datasheet](https://github.com/spacemit-com/docs-chip/blob/main/en/key_stone/k3/k3_docs/k3_ds.md),
+  [Imagination B-Series](https://www.imaginationtech.com/products/gpu/img-b-series-gpu/).
+  *(ESWIN/Ky X1/SG2044 = "not confirmed", search hit an API limit — not "confirmed absent".)*
+
+---
+
 ## Notes on toolchain choice
 
 - Prefer the **`dev.eessi.io/riscv 2025.06-001` (foss-2025b)** modules where an

@@ -52,9 +52,12 @@ expected signal.
 
 ### B1 — real MD/materials applications (highest value: whole-app A/B)
 
-- [ ] **LAMMPS** (`29Aug2024-foss-2023b-kokkos`, 2023b only) — classic MD; the
-  Kokkos build is the natural vehicle for an RVV-vs-scalar force-kernel A/B,
-  the LAMMPS analogue of the GROMACS Force probe. *No repo dir.*
+- [x] **LAMMPS** (`22Jul2025_update4-foss-2025b-kokkos` on RV2) — built & compute
+  verified (`lmp -h`, `in.melt`); installed under `eessi-overlay` (EB failed at
+  `ctest`, manual install). Bench set in `~/lammps-bench`. Learnings:
+  [`kokkos/`](kokkos); RVV Pair prototype + `lj/cut/rvv` plugin:
+  [`lammps/rvv-lj/`](lammps/rvv-lj) (microbench ~1.61× vs scalar; in-LAMMPS
+  ~1.02× vs stock via indexed gather).
 - [ ] **ESPResSo** (`4.2.2` in **both** 2023b and 2025b) — soft-matter MD;
   P3M long-range solver → FFT-backend A/B (FFTW r5v vs scalar), the MD
   companion to `fftw/` and `gromacs/`. *No repo dir.*
@@ -154,23 +157,47 @@ from-scratch port. High scientific impact, high effort.
 
 ---
 
+## Part D — VisionFive 2 / SiFive U74 (scalar `rv64gc`)
+
+U74 OpenBLAS + HPL are done (~1.69×). No RVV/IME on this chip, so the next useful
+work is software that **does not vectorize anyway** — prove the EESSI/EasyBuild
+path and correctness/perf on a real scientific workload that is irregular /
+branchy, not BLAS-bound.
+
+- [ ] **BWA** (`BWA-0.7.19-GCCcore-14.3.0.eb` preferred; already on RV2 inventory) —
+  short-read alignment. Classic non-SIMD scientific code (string matching,
+  branching, irregular memory). Build via EESSI-extend on VF2
+  (`ubuntu@192.168.1.219`), run a small reference alignment, record wall time +
+  correctness vs a known-good host/x86 or prior RV2 run. *Primary U74 next item
+  when the board is back online.*
+- [ ] **BCFtools** / **BamTools** (companions) — same bio column; cheaper smoke
+  tests once BWA is up.
+- [ ] Optional later: **MODFLOW** / **PETSc** KSP — sparse-solve dominated HPC
+  apps (also weakly vectorizing); only after the bio path is proven.
+
+Access notes: see `riscv-learnings` `docs/riscv-u74.md` (`ubuntu@192.168.1.219`).
+
+---
+
 ## Recommended order
 
 1. **onnx int4** (Part A) — dramatic, reproducible, extends shipped IME work.
-2. **OSU-Micro-Benchmarks** (B3) — fast interconnect baseline that every MPI app
+2. **U74 — BWA** (Part D) — when VisionFive 2 is online; non-vector EasyBuild
+   app with real scientific value (post–OpenBLAS/HPL).
+3. **OSU-Micro-Benchmarks** (B3) — fast interconnect baseline that every MPI app
    result depends on; establish it before scalapack/qe/petsc.
-3. **FlexiBLAS RVV OpenBLAS A/B column** — one backend swap validates
+4. **FlexiBLAS RVV OpenBLAS A/B column** — one backend swap validates
    numpy → hpl → elpa → scalapack → scikit-learn → R → Armadillo at once
    (the `_fixed` lib carries the `gemv_n` NaN + TRSM VLEN corrections).
-4. **LAMMPS + ESPResSo** (B1) — the two big new whole-app MD probes on the
-   2025b port; LAMMPS Kokkos = Force-kernel RVV A/B, ESPResSo = P3M FFT A/B.
-5. **PETSc/SLEPc + MUMPS + SuperLU_DIST** (B2) — the sparse-solver column,
+5. **ESPResSo** (B1) — soft-matter MD / P3M FFT A/B (LAMMPS build+compute on RV2
+   done; remaining = repo benchmark dir / Force RVV A/B if pursued).
+6. **PETSc/SLEPc + MUMPS + SuperLU_DIST** (B2) — the sparse-solver column,
    complementary to the dense eigen probes.
-6. **waLBerla + ScaFaCoS** (B1/B2) — newest 2025b additions; bandwidth-bound
+7. **waLBerla + ScaFaCoS** (B1/B2) — newest 2025b additions; bandwidth-bound
    LBM and long-range Coulomb, no prior RV2 data.
-7. **QuantumESPRESSO build** (C2) — bump `7.4-foss-2024a` → 2025b and build;
+8. **QuantumESPRESSO build** (C2) — bump `7.4-foss-2024a` → 2025b and build;
    this is the single item that unblocks the already-present `qe/` benchmark.
-8. **CP2K + OpenFOAM + WRF** (C2) — flagship DFT / CFD / NWP whole-app probes;
+9. **CP2K + OpenFOAM + WRF** (C2) — flagship DFT / CFD / NWP whole-app probes;
    each a toolchain rebump, high impact, tackle after the QE build proves the
    easyconfig-bump workflow on the X60.
 

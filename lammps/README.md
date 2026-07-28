@@ -38,7 +38,8 @@ build on the same inputs.
 | Path | Contents |
 | --- | --- |
 | [`rvv-lj/`](rvv-lj) | Hand RVV `lj/cut` microkernel + `lj/cut/rvv` LAMMPS plugin (~1.61× vs scalar microbench; ~1.02× vs stock in-app) |
-| [`../kokkos/`](../kokkos) | Kokkos learnings on X60 (execution spaces, no RVV SIMD abi, Pair dominance) |
+| [`rvv-eam/`](rvv-eam) | Hand RVV `eam/rvv` plugin (bit-exact; **1.27×** vs `eam`, 0.93× vs `eam/opt`) |
+| [`../kokkos/`](../kokkos) | Kokkos learnings on X60 (execution spaces, no RVV SIMD abi, Pair dominance, LJ/EAM results) |
 
 ## Contents
 
@@ -46,6 +47,7 @@ build on the same inputs.
 |---|---|
 | `run-lammps-bench.sh` | runs the 5 `bench/` inputs x 3 modes (serial / kokkos8 / mpi8), parses LAMMPS's own `Loop time` + `Performance:` lines into a CSV |
 | `rvv-lj/` | hand-RVV LJ Pair microkernel + plugin (see above) |
+| `rvv-eam/` | hand-RVV EAM plugin (see above) |
 
 The five inputs and their data files (`in.lj`, `in.eam`, `in.chain`, `in.chute`,
 `in.rhodo`, `Cu_u3.eam`, `data.{chain,chute,rhodo}`) come straight from the LAMMPS

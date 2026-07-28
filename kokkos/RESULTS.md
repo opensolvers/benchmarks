@@ -32,8 +32,21 @@ Force-on-i only; single type; `lj1=48`, `lj2=24`, `cut=2.5`; `taskset -c 0`.
 
 ## Interpretation
 
-- **1.6×** on the isolated Pair math (after SoA packing) is real and correct.
-- End-to-end LAMMPS will move less until the kernel is wired in (and Newton /
-  multi-type / virial are handled).
+- **1.6×** on the isolated LJ Pair math (after SoA packing) is real vs naive scalar.
+- **In-LAMMPS LJ** lands near **1.02×** vs stock — auto-vec + gather tax.
+- **In-LAMMPS EAM** is the stronger win: **1.27×** vs `eam`, still behind `eam/opt`
+  (1.36×). Pair ~96% of wall.
 - Stock Kokkos on this board is a **portable OpenMP** vehicle, not an RVV
   vectorizer — same lesson as GROMACS before `impl_riscv_rvv`.
+
+## EAM plugin (`lammps/rvv-eam`) — in-LAMMPS Pair
+
+| Date | Styles | atoms / steps | `eam` | `eam/rvv` | `eam/opt` | rvv/eam | forces |
+| --- | --- | --- | ---: | ---: | ---: | ---: | --- |
+| 2026-07-28 | Cu_u3, 1 core, force-only | 864 / 100 | 0.780 s | 0.614 s | 0.574 s | **1.27×** | bit-exact |
+
+## LJ plugin (`lammps/rvv-lj`) — in-LAMMPS Pair
+
+| Date | Case | Pair speedup vs stock `lj/cut` |
+| --- | --- | ---: |
+| 2026-07-28 | 4000 atoms, indexed-gather path, 5 reps | **~1.02×** (0.99–1.04×) |

@@ -3,8 +3,8 @@
 Working notes for **Kokkos** as used by **LAMMPS** on the Orange Pi RV2
 (SpaceMiT X60 / K1, RVV 1.0, VLEN=256), under the EESSI RISC-V stack.
 
-Companion microkernel (hand RVV Pair, not yet linked into Kokkos):
-[`../lammps/rvv-lj/`](../lammps/rvv-lj).
+Companion kernels (hand RVV Pair plugins, not Kokkos SIMD):
+[`../lammps/rvv-lj/`](../lammps/rvv-lj), [`../lammps/rvv-eam/`](../lammps/rvv-eam).
 
 > **Change one variable.** Here the axes are: execution space (Serial / OpenMP),
 > whether Pair uses hand RVV, and the EESSI toolchain (always GCC 14.3 for
@@ -95,19 +95,28 @@ same spirit as GROMACS RVV Force: **hand layout + hand RVV** on the Pair math.
 
 ## RVV Pair direction (results so far)
 
-Prototype (force-on-i / newton-off style SoA tiles): [`../lammps/rvv-lj/`](../lammps/rvv-lj)
+### LJ/cut — [`../lammps/rvv-lj/`](../lammps/rvv-lj)
 
-| Build | n | avg neigh | max \|Δf\| | speedup vs scalar |
-| --- | ---: | ---: | ---: | ---: |
-| EESSI **GCC 14.3.0** | 2048 | 48.1 | 6.8e-14 | **1.64×** |
-| EESSI **GCC 14.3.0** | 4096 | 48.0 | 4.1e-14 | **1.62×** |
-| System gcc 13.3 (informational) | 2048 | 48.1 | ~7e-14 | ~1.59× |
+| Build | Scope | Result |
+| --- | --- | --- |
+| EESSI GCC 14.3 microbench | force-on-i vs naive scalar | **~1.61–1.64×** |
+| `lj/cut/rvv` plugin vs stock `lj/cut` | in-LAMMPS Pair, 4000 atoms | **~1.02×** (near parity) |
 
-Publish **14.3** numbers only. Kernel: gather → SoA `dx/dy/dz` → RVV masked
-cutoff + vector LJ → reduce into `f[i]`. Still missing for LAMMPS parity:
-multi-type params, `special_lj`, energy/virial, Newton scatter / FULL list.
-
+In-app LJ is gather/scatter limited; stock is already `-march=…cv…` auto-vec’d.
 See [`../lammps/rvv-lj/INTEGRATION.md`](../lammps/rvv-lj/INTEGRATION.md).
+
+### EAM — [`../lammps/rvv-eam/`](../lammps/rvv-eam)
+
+Cu `Cu_u3.eam`, 864 atoms, 100 steps, 1 core, force-only; forces **bit-exact** vs stock.
+
+| Style | Pair time | vs `eam` |
+| --- | ---: | ---: |
+| `eam` | 0.780 s | 1.00× |
+| **`eam/rvv`** | 0.614 s | **1.27×** |
+| `eam/opt` | 0.574 s | 1.36× |
+
+EAM is ~**96%** Pair — a better RVV target than LJ. Hand RVV beats stock `eam`
+but still trails the OPT package (~7%).
 
 ---
 
@@ -133,12 +142,10 @@ FFT library = FFTW3
 
 ## Practical optimization backlog
 
-1. **Hand RVV `lj/cut`** (in progress via `lammps/rvv-lj`) → new pair style or
-   `#ifdef` in Pair functor; A/B on `in.melt` / `in.lj` with `newton off`.
-2. **Kokkos `SIMD_RVV` backend** upstream — unlocks any future SIMD-aware kernels;
-   not required for a standalone LAMMPS pair style.
+1. **`eam/rvv` vs `eam/opt`** — close the ~7% gap (templating / less spill).
+2. **Kokkos `SIMD_RVV` backend** upstream — unlocks SIMD-aware kernels later.
 3. Neigh distance filter — lower ROI than Pair.
-4. Do **not** expect `-ftree-vectorize` alone to fix Pair.
+4. LJ further tuning — low ROI after ~1.02× in-app.
 
 ---
 

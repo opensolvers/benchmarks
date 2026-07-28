@@ -33,11 +33,19 @@ All five run at the LAMMPS default problem size (**32000 atoms, 100 steps**), so
 the numbers are directly comparable across modes and against any other LAMMPS
 build on the same inputs.
 
+## Related (this tree)
+
+| Path | Contents |
+| --- | --- |
+| [`rvv-lj/`](rvv-lj) | Hand RVV `lj/cut` microkernel + `lj/cut/rvv` LAMMPS plugin (~1.61× vs scalar microbench; ~1.02× vs stock in-app) |
+| [`../kokkos/`](../kokkos) | Kokkos learnings on X60 (execution spaces, no RVV SIMD abi, Pair dominance) |
+
 ## Contents
 
 | File | Purpose |
 |---|---|
 | `run-lammps-bench.sh` | runs the 5 `bench/` inputs x 3 modes (serial / kokkos8 / mpi8), parses LAMMPS's own `Loop time` + `Performance:` lines into a CSV |
+| `rvv-lj/` | hand-RVV LJ Pair microkernel + plugin (see above) |
 
 The five inputs and their data files (`in.lj`, `in.eam`, `in.chain`, `in.chute`,
 `in.rhodo`, `Cu_u3.eam`, `data.{chain,chute,rhodo}`) come straight from the LAMMPS

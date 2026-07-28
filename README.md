@@ -29,8 +29,8 @@ correctness (finite / bit-identical results) is checked in every case.
 | [`qe/`](qe) | Quantum ESPRESSO `pw.x` plane-wave DFT SCF, end-to-end | **BLAS** (FlexiBLAS) | real-application A/B |
 | [`fftw/`](fftw) | FFTW 3.3.10 RVV (`r5v`) vs scalar, **and** the FFT axis inside a QE SCF | **FFT** (`--enable-r5v`, `LD_PRELOAD`) | microbench + real-application A/B |
 | [`gromacs/`](gromacs) | GROMACS `mdrun` PME molecular dynamics, end-to-end | **FFT** (single-prec `libfftw3f`, `LD_PRELOAD`) | real-application A/B |
-| [`kokkos/`](kokkos) | Kokkos (via LAMMPS) on X60: execution spaces, Pair hot path, why stock SIMD has no RVV; hand-RVV LJ results | Pair / RVV | learnings + results |
-| [`lammps/`](lammps) | Hand RVV `lj/cut` Pair microkernel (SoA tiles) aimed at LAMMPS/Kokkos Pair | Pair kernel | microkernel + verification |
+| [`kokkos/`](kokkos) | Kokkos (via LAMMPS) on X60: execution spaces, Pair hot path, no RVV SIMD abi; hand-RVV LJ + EAM results | Pair / RVV | learnings + results |
+| [`lammps/`](lammps) | Whole-app LAMMPS bench + hand RVV `lj/cut` / `eam` Pair plugins | Pair kernel | microkernel + plugin A/B |
 | [`ime/`](ime) | int8 (`s8s8s32`) GEMM microkernel on the X60 **IME** (`smt.vmadot`) vs RVV | int8 kernel | microkernel + verification |
 | [`onnx/`](onnx) | int4 `MatMulNBits` LLM-FFN inference via ONNX Runtime MLAS | int4 kernel | application + root-cause writeup |
 | [`papers/`](papers) | Longer-form writeups (e.g. X60 IME block-scale optimization) | — | prose / PDF |

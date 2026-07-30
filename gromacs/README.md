@@ -106,6 +106,30 @@ delivers a **~1.23x speedup on the 3D-FFT** step (21.1 s -> 17.2 s), and ~1.05x
 on the full PME mesh (the non-FFT spread/gather/solve sub-steps are scalar and do
 not move).
 
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+Same `md.tpr` + same r5v/scalar `libfftw3f` binaries (copied from the RV2 build),
+`GROMACS/2026.2-foss-2025b`, FlexiBLAS→scalar OpenBLAS, 1 rank / 1 thread, on a
+[Banana Pi BPI-F3](https://www.banana-pi.org/) (SpaceMiT K1, 8× X60 @ 1.6 GHz):
+
+| FFT backend | avg potential energy | Δ vs scalar |
+|---|--:|--:|
+| scalar | **-236622 kJ/mol** | - |
+| r5v / RVV | **-236883 kJ/mol** | **0.11 %** |
+
+| activity | scalar | r5v (RVV) | speedup | kind |
+|---|--:|--:|--:|---|
+| **`PME 3D-FFT`** | 19.965 s | 17.513 s | **1.14x** | **FFT (the swapped axis)** |
+| `PME mesh` (total) | 68.746 s | 66.387 s | 1.04x | FFT + spread/gather/solve |
+| `PME solve Elec` | 9.150 s | 9.162 s | 1.00x | scalar (control) |
+| `Force` | 803.54 s | 803.83 s | 1.00x | **scalar kernels (control)** |
+| `Neighbor search` | 6.465 s | 6.472 s | 1.00x | scalar (control) |
+| `Constraints` | 5.619 s | 5.627 s | 1.00x | scalar (control) |
+
+Same story as the RV2: `Force` control flat, RVV wins on `PME 3D-FFT` (~1.14x
+here vs 1.23x on the RV2 — same binaries, board/run noise at the 2 % PME
+fraction), whole-app barely moves.
+
 ### Where GROMACS sits on the backend-dilution spectrum
 
 | probe | axis A/B'd | isolated-kernel speedup | whole-app effect |

@@ -62,3 +62,24 @@ benchmark: at 8 ranks the node-local BLAS blocks are small and MPI communication
 plus the serial tridiagonal solve dominate wall time, so the RVV-accelerable
 BLAS-3 fraction is small. It is the conservative, communication-bound end of the
 BLAS-backend spectrum.
+
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+`na=3000`, `2x4` grid, 8 ranks × 1 thread on a
+[Banana Pi BPI-F3](https://www.banana-pi.org/) (SpaceMiT K1, 8× X60 @ 1.6 GHz),
+EESSI `ScaLAPACK/2.2.2-gompi-2025b-fb`:
+
+| backend | time | result |
+|---|---:|---|
+| stock CVMFS 0.3.30, default RVV (`ZVL256B`) | - | **HANG** (killed at 240 s) |
+| scalar (`RISCV64_GENERIC`) | 106.00 s | finite=1 (`ev0=2695.86620 evN=4499.98584`) |
+
+Same hang on unpatched vector `gemv_n` as the RV2; scalar finishes cleanly and a
+little faster than the RV2's 116.87 s scalar run. (Patched RVV was not re-built
+on this F3 image; the OpenBLAS / ELPA F3 sections already confirm the fix on this
+SoC.)
+
+## Files
+
+- `scalapack_bench.c` - the benchmark (single source file, MIT licensed).
+- `Makefile` - builds against a loaded ScaLAPACK module (`make CC=mpicc`).

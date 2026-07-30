@@ -16,25 +16,32 @@ implementation (BLAS via FlexiBLAS, or FFT via `LD_PRELOAD`) — so a measured
 delta is attributable to that single backend and nothing else. Numerical
 correctness (finite / bit-identical results) is checked in every case.
 
+Where both boards share the same K1 / X60 silicon, many directories also include a
+**Banana Pi BPI-F3 cross-board confirmation** (3.7 GB RAM) next to the Orange Pi
+RV2 numbers.
+
 ## What's here
 
 | Dir | What it measures | Axis swapped | Kind |
 |---|---|---|---|
-| [`OpenBLAS/`](OpenBLAS) | OpenBLAS on RISC-V: DGEMM performance + differential correctness + TRSM sweep; localizes two broken RVV kernels (`gemv_n` NaN, `_rvv_v1` TRSM VLEN bug) | BLAS | microbench + verification |
-| [`BLIS/`](BLIS) | BLIS (FLAME) RVV build on RISC-V + DGEMM performance A/B vs OpenBLAS | BLAS | microbench + verification |
+| [`cores/`](cores) | X60 and SiFive U74 ISA / codegen notes (what the silicon implements, how to target it) | — | reference |
+| [`OpenBLAS/`](OpenBLAS) | OpenBLAS on RISC-V: DGEMM + differential correctness + TRSM sweep; localizes two broken RVV kernels (`gemv_n` NaN, `_rvv_v1` TRSM VLEN bug) | BLAS | microbench + verification |
+| [`BLIS/`](BLIS) | BLIS (FLAME) RVV build + DGEMM A/B vs OpenBLAS (RV2 + F3) | BLAS | microbench + verification |
 | [`numpy/`](numpy) | BLAS/LAPACK backend as seen through NumPy/SciPy | BLAS | application proxy |
-| [`hpl/`](hpl) | High-Performance Linpack, end-to-end | BLAS (FlexiBLAS) | application A/B |
+| [`hpl/`](hpl) | High-Performance Linpack, end-to-end (incl. HPL-on-BLIS) | BLAS (FlexiBLAS / static BLIS) | application A/B |
 | [`elpa/`](elpa) | Dense real-symmetric eigensolver (ELPA, 1-stage) | BLAS | microbench |
 | [`scalapack/`](scalapack) | Distributed dense eigensolver (ScaLAPACK `PDSYEV`, pure-MPI) | BLAS | microbench (MPI) |
 | [`qe/`](qe) | Quantum ESPRESSO `pw.x` plane-wave DFT SCF, end-to-end | **BLAS** (FlexiBLAS) | real-application A/B |
-| [`fftw/`](fftw) | FFTW 3.3.10 RVV (`r5v`) vs scalar, **and** the FFT axis inside a QE SCF | **FFT** (`--enable-r5v`, `LD_PRELOAD`) | microbench + real-application A/B |
-| [`gromacs/`](gromacs) | GROMACS `mdrun` PME molecular dynamics, end-to-end | **FFT** (single-prec `libfftw3f`, `LD_PRELOAD`) | real-application A/B |
-| [`kokkos/`](kokkos) | Kokkos (via LAMMPS) on X60: execution spaces, Pair hot path, no RVV SIMD abi; hand-RVV LJ + EAM results | Pair / RVV | learnings + results |
-| [`lammps/`](lammps) | Whole-app LAMMPS bench + hand RVV `lj/cut` / `eam` Pair plugins | Pair kernel | microkernel + plugin A/B |
-| [`ime/`](ime) | int8 (`s8s8s32`) GEMM microkernel on the X60 **IME** (`smt.vmadot`) vs RVV | int8 kernel | microkernel + verification |
+| [`fftw/`](fftw) | FFTW 3.3.10 RVV (`r5v`) vs scalar, **and** the FFT axis inside a QE SCF (RV2 + F3) | **FFT** (`--enable-r5v`, `LD_PRELOAD`) | microbench + real-application A/B |
+| [`gromacs/`](gromacs) | GROMACS `mdrun` PME: FFT-axis A/B + hand-written RVV `Force` backend (RV2 + F3 FFT) | **FFT** / **SIMD Force** | real-application A/B |
+| [`kokkos/`](kokkos) | Kokkos (via LAMMPS) on X60: OpenMP/Serial, no RVV SIMD abi; Pair hot path; hand-RVV LJ + EAM results | Pair / RVV | learnings + results |
+| [`lammps/`](lammps) | RVV-Kokkos whole-app MD (5 upstream benches × serial/Kokkos/MPI, RV2 + F3) + hand RVV `lj/cut` / `eam` plugins | Pair / parallel back-end | whole-app + plugin A/B |
+| [`ime/`](ime) | int8 (`s8s8s32`) GEMM on X60 **IME** (`smt.vmadot`) vs RVV (RV2 + F3) | int8 kernel | microkernel + verification |
+| [`llamacpp/`](llamacpp) | llama.cpp Q4_0 / Q4_K_M end-to-end: IME vs RVV (model validation + m1gemv study) | IME / RVV | application A/B |
 | [`onnx/`](onnx) | int4 `MatMulNBits` LLM-FFN inference via ONNX Runtime MLAS | int4 kernel | application + root-cause writeup |
+| [`gpu/`](gpu) | PowerVR BXE-2-32 GPU compute: vendor stack closed + deferred open Mesa `pvr` route | GPU | characterization / negative result |
 | [`papers/`](papers) | Longer-form writeups (e.g. X60 IME block-scale optimization) | — | prose / PDF |
-| [`gpu/`](gpu) | PowerVR BXE-2-32 GPU compute: why the vendor stack is closed + the open Mesa `pvr` / `drm/imagination` route (deferred R&D) | GPU | characterization / negative result |
+| [`todo.md`](todo.md) | Tracking list for remaining RISC-V bring-up work | — | planning |
 
 ### Two views of the same question
 
@@ -47,10 +54,14 @@ disagree — and that disagreement is the interesting result:
 - **FFT axis:** [`fftw`](fftw) standalone microbench (RVV wins **1.06–1.60×**)
   → the same RVV FFTW dropped into a Quantum ESPRESSO SCF (**~0% end-to-end**,
   documented in [`fftw/README.md`](fftw/README.md)), and into a
-  [`gromacs`](gromacs) PME MD run (RVV wins **1.23×** on the isolated
+  [`gromacs`](gromacs) PME MD run (RVV wins **1.14–1.23×** on the isolated
   `PME 3D-FFT`, but that step is a small fraction of a scalar-`Force`-dominated
-  run). A microbenchmark speedup is not an application speedup.
-- **int8/int4 axis:** [`ime`](ime) microkernel → [`onnx`](onnx) real inference.
+  run). Hand-vectorizing `Force` moves the whole app (**~3.31×** on RV2).
+- **int8/int4 axis:** [`ime`](ime) microkernel → [`onnx`](onnx) / [`llamacpp`](llamacpp)
+  real inference.
+- **MD Pair axis:** stock Kokkos Pair (portable OpenMP, no RVV SIMD abi) → hand
+  RVV plugins in [`lammps/rvv-lj`](lammps/rvv-lj) / [`lammps/rvv-eam`](lammps/rvv-eam)
+  and learnings in [`kokkos`](kokkos).
 
 ## How to use / replicate
 
@@ -60,19 +71,18 @@ command, run command, and expected output.
 
 Common ground for reproducing any of these:
 
-1. **Hardware:** a SpaceMiT X60 / K1 board (Orange Pi RV2 or Banana Pi BPI-F3).
-   Results are reported per-board; the FFTW/QE numbers here are from the
-   Orange Pi RV2.
+1. **Hardware:** a SpaceMiT X60 / K1 board — **Orange Pi RV2** (8 GB) or
+   **Banana Pi BPI-F3** (3.7 GB). Primary numbers are usually from the RV2;
+   F3 sections confirm the same SoC (and note RAM limits for large HPL configs).
 2. **Toolchain:** the [EESSI](https://www.eessi.io/) 2025.06 stack (or the
-   `dev.eessi.io` riscv overlay), giving GCC 14.3.0 + external
-   FFTW / FlexiBLAS / OpenBLAS / OpenMPI modules. Each README names the exact
-   modules it loads.
+   [`dev.eessi.io/riscv`](https://www.eessi.io/docs/repositories/dev.eessi.io-riscv/)
+   overlay), giving GCC 14.3.0 + external FFTW / FlexiBLAS / OpenBLAS / OpenMPI
+   modules. Each README names the exact modules it loads.
 3. **The A/B pattern:** swap **one** backend and keep the rest fixed —
-   - **BLAS:** `FlexiBLAS` selects the backend at runtime (`FLEXIBLAS=OpenBLAS`
-     vs another) under one unchanged binary — see [`hpl`](hpl), [`qe`](qe),
-     [`numpy`](numpy).
-   - **FFT:** `LD_PRELOAD` a specific `libfftw3.so.3` (r5v vs scalar) under one
-     unchanged binary — see [`fftw/run-qe-fft-ab.sh`](fftw/run-qe-fft-ab.sh).
+   - **BLAS:** `FlexiBLAS` selects the backend at runtime under one unchanged
+     binary — see [`hpl`](hpl), [`qe`](qe), [`numpy`](numpy).
+   - **FFT:** `LD_PRELOAD` a specific `libfftw3(f).so.3` (r5v vs scalar) under
+     one unchanged binary — see [`fftw`](fftw), [`gromacs`](gromacs).
 4. **Always check correctness first** — every harness verifies finite /
    bit-identical results across the A/B before comparing timings.
 
@@ -85,14 +95,21 @@ Common ground for reproducing any of these:
 
 ## Headline findings so far
 
-- **FFTW RVV codelets are real** (bit-accurate) and win **1.06–1.60×** in
-  isolation — but the win is *largely a planner effect* and **evaporates to ~0%**
-  inside a real Quantum ESPRESSO SCF, which plans with `FFTW_ESTIMATE` over
-  thousands of small mixed-radix transforms.
-- On the X60, **neither the BLAS axis nor the FFT axis meaningfully moves a real
-  QE DFT run** with today's drop-in vectorized libraries.
-- The X60 **IME** (`smt.vmadot`) int8 path is where the real integer-GEMM wins
-  live — see [`ime`](ime) and [`onnx`](onnx).
+- **OpenBLAS RVV `gemv_n`** on stock EESSI returns NaN → HPL / ELPA / QE / NumPy
+  fail; ScaLAPACK **hangs**. The patched build restores correctness (HPL
+  **~10.5–11.5 GFLOP/s** on X60).
+- **FFTW RVV codelets are real** and win **1.06–1.60×** in isolation (RV2 and
+  F3) — but the win is *largely a planner effect* and **evaporates to ~0%**
+  inside a real QE SCF (`FFTW_ESTIMATE`, many small transforms).
+- **GROMACS:** FFT swap **~1.14–1.23×** on `PME 3D-FFT`; hand RVV `Force`
+  backend **~3.31×** whole-app on RV2.
+- **LAMMPS:** RVV-Kokkos whole-app scales to **~6–7×** across 8 cores (parallel
+  scaling, not RVV-vs-scalar); hand RVV Pair: LJ micro **~1.6×**, EAM in-app
+  **1.27×** (still behind `eam/opt`).
+- **IME** (`smt.vmadot`) int8 peaks **~42–45 GOP/s** (~6–7× RVV int8) on both
+  boards; end-to-end int4 wins live in [`onnx`](onnx) / [`llamacpp`](llamacpp).
+- **GPU (BXE-2-32):** vendor GPGPU path is **closed** (BXM-only DDK); open Mesa
+  deferred — see [`gpu`](gpu).
 
 See each directory's `README.md` for the numbers, methodology notes, and the
-traps encountered along the way.
+traps encountered along the way. Site write-ups: [opensolvers.com](https://www.opensolvers.com).

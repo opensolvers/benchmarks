@@ -105,6 +105,35 @@ LAMMPS's own end-of-run `Loop time` and `Performance:` throughput, on 8x X60 @
 |           | kokkos8  | 59.10  | 54.1   | 5.44x |
 |           | mpi8     | 54.17  | 59.1   | **5.94x** |
 
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+Same RVV-Kokkos `lmp` binary (copied from the RV2 overlay install) and the same
+five `bench/` inputs on a [Banana Pi BPI-F3](https://www.banana-pi.org/)
+(SpaceMiT K1, 8× X60 @ 1.6 GHz, 3.7 GB RAM), EESSI `foss/2025b` for runtime
+libs:
+
+| benchmark | mode | loop (s) | katom-step/s | speedup vs serial |
+|---|---|--:|--:|--:|
+| **lj**    | serial   | 13.92  | 229.9  | 1.00x |
+|           | kokkos8  | 2.457  | 1303   | **5.66x** |
+|           | mpi8     | 3.078  | 1040   | 4.52x |
+| **eam**   | serial   | 35.26  | 90.7   | 1.00x |
+|           | kokkos8  | 5.601  | 571.3  | **6.29x** |
+|           | mpi8     | 7.538  | 424.5  | 4.68x |
+| **chain** | serial   | 7.545  | 424.1  | 1.00x |
+|           | kokkos8  | 2.242  | 1427   | 3.37x |
+|           | mpi8     | 1.588  | 2015   | **4.75x** |
+| **chute** | serial   | 5.670  | 564.3  | 1.00x |
+|           | kokkos8  | 1.603  | 1996   | 3.54x |
+|           | mpi8     | 1.381  | 2317   | **4.11x** |
+| **rhodo** | serial   | 281.4  | 11.4   | 1.00x |
+|           | kokkos8  | 57.72  | 55.4   | 4.87x |
+|           | mpi8     | 55.20  | 58.0   | **5.10x** |
+
+Same mode ranking as the RV2 (Kokkos wins on `lj`/`eam`; MPI on `chain`/`chute`/
+`rhodo`). Absolute serial throughputs are a bit higher on this F3 image; 8-core
+scaling factors are in the same ballpark (slightly lower on the pair potentials).
+
 **Reading the matrix.** Two clear regimes on 8 cores:
 
 - **Compute-bound pair potentials (`lj`, `eam`)** favour **Kokkos/OpenMP** — the

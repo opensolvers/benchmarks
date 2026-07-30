@@ -108,6 +108,32 @@ worst_resid=2.55e-07** (single- and 8-thread). BLIS's triangular solve is
 numerically correct on the X60 - unlike the stock OpenBLAS `_rvv_v1` TRSM kernel
 this repo's [`../OpenBLAS`](../OpenBLAS) work localized.
 
+## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+Same BLIS `061c2eb` (`rv64iv`, OpenMP) build path on a
+[Banana Pi BPI-F3](https://www.banana-pi.org/) (SpaceMiT K1, 8× X60 @ 1.6 GHz,
+3.7 GB RAM), linked A/B against stock CVMFS
+`OpenBLAS/0.3.30-GCC-14.3.0` (no local patched OpenBLAS on this image). DGEMM
+GFLOP/s (square, 3 reps, best):
+
+| threads | N | BLIS | OpenBLAS 0.3.30 | BLIS/OpenBLAS |
+|--:|--:|--:|--:|--:|
+| 1 | 1024 | 2.13 | 3.01 | 0.71x |
+| 1 | 2048 | 2.85 | 2.96 | 0.96x |
+| 1 | 4096 | 3.08 | 2.89 | 1.07x |
+| 8 | 1024 | 8.94 | 10.10 | 0.89x |
+| 8 | 2048 | 9.92 | 10.82 | 0.92x |
+| 8 | 4096 | 10.34 | 10.96 | 0.94x |
+
+Correctness (`verify_ctrsm`): **2400 cases, 0 fails, worst_resid=2.55e-07**
+(1- and 8-thread) — identical to the RV2.
+
+Vs the RV2 table above: single-thread BLIS peaks match (~3.0–3.1 GFLOP/s @
+N=4096); stock CVMFS OpenBLAS on the F3 is stronger at small N than the
+RV2's patched local build was (3.01 vs 2.13 @ N=1024×1), so the F3
+BLIS/OpenBLAS ratio at that point is lower. At 8 threads both boards put
+OpenBLAS slightly ahead (~0.9×). Same SoC story, different OpenBLAS baseline.
+
 ## Gotcha - `module load` does not repath `gcc` on the Orange Pi RV2
 
 Same trap as [`../fftw/README.md`](../fftw/README.md): `module load

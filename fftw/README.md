@@ -77,6 +77,27 @@ Under the `FFTW_MEASURE` default the RVV backend beats scalar at **every** size,
 **1.06–1.60×** — largest on cache-resident transforms (1.6× @ 256), tapering to
 ~1.06× as transforms become memory-bandwidth-bound (≥64K). Textbook.
 
+## Cross-board confirmation — Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+Same `tests/bench` A/B (`-t 1.0`, estimate + MEASURE; no `patient`) on a
+[Banana Pi BPI-F3](https://www.banana-pi.org/) (SpaceMiT K1, 8× X60 @ 1.6 GHz),
+using the **same** r5v / scalar `libfftw3.so.3.6.10` binaries built on the RV2
+(GCC 14.3.0, `-O3 -march=rv64imafdcv_zvl256b`). Median MFLOPS:
+
+| size | estimate r5v / scal | **MEASURE r5v / scal** | **r5v speedup (MEASURE)** |
+|---:|---:|---:|:---:|
+| 256 | 2196 / 1386 | **2518 / 1576** | **1.60×** |
+| 1024 | 720 / 746 | **1634 / 1273** | **1.28×** |
+| 4096 | 302 / 361 | **1276 / 1033** | **1.24×** |
+| 16384 | 424 / 330 | **943 / 817** | **1.15×** |
+| 65536 | 178 / 169 | 723 / 741 | **0.98×** |
+| 262144 | 203 / 160 | **729 / 685** | **1.06×** |
+
+Matches the RV2 within a few percent at every cache-resident size (1.60× @ 256
+identical). At N≥64K both boards are bandwidth-bound and the ratio sits near
+1×; the F3's 0.98× at N=65536 is within run-to-run noise of the RV2's 1.06×
+there (same binaries). Planner takeaway unchanged: MEASURE ≫ estimate.
+
 ## The big lever is the planner, not the codelets
 
 The single biggest speedup on this hardware is **planner choice**, worth

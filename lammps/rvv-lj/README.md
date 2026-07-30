@@ -59,6 +59,20 @@ taskset -c 0 ./lj_pair_bench [nlocal=2048] [rounds=20]
 
 `-march=rv64gcv_zvl256b` via the Makefile `ARCH` flag.
 
+## Cross-board confirmation - Banana Pi BPI-F3
+
+Same microbench on a [Banana Pi BPI-F3](https://www.banana-pi.org/) (SpaceMiT
+K1, 8× X60), EESSI GCC 14.3.0 (`-L/-B` for `libgcc_s`):
+
+```
+n=2048 … nnz=98426 rounds=20
+max|f_scalar - f_rvv| = 6.750e-14 OK
+scalar: 58.765 ns/pair
+rvv:    37.417 ns/pair  speedup 1.57x
+```
+
+Matches the RV2 ~1.62× within board noise.
+
 ## Next
 
 See [`INTEGRATION.md`](INTEGRATION.md). **In-LAMMPS verify is done** via

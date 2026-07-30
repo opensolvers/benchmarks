@@ -100,6 +100,25 @@ scalar reference. The clean peak crests at 768³ (~42) then settles to ~32–34 
 alone is 4 MB): the large sizes are turning memory-bound, the main tuning lead
 from here.
 
+## Cross-board confirmation — Banana Pi BPI-F3 (same K1 / X60 SoC)
+
+Same `make board` binary path on a [Banana Pi BPI-F3](https://www.banana-pi.org/)
+(SpaceMiT K1, 8× X60 @ 1.6 GHz, `performance` gov, `taskset -c 0`), EESSI
+`GCC/14.3.0`. Every path is `ok` (bit-exact vs scalar) at every size. Clean-layout
+peaks (max over ≥5 launches; same malloc-aliasing bimodality as the RV2):
+
+| M×N×K | scalar | RVV int8 | **IME (8×16 blocked)** | IME/RVV |
+|---|--:|--:|--:|--:|
+| 256×256×256   | 1.93 | 6.13 | **34** | 5.5× |
+| 512×512×512   | 2.00 | 6.62 | **40** | 6.1× |
+| 768×768×512   | 1.99 | 6.49 | **45** | 6.9× |
+| 1024×1024×512 | 1.97 | 6.44 | **36** | 5.5× |
+
+Same conclusion as the RV2: IME is **~6–7×** RVV int8 and crests near **45 GOP/s**
+at 768³ before L2 pressure pulls large sizes down. (Scalar GOP/s here is higher
+than the older RV2 table above — GCC 14.3 vs the earlier host toolchain — but
+IME absolute peaks and IME/RVV ratios match.)
+
 ### Cache-set aliasing (buffer placement)
 
 Every size here runs **bimodal**: some launches hit the peak above, others sit

@@ -1,0 +1,26 @@
+// UniformGrid RVV A/B — MPI 4 ranks (4 blocks × cellsPerBlock)
+// Slightly fewer steps than np=1 to keep wall time reasonable.
+
+UniformGrid
+{
+   xCells 64;
+   yCells 64;
+   zCells 64;
+
+   xWeight 1.0;
+   yWeight 1.0;
+   zWeight 1.0;
+
+   outerTimeSteps 4;
+   innerTimeSteps 25; // 100 steps
+
+   logToSqlDB  false;
+   sqlFile     uniform_grid_bench_mpi4.sqlite;
+
+   omega 1.4;
+   velocity 0.01;
+}
+
+VTK
+{
+}

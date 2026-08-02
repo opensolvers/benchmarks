@@ -37,6 +37,7 @@ RV2 numbers.
 | [`kokkos/`](kokkos) | Kokkos (via LAMMPS) on X60: OpenMP/Serial, no RVV SIMD abi; Pair hot path; hand-RVV LJ + EAM results | Pair / RVV | learnings + results |
 | [`lammps/`](lammps) | RVV-Kokkos whole-app MD (5 upstream benches × serial/Kokkos/MPI, RV2 + F3) + hand RVV `lj/cut` / `eam` plugins | Pair / parallel back-end | whole-app + plugin A/B |
 | [`openfoam/`](openfoam) | OpenFOAM v2506 motorBike / `simpleFoam`: auto-vec + hand RVV Amul / GS A/B (RV2) | sparse Amul / GS | real-application A/B (negative) |
+| [`walberla/`](walberla) | waLBerla 7.2: BasicLBM ISA A/B, HeatEquation / UniformGrid auto-vec, hand RVV simd + SoA microbenches (RV2) | ISA / auto-vec / simd | HeatEq **1.64×**; UG collide **1.54×**; hand simd loses |
 | [`ime/`](ime) | int8 (`s8s8s32`) GEMM on X60 **IME** (`smt.vmadot`) vs RVV (RV2 + F3) | int8 kernel | microkernel + verification |
 | [`llamacpp/`](llamacpp) | llama.cpp Q4_0 / Q4_K_M end-to-end: IME vs RVV (model validation + m1gemv study) | IME / RVV | application A/B |
 | [`onnx/`](onnx) | int4 `MatMulNBits` LLM-FFN inference via ONNX Runtime MLAS | int4 kernel | application + root-cause writeup |
@@ -110,6 +111,12 @@ Common ground for reproducing any of these:
 - **OpenFOAM motorBike:** GCC `-ftree-vectorize` **~0%**; hand RVV Amul
   **~50% slower** than scalar (solve **~3–4% worse**); hand RVV GS face loops
   also a mild regression — see [`openfoam`](openfoam).
+- **waLBerla:** ISA-tag BasicLBM is only ~**1–4%**; real auto-vec wins are
+  HeatEquation Jacobi **1.64×** (np1) and UniformGrid `--not-fused` WALL
+  **1.30×** / collide **1.54×** (stream flat). Hand `simd::double4_t` RVV is
+  slower than FORCE_SCALAR; plain SoA auto-vec microbench ~**2.4×** vs novec
+  (~**9×** vs hand simd). Collide/stream split BasicLBM loses to fused — see
+  [`walberla`](walberla).
 - **IME** (`smt.vmadot`) int8 peaks **~42–45 GOP/s** (~6–7× RVV int8) on both
   boards; end-to-end int4 wins live in [`onnx`](onnx) / [`llamacpp`](llamacpp).
 - **GPU (BXE-2-32):** vendor GPGPU path is **closed** (BXM-only DDK); open Mesa

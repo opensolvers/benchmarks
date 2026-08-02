@@ -1,0 +1,4 @@
+name=rvv
+hot_lines=356
+hot_vle64=48 hot_vse64=18 hot_vfadd=22 hot_vfmul=20 hot_vfmacc=14 hot_vfsqrt=2
+binary_vle64_total=48 binary_vse64_total=18 binary_vfadd_total=22

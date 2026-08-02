@@ -1,0 +1,57 @@
+soa_lbm_autovec A/B — GCC AUTOVEC vs NOVEC (plain double SoA)
+date=2026-08-02T11:38:23+00:00
+host=orangepirv2 (Orange Pi RV2 / Ky X1 X60)
+nx=262144 iters=80 reps=3 working_set_MiB=18.00
+Q=9 (D2Q9-ish SoA BGK collide) — plain double*, no walberla::simd
+cxxflags=-std=c++20 -O2 -march=rv64gcv -mabi=lp64d -fno-math-errno
+AUTOVEC: -ftree-vectorize
+NOVEC:   -fno-tree-vectorize
+compiler=g++ (GCC) 14.3.0 via EESSI foss/2025b
+source=microbench/soa_lbm_autovec.cpp
+script=scripts/rvv-soa-autovec.sh
+board=/home/orangepi/walberla-bench/
+
+----- WALL (best of 3) -----
+AUTOVEC: BEST_WALL_s=1.580360   MLUPS≈13.270   ≈1.91 GB/s
+NOVEC:   BEST_WALL_s=3.764932   MLUPS≈5.570    ≈0.80 GB/s
+
+speedup_autovec_over_novec=2.38x
+
+----- vs prior simd microbench (same nx/iters) -----
+PRIOR simd vector_size(32): BEST_WALL_s=14.595330  MLUPS≈1.437
+PRIOR FORCE_SCALAR+auto-vec: BEST_WALL_s=8.335790   MLUPS≈2.516
+PRIOR POD RVV:               BEST_WALL_s=22.802704  MLUPS≈0.92
+
+speedup_plain_AUTOVEC_vs_simd≈9.24x
+speedup_plain_AUTOVEC_vs_FORCE_SCALAR≈5.27x
+speedup_plain_AUTOVEC_vs_POD_RVV≈14.4x
+
+Checksums match AUTOVEC/NOVEC (2.8964557243312758e-07).
+
+----- Evidence hot loop vectorized -----
+-fopt-info-vec-optimized:
+  soa_lbm_autovec.cpp:62:29: optimized: loop vectorized using variable length vectors
+objdump collideSoA:
+  AUTOVEC: vle64=9 vse64=9 vfadd=22 vfmul=41 vfmacc=24 vfsqrt=1  (+ vsetvli)
+  NOVEC:   vle64=0 vse64=0 vfadd=0  vfmul=0  vfmacc=0  vfsqrt=0
+
+----- Recommendation -----
+Prefer plain SoA + GCC -ftree-vectorize over hand walberla::simd::double4_t
+for this collide pattern on RVV/GCC 14. Fixed VL=4 simd underperforms scalable
+auto-vec here. FORCE_SCALAR previously looked "fast" only relative to spill-y
+simd; unwrapped double* SoA is much faster still.
+
+----- App-level (CellwiseSweep / SplitPureSweep) -----
+No small safe patch applied. Blockers for auto-vec in full LBM sweeps:
+1. CellwiseSweep: per-cell filter + Field::get(x±Δ,y±Δ,z,f) pull stencil —
+   non-contiguous neighbor gathers; XYZ iterator with ghost padding.
+2. Stream-collide pull (D2Q9): 8 of 9 directions read off-x-line (y±1);
+   even with fzyx SoA, y-neighbor PDF rows are not contiguous with the
+   current x-row for auto-vec of the fused stream-collide.
+3. SplitPureSweep already uses WALBERLA_RESTRICT temps and x-loops, but
+   still routes PDF I/O through Field::get with neighbor offsets — same
+   gather problem for streaming directions.
+4. Collide-only (no stream) on contiguous f-component rows is what this
+   microbench proves vectorizes; that is NOT the default 01_BasicLBM path.
+
+See results/soa-autovec/ for full logs, objdump, vec reports.

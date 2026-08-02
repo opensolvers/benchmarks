@@ -1,0 +1,11 @@
+# CMake fragment: add to apps/tutorials/lbm/CMakeLists.txt (after 01_BasicLBM)
+
+waLBerla_add_executable ( NAME 01_BasicLBM_CollideStreamSplit
+                          FILES 01_BasicLBM_CollideStreamSplit.cpp SoaCollideKernels.cpp
+      DEPENDS walberla::blockforest walberla::core walberla::field walberla::lbm walberla::geometry walberla::timeloop )
+
+# Optional: richer vec report for the SoA collide TU only
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(SoaCollideKernels.cpp PROPERTIES
+    COMPILE_FLAGS "-fopt-info-vec-optimized")
+endif()

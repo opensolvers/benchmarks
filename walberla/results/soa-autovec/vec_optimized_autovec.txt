@@ -1,0 +1,4 @@
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:126:25: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:62:29: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:126:25: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:62:29: optimized: loop vectorized using variable length vectors

@@ -1,0 +1,80 @@
+0000000000011390 <(anonymous namespace)::collideSoA(double*, double*, double*, double*, double*, double*, double*, double*, double*, unsigned long, int, double)>:
+   11390:	7135                	addi	sp,sp,-160
+   11392:	c22022f3          	csrr	t0,vlenb
+   11396:	ed22                	sd	s0,152(sp)
+   11398:	00229313          	slli	t1,t0,0x2
+   1139c:	c2202473          	csrr	s0,vlenb
+   113a0:	e926                	sd	s1,144(sp)
+   113a2:	e54a                	sd	s2,136(sp)
+   113a4:	e14e                	sd	s3,128(sp)
+   113a6:	fcd2                	sd	s4,120(sp)
+   113a8:	f8d6                	sd	s5,112(sp)
+   113aa:	f4da                	sd	s6,104(sp)
+   113ac:	f0de                	sd	s7,96(sp)
+   113ae:	ece2                	sd	s8,88(sp)
+   113b0:	e8e6                	sd	s9,80(sp)
+   113b2:	e4ea                	sd	s10,72(sp)
+   113b4:	e0ee                	sd	s11,64(sp)
+   113b6:	040a                	slli	s0,s0,0x2
+   113b8:	40610133          	sub	sp,sp,t1
+   113bc:	940a                	add	s0,s0,sp
+   113be:	0b042403          	lw	s0,176(s0)
+   113c2:	8281b787          	fld	fa5,-2008(gp) # 130d0 <__TMC_END__+0x28>
+   113c6:	fc22                	sd	s0,56(sp)
+   113c8:	f82a                	sd	a0,48(sp)
+   113ca:	0aa7f753          	fsub.d	fa4,fa5,fa0
+   113ce:	3c805663          	blez	s0,1179a <(anonymous namespace)::collideSoA(double*, double*, double*, double*, double*, double*, double*, double*, double*, unsigned long, int, double)+0x40a>
+   113d2:	8c3e                	mv	s8,a5
+   113d4:	8401b187          	fld	ft3,-1984(gp) # 130e8 <__TMC_END__+0x40>
+   113d8:	8db2                	mv	s11,a2
+   113da:	8381b207          	fld	ft4,-1992(gp) # 130e0 <__TMC_END__+0x38>
+   113de:	8bba                	mv	s7,a4
+   113e0:	0d807657          	vsetvli	a2,zero,e64,m1,ta,ma
+   113e4:	8481b087          	fld	ft1,-1976(gp) # 130f0 <__TMC_END__+0x48>
+   113e8:	5e01d0d7          	vfmv.v.f	v1,ft3
+   113ec:	8b36                	mv	s6,a3
+   113ee:	8201b107          	fld	ft2,-2016(gp) # 130c8 <__TMC_END__+0x20>
+   113f2:	8501b587          	fld	fa1,-1968(gp) # 130f8 <__TMC_END__+0x50>
+   113f6:	0094                	addi	a3,sp,64
+   113f8:	c2202573          	csrr	a0,vlenb
+   113fc:	028680a7          	vs1r.v	v1,(a3)
+   11400:	8181b007          	fld	ft0,-2024(gp) # 130c0 <__TMC_END__+0x18>
+   11404:	5e00d0d7          	vfmv.v.f	v1,ft1
+   11408:	1000                	addi	s0,sp,32
+   1140a:	8581b687          	fld	fa3,-1960(gp) # 13100 <__TMC_END__+0x58>
+   1140e:	02050793          	addi	a5,a0,32
+   11412:	97a2                	add	a5,a5,s0
+   11414:	028780a7          	vs1r.v	v1,(a5)
+   11418:	5e05d0d7          	vfmv.v.f	v1,fa1
+   1141c:	00151693          	slli	a3,a0,0x1
+   11420:	8301b607          	fld	fa2,-2000(gp) # 130d8 <__TMC_END__+0x30>
+   11424:	02068693          	addi	a3,a3,32
+   11428:	96a2                	add	a3,a3,s0
+   1142a:	00251793          	slli	a5,a0,0x2
+   1142e:	028680a7          	vs1r.v	v1,(a3)
+   11432:	8f89                	sub	a5,a5,a0
+   11434:	5e06d0d7          	vfmv.v.f	v1,fa3
+   11438:	5e055557          	vfmv.v.f	v10,fa0
+   1143c:	02078793          	addi	a5,a5,32
+   11440:	5e025057          	vfmv.v.f	v0,ft4
+   11444:	5e0157d7          	vfmv.v.f	v15,ft2
+   11448:	5e005657          	vfmv.v.f	v12,ft0
+   1144c:	5e065757          	vfmv.v.f	v14,fa2
+   11450:	5e0036d7          	vmv.v.i	v13,0
+   11454:	5e0755d7          	vfmv.v.f	v11,fa4
+   11458:	5e07d4d7          	vfmv.v.f	v9,fa5
+   1145c:	f2000553          	fmv.d.x	fa0,zero
+   11460:	97a2                	add	a5,a5,s0
+   11462:	028780a7          	vs1r.v	v1,(a5)
+   11466:	8cc2                	mv	s9,a6
+   11468:	8d46                	mv	s10,a7
+   1146a:	4601                	li	a2,0
+   1146c:	872e                	mv	a4,a1
+   1146e:	87ee                	mv	a5,s11
+   11470:	c2202473          	csrr	s0,vlenb
+   11474:	00241693          	slli	a3,s0,0x2
+   11478:	968a                	add	a3,a3,sp
+   1147a:	0a86bf83          	ld	t6,168(a3)
+   1147e:	00241693          	slli	a3,s0,0x2
+   11482:	968a                	add	a3,a3,sp
+   11484:	0a06bf03          	ld	t5,160(a3)

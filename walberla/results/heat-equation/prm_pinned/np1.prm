@@ -1,0 +1,12 @@
+DomainSetup
+{
+   blocks         < 1, 1, 1 >;
+   cellsPerBlock  < 200, 200, 1 >;
+}
+Parameters
+{
+   dt                0.01;
+   kappa             1;
+   timesteps         10;
+   jacobiIterations  2000;
+}

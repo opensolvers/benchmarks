@@ -1,0 +1,133 @@
+======== RVV GS A/B 2026-08-01T12:29:14+00:00 ========
+-rwxrwxr-x 1 orangepi orangepi 146072 Aug  1 12:25 /home/orangepi/eessi-overlay/versions/2025.06-001/software/linux/riscv64/generic/software/OpenFOAM/v2506-foss-2025b-noPV/OpenFOAM-v2506/platforms/linux64GccDPInt32Opt/lib/libOpenFOAM.so
+/home/orangepi/eessi-overlay/versions/2025.06-001/software/linux/riscv64/generic/software/OpenFOAM/v2506-foss-2025b-noPV/OpenFOAM-v2506/platforms/linux64GccDPInt32Opt/bin/simpleFoam
+==== RUN profile5 endTime=5 2026-08-01T12:29:14+00:00 env: FOAM_RVV_KERNELS=1 FOAM_RVV_AMUL=0 FOAM_RVV_GS=1 FOAM_RVV_PROFILE=1 ====
+endTime            5;
+WALL 51
+==== DONE profile5 2026-08-01T12:30:05+00:00 ====
+ExecutionTime = 15.03 s  ClockTime = 16 s
+ExecutionTime = 22.09 s  ClockTime = 23 s
+ExecutionTime = 28.91 s  ClockTime = 30 s
+ExecutionTime = 35.71 s  ClockTime = 36 s
+ExecutionTime = 42.44 s  ClockTime = 43 s
+[FOAM_RVV_PROFILE] Amul: 2.987s / 464 calls  |  GS: 6.923s / 403  |  dot: 0.000s / 296  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 2.981s / 464 calls  |  GS: 6.930s / 403  |  dot: 0.000s / 296  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 2.426s / 464 calls  |  GS: 7.764s / 403  |  dot: 0.000s / 296  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 2.453s / 464 calls  |  GS: 7.779s / 403  |  dot: 0.000s / 296  |  axpy: 0.000s / 0
+==== RUN gs_on50 endTime=50 2026-08-01T12:30:05+00:00 env: FOAM_RVV_KERNELS=1 FOAM_RVV_AMUL=0 FOAM_RVV_GS=1 FOAM_RVV_PROFILE=1 ====
+endTime            50;
+WALL 389
+==== DONE gs_on50 2026-08-01T12:36:34+00:00 ====
+ExecutionTime = 14.89 s  ClockTime = 16 s
+ExecutionTime = 21.78 s  ClockTime = 23 s
+ExecutionTime = 28.43 s  ClockTime = 29 s
+ExecutionTime = 35.6 s  ClockTime = 37 s
+ExecutionTime = 42.3 s  ClockTime = 43 s
+ExecutionTime = 48.99 s  ClockTime = 50 s
+ExecutionTime = 55.7 s  ClockTime = 57 s
+ExecutionTime = 62.41 s  ClockTime = 63 s
+ExecutionTime = 69.11 s  ClockTime = 70 s
+ExecutionTime = 75.82 s  ClockTime = 77 s
+ExecutionTime = 82.51 s  ClockTime = 83 s
+ExecutionTime = 89.22 s  ClockTime = 90 s
+ExecutionTime = 95.93 s  ClockTime = 97 s
+ExecutionTime = 102.66 s  ClockTime = 104 s
+ExecutionTime = 109.38 s  ClockTime = 110 s
+ExecutionTime = 116.11 s  ClockTime = 117 s
+ExecutionTime = 122.82 s  ClockTime = 124 s
+ExecutionTime = 129.52 s  ClockTime = 131 s
+ExecutionTime = 136.22 s  ClockTime = 137 s
+ExecutionTime = 142.95 s  ClockTime = 144 s
+ExecutionTime = 149.68 s  ClockTime = 151 s
+ExecutionTime = 156.4 s  ClockTime = 157 s
+ExecutionTime = 163.11 s  ClockTime = 164 s
+ExecutionTime = 169.83 s  ClockTime = 171 s
+ExecutionTime = 176.54 s  ClockTime = 178 s
+ExecutionTime = 183.24 s  ClockTime = 184 s
+ExecutionTime = 189.96 s  ClockTime = 191 s
+ExecutionTime = 196.67 s  ClockTime = 198 s
+ExecutionTime = 203.38 s  ClockTime = 204 s
+ExecutionTime = 210.13 s  ClockTime = 211 s
+ExecutionTime = 216.89 s  ClockTime = 218 s
+ExecutionTime = 223.66 s  ClockTime = 225 s
+ExecutionTime = 230.42 s  ClockTime = 231 s
+ExecutionTime = 237.19 s  ClockTime = 238 s
+ExecutionTime = 243.96 s  ClockTime = 245 s
+ExecutionTime = 250.73 s  ClockTime = 252 s
+ExecutionTime = 257.43 s  ClockTime = 259 s
+ExecutionTime = 264.14 s  ClockTime = 265 s
+ExecutionTime = 270.87 s  ClockTime = 272 s
+ExecutionTime = 277.59 s  ClockTime = 279 s
+ExecutionTime = 284.3 s  ClockTime = 285 s
+ExecutionTime = 291 s  ClockTime = 292 s
+ExecutionTime = 297.72 s  ClockTime = 299 s
+ExecutionTime = 304.45 s  ClockTime = 306 s
+ExecutionTime = 311.19 s  ClockTime = 312 s
+ExecutionTime = 317.92 s  ClockTime = 319 s
+ExecutionTime = 324.67 s  ClockTime = 326 s
+ExecutionTime = 331.41 s  ClockTime = 333 s
+ExecutionTime = 338.12 s  ClockTime = 339 s
+ExecutionTime = 344.9 s  ClockTime = 346 s
+[FOAM_RVV_PROFILE] Amul: 27.983s / 4248 calls  |  GS: 66.607s / 3830  |  dot: 0.001s / 2644  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 28.059s / 4248 calls  |  GS: 66.722s / 3830  |  dot: 0.000s / 2644  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 22.770s / 4248 calls  |  GS: 75.015s / 3830  |  dot: 0.000s / 2644  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 22.867s / 4248 calls  |  GS: 75.511s / 3830  |  dot: 0.000s / 2644  |  axpy: 0.000s / 0
+==== RUN gs_off50 endTime=50 2026-08-01T12:36:34+00:00 env: FOAM_RVV_KERNELS=0 FOAM_RVV_PROFILE=1 ====
+endTime            50;
+WALL 387
+==== DONE gs_off50 2026-08-01T12:43:02+00:00 ====
+ExecutionTime = 14.81 s  ClockTime = 15 s
+ExecutionTime = 21.82 s  ClockTime = 22 s
+ExecutionTime = 28.55 s  ClockTime = 29 s
+ExecutionTime = 35.32 s  ClockTime = 36 s
+ExecutionTime = 42.04 s  ClockTime = 43 s
+ExecutionTime = 48.71 s  ClockTime = 49 s
+ExecutionTime = 55.41 s  ClockTime = 56 s
+ExecutionTime = 62.09 s  ClockTime = 63 s
+ExecutionTime = 68.81 s  ClockTime = 69 s
+ExecutionTime = 75.47 s  ClockTime = 76 s
+ExecutionTime = 82.12 s  ClockTime = 83 s
+ExecutionTime = 88.61 s  ClockTime = 89 s
+ExecutionTime = 95.2 s  ClockTime = 96 s
+ExecutionTime = 101.91 s  ClockTime = 103 s
+ExecutionTime = 108.62 s  ClockTime = 109 s
+ExecutionTime = 115.33 s  ClockTime = 116 s
+ExecutionTime = 122.03 s  ClockTime = 123 s
+ExecutionTime = 128.72 s  ClockTime = 129 s
+ExecutionTime = 135.4 s  ClockTime = 136 s
+ExecutionTime = 142.1 s  ClockTime = 143 s
+ExecutionTime = 148.83 s  ClockTime = 149 s
+ExecutionTime = 155.52 s  ClockTime = 156 s
+ExecutionTime = 162.19 s  ClockTime = 163 s
+ExecutionTime = 168.91 s  ClockTime = 170 s
+ExecutionTime = 175.6 s  ClockTime = 176 s
+ExecutionTime = 182.31 s  ClockTime = 183 s
+ExecutionTime = 188.99 s  ClockTime = 190 s
+ExecutionTime = 195.58 s  ClockTime = 196 s
+ExecutionTime = 202.09 s  ClockTime = 203 s
+ExecutionTime = 208.79 s  ClockTime = 209 s
+ExecutionTime = 215.54 s  ClockTime = 216 s
+ExecutionTime = 222.27 s  ClockTime = 223 s
+ExecutionTime = 229.04 s  ClockTime = 230 s
+ExecutionTime = 235.8 s  ClockTime = 237 s
+ExecutionTime = 242.52 s  ClockTime = 243 s
+ExecutionTime = 249.28 s  ClockTime = 250 s
+ExecutionTime = 256 s  ClockTime = 257 s
+ExecutionTime = 262.65 s  ClockTime = 263 s
+ExecutionTime = 269.29 s  ClockTime = 270 s
+ExecutionTime = 275.96 s  ClockTime = 277 s
+ExecutionTime = 282.65 s  ClockTime = 283 s
+ExecutionTime = 289.33 s  ClockTime = 290 s
+ExecutionTime = 296.04 s  ClockTime = 297 s
+ExecutionTime = 302.77 s  ClockTime = 304 s
+ExecutionTime = 309.27 s  ClockTime = 310 s
+ExecutionTime = 315.82 s  ClockTime = 317 s
+ExecutionTime = 322.5 s  ClockTime = 323 s
+ExecutionTime = 329.21 s  ClockTime = 330 s
+ExecutionTime = 335.92 s  ClockTime = 337 s
+ExecutionTime = 342.72 s  ClockTime = 343 s
+[FOAM_RVV_PROFILE] Amul: 28.406s / 4248 calls  |  GS: 61.876s / 3830  |  dot: 0.000s / 0  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 22.941s / 4248 calls  |  GS: 72.073s / 3830  |  dot: 0.000s / 0  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 28.218s / 4248 calls  |  GS: 62.664s / 3830  |  dot: 0.000s / 0  |  axpy: 0.000s / 0
+[FOAM_RVV_PROFILE] Amul: 22.960s / 4248 calls  |  GS: 72.235s / 3830  |  dot: 0.000s / 0  |  axpy: 0.000s / 0
+======== RVV GS A/B DONE 2026-08-01T12:43:02+00:00 ========

@@ -1,0 +1,19 @@
+# collideSoA objdump evidence — vector_size RVV vs prior POD RVV
+# date=2026-08-02  host=orangepirv2  g++ 14.3 -O2 -march=rv64gcv
+
+## Hot-function instruction counts
+
+| backend | vle64 | vse64 | vfadd | vfmul | vfmacc+vfmadd | vfsqrt | mem | vf* | vf*/mem |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| POD RVV (double[4] spill) | 71 | 61 | 11 | 17 | ~0 | 1 | 132 | 29 | 0.22 |
+| vector_size RVV (f64x4_t) | 48 | 18 | 22 | 20 | 14 | 2 | 66 | 58 | 0.88 |
+| FORCE_SCALAR (auto-vec) | 38 | 27 | 8 | 20 | 14 | 2 | 65 | 44 | 0.68 |
+
+## Takeaway
+vector_size cuts hot vse roughly 3× and mem ops ~2× vs POD, while arithmetic
+density rises (including FMAs). Still not faster than FORCE_SCALAR on this SoA
+microbench (WALL 14.60s vs 8.34s).
+
+## Sample (vector_size collideSoA)
+  vle64.v / vse64.v / vfadd.vv / vfmul / vfmacc / vfsqrt present
+  arithmetic sequences no longer wrap every op in vse→vle through POD.

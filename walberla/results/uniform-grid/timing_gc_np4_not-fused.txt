@@ -1,0 +1,52 @@
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + block size:  64 x 64 x 64 cells
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][INFO    ]------(0.244 sec) Benchmark parameters:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fused (stream & collide) kernel: no
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - split (collision) kernel:        yes
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]------(5.998 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  53.21% |          12.23|          0.122|            100|          0.119|          0.132|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  37.80% |           8.69|          0.087|            100|          0.078|          0.225|          0.001|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.55852 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.13963 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.27914 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]-----(11.558 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  54.49% |          12.10|          0.121|            100|          0.118|          0.128|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  36.66% |           8.14|          0.081|            100|          0.079|          0.088|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.71483 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.17871 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.42587 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]-----(17.061 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  55.47% |          12.19|          0.122|            100|          0.117|          0.138|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  35.92% |           7.90|          0.079|            100|          0.076|          0.083|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.76455 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.19114 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.47254 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]-----(22.534 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  55.47% |          12.13|          0.121|            100|          0.118|          0.135|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  36.03% |           7.88|          0.079|            100|          0.077|          0.086|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.79081 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.1977 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.49719 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + block size:  64 x 64 x 64 cells
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][INFO    ]-----(22.534 sec) Benchmark parameters:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fused (stream & collide) kernel: no
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - split (collision) kernel:        yes
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - data layout:                     fzyx (structure of arrays [SoA])

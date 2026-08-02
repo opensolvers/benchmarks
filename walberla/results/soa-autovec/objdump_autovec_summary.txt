@@ -1,0 +1,1 @@
+name=autovec hot_vle64=9 hot_vse64=9 hot_vfadd=22 hot_vfmul=41 hot_vfmacc=24 hot_vfsqrt=1 hot_lines=315

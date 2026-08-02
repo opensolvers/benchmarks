@@ -1,0 +1,779 @@
+======== UniformGrid A/B 2026-08-02T16:33:27+00:00 (gc vs gcv, focus --not-fused) ========
+board: Linux orangepirv2 6.6.63-ky #1.0.0 SMP PREEMPT Wed Mar 12 09:04:00 CST 2025 riscv64 GNU/Linux
+CPU(s):              8
+On-line CPU(s) list: 0-7
+Model name:          Ky(R) X1
+Model name:          ky,x60
+CPU(s) scaling MHz:  100%
+CPU max MHz:         1600.0000
+CPU min MHz:         614.4000
+binary: UniformGridBenchmark
+CLI: <prm> [--not-fused] [--not-split] [--not-pure] [--zyxf] [--full-comm] [--direct-comm] [--trt|--mrt] [--comp]
+defaults: split+pure+fzyx+fused (SRT incompressible)
+prm np1:
+// UniformGrid RVV A/B — sized for Orange Pi RV2 (~1–3 min/run)
+// Defaults in binary: split+pure+fzyx+fused. Pass --not-fused for SoA collide separate from stream.
+// VTK block empty → no VTK writers.
+
+UniformGrid
+{
+   // cells per block (np=1 → one block; np=4 → four blocks via process grid)
+   xCells 64;
+   yCells 64;
+   zCells 64;
+
+   xWeight 1.0;
+   yWeight 1.0;
+   zWeight 1.0;
+
+   // total timesteps = outer * inner
+   outerTimeSteps 5;
+   innerTimeSteps 40; // 200 steps; TimingPool logged each outer
+
+   logToSqlDB  false;
+   sqlFile     uniform_grid_bench.sqlite;
+
+   omega 1.4;
+   velocity 0.01;
+}
+
+VTK
+{
+}
+prm np4:
+// UniformGrid RVV A/B — MPI 4 ranks (4 blocks × cellsPerBlock)
+// Slightly fewer steps than np=1 to keep wall time reasonable.
+
+UniformGrid
+{
+   xCells 64;
+   yCells 64;
+   zCells 64;
+
+   xWeight 1.0;
+   yWeight 1.0;
+   zWeight 1.0;
+
+   outerTimeSteps 4;
+   innerTimeSteps 25; // 100 steps
+
+   logToSqlDB  false;
+   sqlFile     uniform_grid_bench_mpi4.sqlite;
+
+   omega 1.4;
+   velocity 0.01;
+}
+
+VTK
+{
+}
+==== RECONFIGURE gc WALBERLA_BUILD_BENCHMARKS=ON 2026-08-02T16:33:28+00:00 ====
+CMAKE_CXX_FLAGS:STRING=-O2 -ftree-vectorize -march=rv64gc -mabi=lp64d -fno-math-errno -fPIC
+WALBERLA_BUILD_BENCHMARKS:BOOL=ON
+==== RECONFIGURE gcv WALBERLA_BUILD_BENCHMARKS=ON 2026-08-02T16:34:42+00:00 ====
+CMAKE_CXX_FLAGS:STRING=-O2 -ftree-vectorize -march=rv64gcv -mabi=lp64d -fno-math-errno -fPIC
+WALBERLA_BUILD_BENCHMARKS:BOOL=ON
+==== BUILD gc UniformGridBenchmark 2026-08-02T16:35:55+00:00 ====
+BUILD_OK gc
+-rwxrwxr-x 1 orangepi orangepi 4276904 Aug  2 17:13 /home/orangepi/walberla-bench/build-gc/apps/benchmarks/UniformGrid/UniformGridBenchmark
+ISA gc:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0"
+==== BUILD gcv UniformGridBenchmark 2026-08-02T17:13:46+00:00 ====
+BUILD_OK gcv
+-rwxrwxr-x 1 orangepi orangepi 4400048 Aug  2 17:35 /home/orangepi/walberla-bench/build-gcv/apps/benchmarks/UniformGrid/UniformGridBenchmark
+ISA gcv:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_v1p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
+  Tag_RISCV_priv_spec: 1
+  Tag_RISCV_priv_spec_minor: 11
+==== VEC-INFO rebuild UniformGrid.cpp (gcv) 2026-08-02T17:35:47+00:00 ====
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _44 = *_45;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _31 = *_30;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _45 = *_46;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _32 = *_31;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _45 = *_46;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _32 = *_31;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _44 = *_45;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _31 = *_30;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _45 = *_46;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _32 = *_31;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _44 = *_45;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _31 = *_30;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/DensityAndMomentumDensity.h:94:13: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/DensityAndMomentumDensity.h:94:13: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/math/Vector3.h:526:10: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/math/Vector3.h:526:10: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _15 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _15 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:409:41: missed: not vectorized: number of iterations cannot be computed.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:418:9: missed: not vectorized: could not determine main exit from loop with multiple exits.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:448:10: missed: not vectorized: could not determine main exit from loop with multiple exits.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:448:10: missed: not vectorized: could not determine main exit from loop with multiple exits.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/RecvBuffer.h:549:9: missed: not vectorized: vectorization is not profitable.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct ._anon_197 *)__dest_5(D)] = MEM[(const struct ._anon_197 &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct ._anon_253 *)__dest_5(D)] = MEM[(const struct ._anon_253 &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct ._anon_261 *)__dest_5(D)] = MEM[(const struct ._anon_261 &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/list.tcc:71:20: missed: not vectorized: number of iterations cannot be computed.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_list.h:153:16: missed: not vectorized: vectorization is not profitable.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_list.h:153:16: missed: not vectorized: vectorization is not profitable.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/communication/UniformBufferedScheme.h:550:24: missed: not vectorized: statement can throw an exception: OBJ_TYPE_REF(_20;_18->4B) (_18, _6, _23, &recvBuffer);
+00000000000e2222 W walberla::lbm::CellwiseSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void>::collide(walberla::domain_decomposition::IBlock*, unsigned long)
+00000000000e1c74 W walberla::lbm::CellwiseSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void>::collide(walberla::domain_decomposition::IBlock*, unsigned long)
+00000000000e2e1e W walberla::lbm::CellwiseSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void>::collide(walberla::domain_decomposition::IBlock*, unsigned long)
+00000000000e27b8 W walberla::lbm::CellwiseSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void>::collide(walberla::domain_decomposition::IBlock*, unsigned long)
+00000000000e3454 W walberla::lbm::CellwiseSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::D3Q19MRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void>::collide(walberla::domain_decomposition::IBlock*, unsigned long)
+00000000000e4028 W walberla::lbm::CellwiseSweep<walberla::lbm::D3Q27<walberla::lbm::collision_model::D3Q27Cumulant, true, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void>::collide(walberla::domain_decomposition::IBlock*, unsigned long)
+000000000008d18a W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008cc02 W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008cc02 W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+00000000000d366e W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, void>::operator()(walberla::domain_decomposition::IBlock*)
+000000000008d0d6 W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008cb56 W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008cb56 W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+00000000000c80d4 W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, void>::operator()(walberla::domain_decomposition::IBlock*)
+000000000008d2f2 W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008cd5a W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008cd5a W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+00000000000dcc6e W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, void>::operator()(walberla::domain_decomposition::IBlock*)
+000000000008d23e W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008ccae W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+000000000008ccae W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, void>::~SplitPureSweep()
+00000000000d7fac W walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, void>::operator()(walberla::domain_decomposition::IBlock*)
+0000000000094334 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000d2cd8 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+0000000000093f7c W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000c773e W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+0000000000094aa4 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000dc2d8 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+00000000000946ec W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000d7616 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::StreamSweep<walberla::lbm::SplitPureSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+00000000000943bc W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000ce4a2 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+0000000000094004 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000cf7d2 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, true, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+0000000000094b2c W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000cb84c W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+0000000000094774 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000ccda4 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::SplitSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::TRT, true, walberla::lbm::force_model::None, 2>, walberla::field::FlagField<unsigned char>, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+00000000000944cc W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::CellwiseSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void> > >::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+00000000000e27a6 W std::_Function_handler<void (walberla::domain_decomposition::IBlock*), walberla::lbm::CollideSweep<walberla::lbm::CellwiseSweep<walberla::lbm::D3Q19<walberla::lbm::collision_model::SRT, false, walberla::lbm::force_model::None, 2>, walberla::field::FlagFieldEvaluationFilter<walberla::field::FlagField<unsigned char> >, walberla::lbm::DefaultDensityEquilibriumVelocityCalculation, walberla::lbm::DefaultDensityVelocityCallback, void> > >::_M_invoke(std::_Any_data const&, walberla::domain_decomposition::IBlock*&&)
+RVV insn counts in full UniformGridBenchmark (gc):
+  vle64=0
+0
+  vse64=0
+0
+  vfadd=0
+0
+  vfmul=0
+0
+  vfmacc=0
+0
+  vfmadd=0
+0
+  vsetvli=0
+0
+
+======== RUN PHASE 2026-08-02T17:53:07+00:00 (SKIP_BUILD; focus --not-fused) ========
+board: Linux orangepirv2 6.6.63-ky #1.0.0 SMP PREEMPT Wed Mar 12 09:04:00 CST 2025 riscv64 GNU/Linux
+CPU(s):              8
+On-line CPU(s) list: 0-7
+Model name:          Ky(R) X1
+Model name:          ky,x60
+CPU(s) scaling MHz:  100%
+CPU max MHz:         1600.0000
+CPU min MHz:         614.4000
+gc bin:
+-rwxrwxr-x 1 orangepi orangepi 4276904 Aug  2 17:13 /home/orangepi/walberla-bench/build-gc/apps/benchmarks/UniformGrid/UniformGridBenchmark
+gcv bin:
+-rwxrwxr-x 1 orangepi orangepi 4400048 Aug  2 17:49 /home/orangepi/walberla-bench/build-gcv/apps/benchmarks/UniformGrid/UniformGridBenchmark
+prm np1:
+// UniformGrid RVV A/B — sized for Orange Pi RV2 (~1–3 min/run)
+// Defaults in binary: split+pure+fzyx+fused. Pass --not-fused for SoA collide separate from stream.
+// VTK block empty → no VTK writers.
+
+UniformGrid
+{
+   // cells per block (np=1 → one block; np=4 → four blocks via process grid)
+   xCells 64;
+   yCells 64;
+   zCells 64;
+
+   xWeight 1.0;
+   yWeight 1.0;
+   zWeight 1.0;
+
+   // total timesteps = outer * inner
+   outerTimeSteps 5;
+   innerTimeSteps 40; // 200 steps; TimingPool logged each outer
+
+   logToSqlDB  false;
+   sqlFile     uniform_grid_bench.sqlite;
+
+   omega 1.4;
+   velocity 0.01;
+}
+
+VTK
+{
+}
+==== VEC / RVV EVIDENCE 2026-08-02T17:53:07+00:00 ====
+SplitPureSweep.impl.h optimized lines:
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:485:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized:  loop versioned for vectorization because of possible aliasing
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/srt/SplitPureSweep.impl.h:608:7: optimized:  loop versioned for vectorization because of possible aliasing
+DensityAndMomentumDensity optimized:
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/DensityAndMomentumDensity.h:94:13: optimized: loop vectorized using variable length vectors
+count variable-length vectorized: 278
+ISA gc:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0"
+
+======== RUN PHASE 2026-08-02T17:54:33+00:00 ========
+gc:  -rwxrwxr-x 1 orangepi orangepi 4276904 Aug  2 17:13 /home/orangepi/walberla-bench/build-gc/apps/benchmarks/UniformGrid/UniformGridBenchmark
+gcv: -rwxrwxr-x 1 orangepi orangepi 4400048 Aug  2 17:49 /home/orangepi/walberla-bench/build-gcv/apps/benchmarks/UniformGrid/UniformGridBenchmark
+ISA gc:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0"
+ISA gcv:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_v1p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
+  Tag_RISCV_priv_spec: 1
+  Tag_RISCV_priv_spec_minor: 11
+collide demangled tail gc: std::_Manager_operation)
+collide demangled tail gcv: std::_Manager_operation)
+full-bin RVV gc: vle64=0 vse64=0 vfadd=0 vfmul=0 vfmacc=0 vsetvli=0
+full-bin RVV gcv: vle64=1822 vse64=2705 vfadd=293 vfmul=588 vfmacc=306 vsetvli=2889
+==== RUN gc_np1_not-fused 2026-08-02T17:54:50+00:00 ====
+rc=127 
+==== RUN gcv_np1_not-fused 2026-08-02T17:54:50+00:00 ====
+rc=127 
+==== RUN gc_np1_fused 2026-08-02T17:54:51+00:00 ====
+rc=127 
+==== RUN gcv_np1_fused 2026-08-02T17:54:51+00:00 ====
+rc=127 
+==== RUN gc_np4_not-fused 2026-08-02T17:54:51+00:00 ====
+rc=127 
+==== RUN gcv_np4_not-fused 2026-08-02T17:54:51+00:00 ====
+rc=127 
+
+======== SUMMARY TABLE 2026-08-02T17:54:51+00:00 ========
+DONE 2026-08-02T17:54:51+00:00
+
+======== RUN PHASE FIXED 2026-08-02T17:57:36+00:00 (date WALL; no /usr/bin/time) ========
+RVV evidence (prior): gc vle64=0; gcv vle64=1822 vse64=2705 vfadd=293 vfmul=588 vfmacc=306 vsetvli=2889
+SplitPureSweep.impl.h:485/608 optimized: loop vectorized using variable length vectors (gcv vec-info)
+==== RUN gc_np1_not-fused 2026-08-02T17:57:36+00:00 ====
+rc=139 WALL 4s
+==== RUN gcv_np1_not-fused 2026-08-02T17:57:40+00:00 ====
+rc=139 WALL 4s
+==== RUN gc_np1_fused 2026-08-02T17:57:44+00:00 ====
+rc=139 WALL 4s
+==== RUN gcv_np1_fused 2026-08-02T17:57:48+00:00 ====
+rc=139 WALL 4s
+==== RUN gc_np4_not-fused 2026-08-02T17:57:52+00:00 ====
+rc=0 WALL 27s
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + block size:  64 x 64 x 64 cells
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][INFO    ]------(0.244 sec) Benchmark parameters:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fused (stream & collide) kernel: no
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - split (collision) kernel:        yes
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]------(5.998 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  53.21% |          12.23|          0.122|            100|          0.119|          0.132|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  37.80% |           8.69|          0.087|            100|          0.078|          0.225|          0.001|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.55852 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.13963 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.27914 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]-----(11.558 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  54.49% |          12.10|          0.121|            100|          0.118|          0.128|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  36.66% |           8.14|          0.081|            100|          0.079|          0.088|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.71483 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.17871 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.42587 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]-----(17.061 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  55.47% |          12.19|          0.122|            100|          0.117|          0.138|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  35.92% |           7.90|          0.079|            100|          0.076|          0.083|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.76455 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.19114 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.47254 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][RESULT  ]-----(22.534 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  55.47% |          12.13|          0.121|            100|          0.118|          0.135|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  36.03% |           7.88|          0.079|            100|          0.077|          0.086|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - performance: 4.79081 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           1.1977 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                                           4.49719 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + block size:  64 x 64 x 64 cells
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0][INFO    ]-----(22.534 sec) Benchmark parameters:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - fused (stream & collide) kernel: no
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - split (collision) kernel:        yes
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gc_np4_not-fused.log:[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+==== RUN gcv_np4_not-fused 2026-08-02T17:58:19+00:00 ====
+rc=0 WALL 26s
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                               + block size:  64 x 64 x 64 cells
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                               + cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0][INFO    ]------(0.256 sec) Benchmark parameters:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - fused (stream & collide) kernel: no
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - split (collision) kernel:        yes
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0][RESULT  ]------(5.580 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  48.43% |          10.30|          0.103|            100|          0.096|          0.113|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  42.26% |           8.99|          0.090|            100|          0.080|          0.235|          0.001|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - performance: 4.92613 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           1.23153 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           4.62422 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0][RESULT  ]-----(10.728 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  49.99% |          10.28|          0.103|            100|          0.095|          0.112|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  40.85% |           8.40|          0.084|            100|          0.081|          0.088|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - performance: 5.09215 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           1.27304 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           4.78007 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0][RESULT  ]-----(15.883 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  49.85% |          10.27|          0.103|            100|          0.092|          0.115|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  40.96% |           8.44|          0.084|            100|          0.077|          0.090|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - performance: 5.08612 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           1.27153 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           4.77441 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0][RESULT  ]-----(20.801 sec) Time loop timing:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (collide)   |  49.70% |           9.76|          0.098|            100|          0.091|          0.111|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            split pure LB sweep (stream)    |  41.06% |           8.07|          0.081|            100|          0.077|          0.089|          0.000|
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - performance: 5.33167 MLUPS (million lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           1.33292 MLUPS / process
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           n/a *) MLUPS / core
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                                           5.00491 MFLUPS (million fluid lattice cell updates per second)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                               + block size:  64 x 64 x 64 cells
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                               + cells:       1048576
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0][INFO    ]-----(20.801 sec) Benchmark parameters:
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - fused (stream & collide) kernel: no
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - split (collision) kernel:        yes
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+/home/orangepi/walberla-bench/results/uniform-grid/run_gcv_np4_not-fused.log:[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+
+======== SUMMARY TABLE 2026-08-02T17:58:45+00:00 ========
+gc_np1_fused | WALL 4
+gc_np1_not-fused | WALL 4
+gc_np4_not-fused | WALL 27
+gcv_np1_fused | WALL 4
+gcv_np1_not-fused | WALL 4
+gcv_np4_not-fused | WALL 26
+DONE 2026-08-02T17:58:46+00:00
+
+======== RUN PHASE AFTER CARTESIAN FIX 2026-08-02T18:06:09+00:00 ========
+patch: Cartesian.cpp null-check processIdMap_ (stock saved as Cartesian.cpp.stock)
+prm:
+// UniformGrid RVV A/B — sized for Orange Pi RV2 (~1–3 min/run)
+// Defaults in binary: split+pure+fzyx+fused. Pass --not-fused for SoA collide separate from stream.
+// VTK block empty → no VTK writers.
+
+UniformGrid
+{
+   // cells per block (np=1 → one block; np=4 → four blocks via process grid)
+   xCells 64;
+   yCells 64;
+   zCells 64;
+
+   xWeight 1.0;
+   yWeight 1.0;
+   zWeight 1.0;
+
+   // total timesteps = outer * inner
+   outerTimeSteps 5;
+   innerTimeSteps 40; // 200 steps; TimingPool logged each outer
+
+   logToSqlDB  false;
+   sqlFile     uniform_grid_bench.sqlite;
+
+   omega 1.4;
+   velocity 0.01;
+}
+
+VTK
+{
+}
+
+======== RUN PHASE LIVE 2026-08-02T18:10:48+00:00 ========
+==== RUN gc_np1_not-fused 2026-08-02T18:10:48+00:00 ====
+rc=0 WALL 30s
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]------(0.199 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+[0][RESULT  ]------(6.186 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  68.34% |           4.09|          0.102|             40|          0.101|          0.103|          0.000|
+[0]                            split pure LB sweep (stream)    |  23.21% |           1.39|          0.035|             40|          0.032|          0.139|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 1.75214 MLUPS (million lattice cell updates per second)
+[0]                                           1.75214 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(12.024 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  69.83% |           4.07|          0.102|             40|          0.101|          0.103|          0.000|
+[0]                            split pure LB sweep (stream)    |  21.94% |           1.28|          0.032|             40|          0.032|          0.032|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 1.79631 MLUPS (million lattice cell updates per second)
+[0]                                           1.79631 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(17.848 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  69.78% |           4.06|          0.102|             40|          0.101|          0.102|          0.000|
+[0]                            split pure LB sweep (stream)    |  22.01% |           1.28|          0.032|             40|          0.032|          0.032|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 1.80087 MLUPS (million lattice cell updates per second)
+[0]                                           1.80087 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(23.669 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  69.63% |           4.05|          0.101|             40|          0.101|          0.102|          0.000|
+[0]                            split pure LB sweep (stream)    |  22.02% |           1.28|          0.032|             40|          0.032|          0.032|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 1.8013 MLUPS (million lattice cell updates per second)
+[0]                                           1.8013 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(29.449 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  69.47% |           4.01|          0.100|             40|          0.099|          0.102|          0.000|
+[0]                            split pure LB sweep (stream)    |  22.17% |           1.28|          0.032|             40|          0.032|          0.032|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 1.81449 MLUPS (million lattice cell updates per second)
+[0]                                           1.81449 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]-----(29.450 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+==== RUN gcv_np1_not-fused 2026-08-02T18:11:19+00:00 ====
+rc=0 WALL 23s
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]------(0.203 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+[0][RESULT  ]------(4.870 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  56.36% |           2.63|          0.066|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  31.08% |           1.45|          0.036|             40|          0.033|          0.142|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.24775 MLUPS (million lattice cell updates per second)
+[0]                                           2.24775 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]------(9.396 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.90% |           2.62|          0.065|             40|          0.064|          0.068|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.66% |           1.34|          0.034|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.31703 MLUPS (million lattice cell updates per second)
+[0]                                           2.31703 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(13.918 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.87% |           2.61|          0.065|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.65% |           1.34|          0.033|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.31911 MLUPS (million lattice cell updates per second)
+[0]                                           2.31911 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(18.435 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.82% |           2.61|          0.065|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.70% |           1.34|          0.033|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.32184 MLUPS (million lattice cell updates per second)
+[0]                                           2.32184 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(22.954 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.84% |           2.61|          0.065|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.68% |           1.34|          0.034|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.32074 MLUPS (million lattice cell updates per second)
+[0]                                           2.32074 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]-----(22.954 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+==== RUN gc_np1_fused 2026-08-02T18:11:42+00:00 ====
+rc=0 WALL 25s
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]------(0.199 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: yes
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+[0][RESULT  ]------(5.060 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  90.21% |           4.38|          0.110|             40|          0.106|          0.214|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.1582 MLUPS (million lattice cell updates per second)
+[0]                                           2.1582 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]------(9.764 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  90.32% |           4.25|          0.106|             40|          0.105|          0.107|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.22925 MLUPS (million lattice cell updates per second)
+[0]                                           2.22925 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(14.461 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  90.17% |           4.23|          0.106|             40|          0.105|          0.107|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.23282 MLUPS (million lattice cell updates per second)
+[0]                                           2.23282 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(19.137 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  90.38% |           4.22|          0.106|             40|          0.105|          0.106|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.24293 MLUPS (million lattice cell updates per second)
+[0]                                           2.24293 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(23.804 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  90.50% |           4.22|          0.106|             40|          0.105|          0.106|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.24722 MLUPS (million lattice cell updates per second)
+[0]                                           2.24722 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]-----(23.804 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: yes
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+==== RUN gcv_np1_fused 2026-08-02T18:12:07+00:00 ====
+==== RUN gcv_np1_fused 2026-08-02T19:16:01+00:00 ====
+rc=0 WALL 21s
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]------(0.196 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: yes
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+[0][RESULT  ]------(4.230 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  85.78% |           3.46|          0.086|             40|          0.082|          0.197|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.60078 MLUPS (million lattice cell updates per second)
+[0]                                           2.60078 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]------(8.117 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  85.84% |           3.33|          0.083|             40|          0.082|          0.085|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.69858 MLUPS (million lattice cell updates per second)
+[0]                                           2.69858 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(12.007 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  85.87% |           3.34|          0.083|             40|          0.082|          0.085|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.69601 MLUPS (million lattice cell updates per second)
+[0]                                           2.69601 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(15.891 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  85.84% |           3.33|          0.083|             40|          0.082|          0.085|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.70015 MLUPS (million lattice cell updates per second)
+[0]                                           2.70015 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(19.778 sec) Time loop timing:
+[0]                            split pure LB sweep (stream & collide)   |  85.84% |           3.33|          0.083|             40|          0.082|          0.085|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.69784 MLUPS (million lattice cell updates per second)
+[0]                                           2.69784 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]-----(19.778 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: yes
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+
+======== PARSED TABLE 2026-08-02T19:16:22+00:00 ========
+np1 not-fused / fused from LIVE 18:10+; np4 not-fused from 17:58 (MPI path, no nullptr crash)
+
+label | WALL_s | collide_s | stream_s | fused_s | MLUPS
+gc_np1_not-fused | 30.00 | 4.01 | 1.28 | n/a | 1.81
+gcv_np1_not-fused | 23.00 | 2.61 | 1.34 | n/a | 2.32
+gc_np1_fused | 25.00 | n/a | n/a | 4.22 | 2.25
+gcv_np1_fused | 21.00 | n/a | n/a | 3.33 | 2.70
+gc_np4_not-fused | 27.00 | 12.13 | 7.88 | n/a | 4.79
+gcv_np4_not-fused | 26.00 | 9.76 | 8.07 | n/a | 5.33
+
+not-fused WALL speedup gcv/gc: 1.304x
+not-fused collide speedup gcv/gc: 1.536x
+not-fused stream speedup gcv/gc: 0.955x
+fused WALL speedup gcv/gc: 1.190x
+fused kernel speedup gcv/gc: 1.267x
+np4 not-fused WALL speedup gcv/gc: 1.038x
+np4 not-fused collide speedup gcv/gc: 1.243x
+DONE_PARSE 2026-08-02T19:16:23.254982

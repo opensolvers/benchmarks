@@ -1,0 +1,220 @@
+======== HeatEquation A/B 2026-08-02T14:49:14+00:00 (gc vs gcv[+novec]) ========
+board: Linux orangepirv2 6.6.63-ky #1.0.0 SMP PREEMPT Wed Mar 12 09:04:00 CST 2025 riscv64 GNU/Linux
+CPU(s):              8
+On-line CPU(s) list: 0-7
+Model name:          Ky(R) X1
+Model name:          ky,x60
+CPU(s) scaling MHz:  100%
+CPU max MHz:         1600.0000
+CPU min MHz:         614.4000
+prm np1: /home/orangepi/walberla-bench/prm/02_HeatEquation_bench.prm
+DomainSetup
+{
+   blocks         < 1, 1, 1 >;
+   cellsPerBlock  < 128, 128, 1 >;
+}
+
+Parameters
+{
+   dt                0.01;
+   kappa             1;
+   timesteps         10;
+   jacobiIterations  2000;
+}
+----
+prm np4: /home/orangepi/walberla-bench/prm/02_HeatEquation_bench_mpi4.prm
+DomainSetup
+{
+   blocks         < 2, 2, 1 >;
+   cellsPerBlock  < 64, 64, 1 >;
+}
+
+Parameters
+{
+   dt                0.01;
+   kappa             1;
+   timesteps         10;
+   jacobiIterations  2000;
+}
+=== INSTALL bench 02_HeatEquation.cpp ===
+==== BUILD gc 2026-08-02T14:49:14+00:00 ====
+BUILD_OK gc
+-rwxrwxr-x 1 orangepi orangepi 1268216 Aug  2 14:52 /home/orangepi/walberla-bench/build-gc/apps/tutorials/pde/02_HeatEquation
+ISA gc:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0"
+==== BUILD gcv 2026-08-02T14:52:31+00:00 ====
+BUILD_OK gcv
+-rwxrwxr-x 1 orangepi orangepi 1293064 Aug  2 14:55 /home/orangepi/walberla-bench/build-gcv/apps/tutorials/pde/02_HeatEquation
+ISA gcv:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_v1p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
+  Tag_RISCV_priv_spec: 1
+  Tag_RISCV_priv_spec_minor: 11
+==== BUILD novec (-march=rv64gcv -fno-tree-vectorize) 2026-08-02T14:55:51+00:00 ====
+-rwxrwxr-x 1 orangepi orangepi 1293064 Aug  2 14:59 /home/orangepi/walberla-bench/results/heat-equation/02_HeatEquation_novec
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_v1p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
+  Tag_RISCV_priv_spec: 1
+  Tag_RISCV_priv_spec_minor: 11
+==== RESTORE gcv vectorizing binary ====
+==== RUN gc np=1 2026-08-02T15:02:35+00:00 ====
+WALL 16  rc=0
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<128,128,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181354
+==== RUN gcv np=1 2026-08-02T15:02:51+00:00 ====
+WALL 10  rc=0
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<128,128,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181354
+==== RUN novec np=1 2026-08-02T15:03:01+00:00 ====
+WALL 10  rc=0
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<128,128,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181354
+==== RUN gc np=4 2026-08-02T15:03:12+00:00 ====
+WALL 11  rc=0
+HeatEquation bench: blocks=<2,2,1> cellsPerBlock=<64,64,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181356
+==== RUN gcv np=4 2026-08-02T15:03:23+00:00 ====
+WALL 11  rc=0
+HeatEquation bench: blocks=<2,2,1> cellsPerBlock=<64,64,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181356
+==== RUN novec np=4 2026-08-02T15:03:34+00:00 ====
+WALL 10  rc=0
+HeatEquation bench: blocks=<2,2,1> cellsPerBlock=<64,64,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181356
+---- speedup summary ----
+np=1: gc=16s gcv=10s speedup=1.600x (37.50% faster gcv)
+np=1: novec=10s  gcv_vs_novec=1.000x  gc_vs_novec=0.625x
+np=4: gc=11s gcv=11s speedup=1.000x (0.00% faster gcv)
+np=4: novec=10s  gcv_vs_novec=0.909x  gc_vs_novec=0.909x
+======== HeatEquation A/B DONE 2026-08-02T15:03:46+00:00 ========
+
+======== HeatEquation LARGE re-run 2026-08-02T15:20:38+00:00 (true novec object) ========
+prm:
+DomainSetup
+{
+   blocks         < 1, 1, 1 >;
+   cellsPerBlock  < 128, 128, 1 >;
+}
+
+Parameters
+{
+   dt                0.01;
+   kappa             1;
+   timesteps         10;
+   jacobiIterations  2000;
+}
+Jacobi RVV insn counts (operator()):
+  gc:    vle64=0
+0 vse64=0
+0 vfdiv=0
+0 vsetvli=0
+0 
+  gcv:   vle64=5 vse64=11 vfdiv=2 vsetvli=9 
+  novec: vle64=0
+0 vse64=0
+0 vfdiv=0
+0 vsetvli=4 
+gcv opt-info (HeatEquation + FieldIterator excerpts):
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:38:45: missed: couldn't vectorize loop
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:38:45: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:36:6: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:36:6: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:36:6: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:36:6: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:131:45: missed: couldn't vectorize loop
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:131:45: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:128:8: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:160:50: missed: not vectorized: statement can throw an exception: std::__cxx11::basic_string<char>::__ct_base .constprop (&D.413679, "Parameters");
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:142:5: missed: not vectorized: statement can throw an exception: resx 11
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:161:59: missed: not vectorized: statement can throw an exception: std::__cxx11::basic_string<char>::__ct_base .constprop (&D.413687, "dt");
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/pde/02_HeatEquation.cpp:161:59: missed: not vectorized: statement can throw an exception: D.413721 = walberla::config::Config::BlockHandle::getParameter<double> (&parameters, &D.413687, &dt); [return slot optimization]
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:52:12: optimized: basic block part vectorized using 8 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:40:18: optimized: basic block part vectorized using 16 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:52:12: optimized: basic block part vectorized using 8 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:52:12: optimized: basic block part vectorized using 8 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:44:16: optimized: basic block part vectorized using 16 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:40:18: optimized: basic block part vectorized using 16 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:52:12: optimized: basic block part vectorized using 8 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:44:16: optimized: basic block part vectorized using 16 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:52:12: optimized: basic block part vectorized using 8 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/iterators/FieldIterator.impl.h:44:16: optimized: basic block part vectorized using 16 byte vectors
+==== RUN gc np=1 LARGE 2026-08-02T15:20:39+00:00 ====
+WALL 16.121
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<128,128,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181354
+==== RUN gcv np=1 LARGE 2026-08-02T15:20:56+00:00 ====
+WALL 10.067
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<128,128,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=1201.3152861181354
+==== RUN novec np=1 LARGE 2026-08-02T15:21:06+00:00 ====
+WALL 37.406
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<200,200,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=4373.0146557791086
+==== RUN gc np=4 LARGE 2026-08-02T15:21:44+00:00 ====
+WALL 17.376
+HeatEquation bench: blocks=<2,2,1> cellsPerBlock=<100,100,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=4373.0146557791086
+
+======== HeatEquation CLEAN 200x200 A/B 2026-08-02T15:22:33+00:00 ========
+DomainSetup
+{
+   blocks         < 1, 1, 1 >;
+   cellsPerBlock  < 200, 200, 1 >;
+}
+Parameters
+{
+   dt                0.01;
+   kappa             1;
+   timesteps         10;
+   jacobiIterations  2000;
+}
+==== RUN gc np=1 200x200 2026-08-02T15:22:33+00:00 ====
+WALL 35.568
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<200,200,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=4373.0146557791086
+==== RUN gcv np=1 200x200 2026-08-02T15:23:09+00:00 ====
+WALL 21.755
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<200,200,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=4373.0146557791086
+==== RUN novec np=1 200x200 2026-08-02T15:23:32+00:00 ====
+WALL 37.607
+HeatEquation bench: blocks=<1,1,1> cellsPerBlock=<200,200,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=4373.0146557791086
+==== RUN gc np=4 200x200 2026-08-02T15:24:10+00:00 ====
+WALL 17.547
+HeatEquation bench: blocks=<2,2,1> cellsPerBlock=<100,100,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=4373.0146557791086
+==== RUN gcv np=4 200x200 2026-08-02T15:24:57+00:00 ====
+WALL 16.646 rc=0
+HeatEquation bench: blocks=<2,2,1> cellsPerBlock=<100,100,1> timesteps=10 jacobiIterations=2000 dt=0.01 kappa=1 (VTK off, stock Jacobi)
+checksum_u_sum=4373.0146557791086
+==== RUN novec np=4 200x200 2026-08-02T15:25:54+00:00 ====
+WALL 19 (retimed 2026-08-02T15:28; checksum OK)
+
+---- FINAL 200x200 speedup summary ----
+np=1: gc=35.568s gcv=21.755s novec=37.607s
+  gcv vs gc = 1.635x (38.84% faster)
+  gcv vs novec = 1.729x
+  novec vs gc = 0.946x
+np=4: gc=17.547s gcv=16.646s novec=19.000s
+  gcv vs gc = 1.054x (5.13% faster)
+  gcv vs novec = 1.141x
+  novec vs gc = 0.924x
+checksum all: 4373.0146557791086
+Jacobi RVV: gc none; gcv vle64=5 vse64=11 vfdiv=2; true-novec no vle/vse/vfdiv
+Domain: 200x200 (np1) / 2x2 x 100x100 (np4), 10 timesteps x 2000 Jacobi, VTK off, stock Jacobi
+======== FINAL DONE ========

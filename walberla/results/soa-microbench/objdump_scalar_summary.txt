@@ -1,0 +1,4 @@
+name=scalar
+hot_lines=307
+hot_vle64=38 hot_vse64=27 hot_vfadd=8 hot_vfmul=20 hot_vfmacc=14 hot_vfsqrt=2
+binary_vle64_total=38 binary_vse64_total=27 binary_vfadd_total=8

@@ -1,0 +1,38 @@
+Parameters
+{
+ omega 1.8;
+ initialVelocity < 0.1, 0, 0 >;
+ timesteps 2000;
+ remainingTimeLoggerFrequency 10;
+ sweepMode stock;
+}
+
+DomainSetup
+{
+ blocks < 2, 2, 1 >;
+ cellsPerBlock < 400, 200, 1 >;
+ periodic < 0, 0, 1 >;
+}
+
+StabilityChecker
+{
+ checkFrequency 0;
+ streamOutput false;
+ vtkOutput false;
+}
+
+Boundaries
+{
+ velocity0 < 0.1, 0, 0 >;
+ velocity1 < 0, 0, 0 >;
+ pressure0 1.1;
+ pressure1 1.0;
+
+ Border { direction W; walldistance -1; Velocity0 {} }
+ Border { direction E; walldistance -1; Pressure1 {} }
+ Border { direction S,N; walldistance -1; NoSlip {} }
+}
+
+VTK
+{
+}

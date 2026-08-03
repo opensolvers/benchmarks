@@ -1,0 +1,115 @@
+======== waLBerla A/B 2026-08-02T07:44:42+00:00 (stock-gc vs local-gcv) ========
+board: Linux orangepirv2 6.6.63-ky #1.0.0 SMP PREEMPT Wed Mar 12 09:04:00 CST 2025 riscv64 GNU/Linux
+CPU(s):              8
+On-line CPU(s) list: 0-7
+Model name:          Ky(R) X1
+Model name:          ky,x60
+CPU(s) scaling MHz:  100%
+CPU max MHz:         1600.0000
+CPU min MHz:         614.4000
+stock ISA:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0"
+==== CONFIGURE gcv 2026-08-02T07:44:42+00:00 ====
+==== BUILD gcv 2026-08-02T07:47:04+00:00 ====
+==== RESUME BUILD gcv 2026-08-02T08:36:24+00:00 ====
+gcv ISA:
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_v1p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0"
+  Tag_RISCV_priv_spec: 1
+  Tag_RISCV_priv_spec_minor: 11
+==== RUN stock-gc np=1 2026-08-02T09:20:53+00:00 ====
+WALL 129
+[0][INFO    ]-----(10.253 sec)[ 160] Estimated Remaining Time:  1m 55s 
+[0][INFO    ]-----(20.273 sec)[ 320] Estimated Remaining Time:  1m 45s 
+[0][INFO    ]-----(30.287 sec)[ 480] Estimated Remaining Time:  1m 35s 
+[0][INFO    ]-----(40.305 sec)[ 640] Estimated Remaining Time:  1m 25s 
+[0][INFO    ]-----(50.328 sec)[ 800] Estimated Remaining Time:  1m 15s 
+[0][INFO    ]-----(60.346 sec)[ 960] Estimated Remaining Time:   1m 5s 
+[0][INFO    ]-----(70.382 sec)[1122] Estimated Remaining Time:     55s 
+[0][INFO    ]-----(80.419 sec)[1286] Estimated Remaining Time:     44s 
+[0][INFO    ]-----(90.453 sec)[1450] Estimated Remaining Time:     34s 
+[0][INFO    ]----(100.487 sec)[1614] Estimated Remaining Time:     24s 
+[0][INFO    ]----(110.523 sec)[1778] Estimated Remaining Time:     14s 
+[0][INFO    ]----(120.562 sec)[1942] Estimated Remaining Time:      4s 
+[0][INFO    ]-----(10.253 sec)[ 160] Estimated Remaining Time:  1m 55s 
+[0][INFO    ]-----(20.273 sec)[ 320] Estimated Remaining Time:  1m 45s 
+[0][INFO    ]-----(30.287 sec)[ 480] Estimated Remaining Time:  1m 35s 
+[0][INFO    ]-----(40.305 sec)[ 640] Estimated Remaining Time:  1m 25s 
+[0][INFO    ]-----(50.328 sec)[ 800] Estimated Remaining Time:  1m 15s 
+[0][INFO    ]-----(60.346 sec)[ 960] Estimated Remaining Time:   1m 5s 
+[0][INFO    ]-----(70.382 sec)[1122] Estimated Remaining Time:     55s 
+[0][INFO    ]-----(80.419 sec)[1286] Estimated Remaining Time:     44s 
+[0][INFO    ]-----(90.453 sec)[1450] Estimated Remaining Time:     34s 
+[0][INFO    ]----(100.487 sec)[1614] Estimated Remaining Time:     24s 
+[0][INFO    ]----(110.523 sec)[1778] Estimated Remaining Time:     14s 
+[0][INFO    ]----(120.562 sec)[1942] Estimated Remaining Time:      4s 
+================================================================================
+|         END LOGGING - Sunday, 02.August 2026, 09:23:02                       |
+================================================================================
+==== RUN gcv np=1 2026-08-02T09:23:02+00:00 ====
+WALL 127
+[0][INFO    ]-----(10.249 sec)[ 163] Estimated Remaining Time:  1m 53s 
+[0][INFO    ]-----(20.271 sec)[ 326] Estimated Remaining Time:  1m 43s 
+[0][INFO    ]-----(30.285 sec)[ 489] Estimated Remaining Time:  1m 33s 
+[0][INFO    ]-----(40.344 sec)[ 653] Estimated Remaining Time:  1m 23s 
+[0][INFO    ]-----(50.350 sec)[ 816] Estimated Remaining Time:  1m 13s 
+[0][INFO    ]-----(60.358 sec)[ 979] Estimated Remaining Time:   1m 3s 
+[0][INFO    ]-----(70.365 sec)[1142] Estimated Remaining Time:     53s 
+[0][INFO    ]-----(80.369 sec)[1305] Estimated Remaining Time:     43s 
+[0][INFO    ]-----(90.375 sec)[1468] Estimated Remaining Time:     33s 
+[0][INFO    ]----(100.379 sec)[1631] Estimated Remaining Time:     23s 
+[0][INFO    ]----(110.388 sec)[1794] Estimated Remaining Time:     13s 
+[0][INFO    ]----(120.394 sec)[1957] Estimated Remaining Time:      3s 
+[0][INFO    ]-----(10.249 sec)[ 163] Estimated Remaining Time:  1m 53s 
+[0][INFO    ]-----(20.271 sec)[ 326] Estimated Remaining Time:  1m 43s 
+[0][INFO    ]-----(30.285 sec)[ 489] Estimated Remaining Time:  1m 33s 
+[0][INFO    ]-----(40.344 sec)[ 653] Estimated Remaining Time:  1m 23s 
+[0][INFO    ]-----(50.350 sec)[ 816] Estimated Remaining Time:  1m 13s 
+[0][INFO    ]-----(60.358 sec)[ 979] Estimated Remaining Time:   1m 3s 
+[0][INFO    ]-----(70.365 sec)[1142] Estimated Remaining Time:     53s 
+[0][INFO    ]-----(80.369 sec)[1305] Estimated Remaining Time:     43s 
+[0][INFO    ]-----(90.375 sec)[1468] Estimated Remaining Time:     33s 
+[0][INFO    ]----(100.379 sec)[1631] Estimated Remaining Time:     23s 
+[0][INFO    ]----(110.388 sec)[1794] Estimated Remaining Time:     13s 
+[0][INFO    ]----(120.394 sec)[1957] Estimated Remaining Time:      3s 
+================================================================================
+|         END LOGGING - Sunday, 02.August 2026, 09:25:09                       |
+================================================================================
+==== RUN stock-gc np=4 2026-08-02T09:25:09+00:00 ====
+WALL 47
+[0][INFO    ]-----(10.080 sec)[ 485] Estimated Remaining Time:     31s 
+[0][INFO    ]-----(20.086 sec)[ 970] Estimated Remaining Time:     21s 
+[0][INFO    ]-----(30.088 sec)[1455] Estimated Remaining Time:     11s 
+[0][INFO    ]-----(40.107 sec)[1941] Estimated Remaining Time:      1s 
+================================================================================
+|       BEGIN LOGGING - Sunday, 02.August 2026, 09:25:15                       |
+================================================================================
+[0][INFO    ]-----(10.080 sec)[ 485] Estimated Remaining Time:     31s 
+[0][INFO    ]-----(20.086 sec)[ 970] Estimated Remaining Time:     21s 
+[0][INFO    ]-----(30.088 sec)[1455] Estimated Remaining Time:     11s 
+[0][INFO    ]-----(40.107 sec)[1941] Estimated Remaining Time:      1s 
+================================================================================
+|         END LOGGING - Sunday, 02.August 2026, 09:25:56                       |
+================================================================================
+==== RUN gcv np=4 2026-08-02T09:25:57+00:00 ====
+WALL 45
+[0][INFO    ]-----(10.094 sec)[ 491] Estimated Remaining Time:     31s 
+[0][INFO    ]-----(20.105 sec)[ 981] Estimated Remaining Time:     21s 
+[0][INFO    ]-----(30.123 sec)[1472] Estimated Remaining Time:     11s 
+[0][INFO    ]-----(40.127 sec)[1962] Estimated Remaining Time:      1s 
+================================================================================
+|       BEGIN LOGGING - Sunday, 02.August 2026, 09:26:01                       |
+================================================================================
+[0][INFO    ]-----(10.094 sec)[ 491] Estimated Remaining Time:     31s 
+[0][INFO    ]-----(20.105 sec)[ 981] Estimated Remaining Time:     21s 
+[0][INFO    ]-----(30.123 sec)[1472] Estimated Remaining Time:     11s 
+[0][INFO    ]-----(40.127 sec)[1962] Estimated Remaining Time:      1s 
+================================================================================
+|         END LOGGING - Sunday, 02.August 2026, 09:26:42                       |
+================================================================================
+======== waLBerla A/B DONE 2026-08-02T09:26:42+00:00 ========

@@ -1,0 +1,26 @@
+[0][RESULT  ]----(133.954 sec) sweepMode=stock
+[0][RESULT  ]----(133.974 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+================================================================================
+|         END LOGGING - Sunday, 02.August 2026, 11:59:02                       |
+================================================================================
+---
+[0][RESULT  ]------(0.000 sec) sweepMode=stock
+[0][RESULT  ]----(133.954 sec) WALL 133.764
+[0][RESULT  ]----(133.954 sec) MLUPS 4.78455 (cells≈320000 steps=2000)
+[0][RESULT  ]----(133.954 sec) sweepMode=stock
+[0][RESULT  ]----(133.974 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+[0][RESULT  ]------(0.000 sec) sweepMode=split
+[0][RESULT  ]----(176.113 sec) WALL 175.923
+[0][RESULT  ]----(176.113 sec) MLUPS 3.63795 (cells≈320000 steps=2000)
+[0][RESULT  ]----(176.113 sec) sweepMode=split
+[0][RESULT  ]----(176.126 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+[0][RESULT  ]------(0.000 sec) sweepMode=stock
+[0][RESULT  ]-----(41.406 sec) WALL 41.3441
+[0][RESULT  ]-----(41.406 sec) MLUPS 15.4798 (cells≈320000 steps=2000)
+[0][RESULT  ]-----(41.406 sec) sweepMode=stock
+[0][RESULT  ]-----(41.411 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+[0][RESULT  ]------(0.000 sec) sweepMode=split
+[0][RESULT  ]-----(64.759 sec) WALL 64.6987
+[0][RESULT  ]-----(64.760 sec) MLUPS 9.89201 (cells≈320000 steps=2000)
+[0][RESULT  ]-----(64.760 sec) sweepMode=split
+[0][RESULT  ]-----(64.765 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311

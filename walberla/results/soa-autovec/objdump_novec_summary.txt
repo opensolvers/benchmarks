@@ -1,0 +1,1 @@
+name=novec hot_vle64=0 hot_vse64=0 hot_vfadd=0 hot_vfmul=0 hot_vfmacc=0 hot_vfsqrt=0 hot_lines=239

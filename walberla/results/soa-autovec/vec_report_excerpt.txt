@@ -1,0 +1,57 @@
+===== vec-optimized (autovec) =====
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:126:25: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:62:29: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:126:25: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:62:29: optimized: loop vectorized using variable length vectors
+
+===== vec-missed (hot-loop related, sample) =====
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:59:24: missed: couldn't vectorize loop
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:103:16: missed: not vectorized: complicated access pattern.
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:63:23: missed: statement clobbers memory: vect_fq0_143.183_730 = .MASK_LEN_LOAD (vectp_f0.181_732, 64B, { -1, ... }, _335, 0);
+/home/orangepi/walberla-bench/microbench/soa_lbm_autovec.cpp:103:16: missed: statement clobbers memory: .MASK_LEN_STORE (vectp_f0.270_554, 64B, { -1, ... }, _335, 0, vect__55.269_556);
+
+===== objdump RVV sample (autovec hot) =====
+   113e0:	0d807657          	vsetvli	a2,zero,e64,m1,ta,ma
+   114b4:	0d8ff757          	vsetvli	a4,t6,e64,m1,ta,ma
+   114b8:	0203fa07          	vle64.v	v20,(t2)
+   114bc:	0202fa87          	vle64.v	v21,(t0)
+   114c0:	02047987          	vle64.v	v19,(s0)
+   114c4:	0204f887          	vle64.v	v17,(s1)
+   114c8:	02097807          	vle64.v	v16,(s2)
+   114cc:	0209f407          	vle64.v	v8,(s3)
+   114d0:	020a7387          	vle64.v	v7,(s4)
+   114d4:	034a91d7          	vfadd.vv	v3,v20,v21
+   114d8:	020af307          	vle64.v	v6,(s5)
+   114dc:	020df287          	vle64.v	v5,(s11)
+   114e4:	a34690d7          	vfmadd.vv	v1,v13,v20
+   114e8:	023991d7          	vfadd.vv	v3,v3,v19
+   114f0:	a3369257          	vfmadd.vv	v4,v13,v19
+   114fc:	0d877057          	vsetvli	zero,a4,e64,m1,ta,ma
+   11500:	023891d7          	vfadd.vv	v3,v3,v17
+   11508:	b2d89257          	vfmacc.vv	v4,v17,v13
+   11510:	023811d7          	vfadd.vv	v3,v3,v16
+   11514:	b2d810d7          	vfmacc.vv	v1,v16,v13
+   1151e:	023411d7          	vfadd.vv	v3,v3,v8
+   1152a:	021410d7          	vfadd.vv	v1,v1,v8
+   1152e:	023391d7          	vfadd.vv	v3,v3,v7
+   11532:	02441257          	vfadd.vv	v4,v4,v8
+   1153c:	023311d7          	vfadd.vv	v3,v3,v6
+   11540:	02439257          	vfadd.vv	v4,v4,v7
+   1154c:	023291d7          	vfadd.vv	v3,v3,v5
+   11556:	021290d7          	vfadd.vv	v1,v1,v5
+   1156a:	923b1fd7          	vfmul.vv	v31,v3,v22
+   11582:	923b1d57          	vfmul.vv	v26,v3,v22
+   11592:	922090d7          	vfmul.vv	v1,v2,v1
+   11596:	92221157          	vfmul.vv	v2,v2,v4
+   1159c:	923b11d7          	vfmul.vv	v3,v3,v22
+   115ac:	a2169e57          	vfmadd.vv	v28,v13,v1
+   115b0:	92211257          	vfmul.vv	v4,v2,v2
+   115b8:	a2269b57          	vfmadd.vv	v22,v13,v2
+   115ca:	93c79e57          	vfmul.vv	v28,v28,v15
+   115ce:	b2109257          	vfmacc.vv	v4,v1,v1
+   115d2:	93679b57          	vfmul.vv	v22,v22,v15
+   115d6:	93e79f57          	vfmul.vv	v30,v30,v15
+
+===== objdump RVV count (novec hot) — expect none =====
+0
+0

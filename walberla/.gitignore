@@ -1,0 +1,3 @@
+# Keep assembly dumps local; summaries/objdump excerpts are enough.
+*.s
+results/**/*.s

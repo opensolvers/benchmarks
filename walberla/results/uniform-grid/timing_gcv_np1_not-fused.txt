@@ -1,0 +1,52 @@
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]------(0.203 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+[0][RESULT  ]------(4.870 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  56.36% |           2.63|          0.066|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  31.08% |           1.45|          0.036|             40|          0.033|          0.142|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.24775 MLUPS (million lattice cell updates per second)
+[0]                                           2.24775 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]------(9.396 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.90% |           2.62|          0.065|             40|          0.064|          0.068|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.66% |           1.34|          0.034|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.31703 MLUPS (million lattice cell updates per second)
+[0]                                           2.31703 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(13.918 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.87% |           2.61|          0.065|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.65% |           1.34|          0.033|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.31911 MLUPS (million lattice cell updates per second)
+[0]                                           2.31911 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(18.435 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.82% |           2.61|          0.065|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.70% |           1.34|          0.033|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.32184 MLUPS (million lattice cell updates per second)
+[0]                                           2.32184 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0][RESULT  ]-----(22.954 sec) Time loop timing:
+[0]                            split pure LB sweep (collide)   |  57.84% |           2.61|          0.065|             40|          0.064|          0.067|          0.000|
+[0]                            split pure LB sweep (stream)    |  29.68% |           1.34|          0.034|             40|          0.033|          0.034|          0.000|
+[0]                            - cells:       262144
+[0]                            - fluid cells: 238328 (90.9149 % of all cells)
+[0]                            - performance: 2.32074 MLUPS (million lattice cell updates per second)
+[0]                                           2.32074 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                               + cells:       262144
+[0]                               + fluid cells: 238328 (90.9149 % of all cells)
+[0][INFO    ]-----(22.954 sec) Benchmark parameters:
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])

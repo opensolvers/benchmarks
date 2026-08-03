@@ -1,0 +1,1 @@
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/lbm/SoaCollideKernels.cpp:35:26: optimized: loop vectorized using variable length vectors

@@ -1,0 +1,42 @@
+soa_lbm_simd A/B — RVV vs WALBERLA_SIMD_FORCE_SCALAR
+date=2026-08-02T10:57:58+00:00
+host=orangepirv2 (Orange Pi RV2 / Ky X1 X60)
+nx=262144 iters=80 reps=3 working_set_MiB=18.00
+Q=9 (D2Q9-ish SoA BGK collide) VL=4 (double4_t)
+cxxflags=-std=c++20 -O2 -march=rv64gcv -mabi=lp64d -fno-math-errno
+source=microbench/soa_lbm_simd.cpp
+script=scripts/rvv-soa-microbench.sh
+board=/home/orangepi/walberla-bench/
+
+----- ISA -----
+RVV binary:    usedInstructionSet=RVV
+Scalar binary: usedInstructionSet=scalar emulation  (-DWALBERLA_SIMD_FORCE_SCALAR)
+
+----- WALL (best of 3) -----
+RVV:    BEST_WALL_s=22.802704   MLUPS≈0.92   ≈0.13 GB/s
+Scalar: BEST_WALL_s=8.594906    MLUPS≈2.44   ≈0.35 GB/s
+
+speedup_rvv_over_scalar=0.377x
+speedup_scalar_over_rvv=2.653x
+
+Checksums match to ~1e-15 relative (same kernel math).
+
+----- objdump collideSoA -----
+RVV hot:    vle64=71  vse64=61  vfadd=11  vfmul=17  vfsqrt=1
+Scalar hot: still some auto-vec RVV under -march=rv64gcv (vle64≈38 vfadd≈8)
+            but hot path is dominated by scalar fld/fsd/fadd/fmul on POD lanes;
+            RVV binary has clearly more explicit vle/vse around every simd op.
+
+Sample RVV (collideSoA):
+  vle64.v / vse64.v / vfadd.vv / vfmul / vfsqrt present
+
+----- Caveat -----
+RVV.h stores double4_t as alignas(32) double[4] (GCC cannot put RVV types in
+structs). Each operator+/−/* and load/store path does vle → compute → vse via
+the POD buffer, so values do not stay in vector registers across expression
+trees. This microbench therefore A/Bs the *simd layer path*, not a hand-kept
+vfloat64m2_t kernel. FORCE_SCALAR wins ~2.65× here; a true RVV win would need
+keeping vectors live (or a different API).
+
+Both binaries use the same -march=rv64gcv, so GCC may auto-vec parts of the
+Scalar.h path — that is intentional (same ISA flags, different simd backend).

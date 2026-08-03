@@ -1,0 +1,80 @@
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/invoke.h:61:36: missed: statement clobbers memory: <retval> = _3 (__args#0_4(D), _6); [return slot optimization]
+/home/orangepi/walberla-bench/src/walberla-7.2/src/communication/UniformPackInfo.h:176:16: missed: statement clobbers memory: OBJ_TYPE_REF(_15;_12->10B) (_12, _7, _13, _10);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/communication/UniformBufferedScheme.h:340:45: missed: statement clobbers memory: OBJ_TYPE_REF(_5;_3->5B) (_3, _6, _7, _8);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/communication/UniformPackInfo.h:176:16: missed: statement clobbers memory: OBJ_TYPE_REF(_8;_3->10B) (_3, _5, _6, __args#0_4(D));
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_construct.h:88:18: missed: statement clobbers memory: OBJ_TYPE_REF(_5;_4->0B) (_4);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_construct.h:88:18: missed: statement clobbers memory: OBJ_TYPE_REF(_5;_4->0B) (_4);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_construct.h:88:18: missed: statement clobbers memory: OBJ_TYPE_REF(_5;_4->0B) (_4);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_construct.h:88:18: missed: statement clobbers memory: OBJ_TYPE_REF(_5;_4->0B) (_4);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:179:31: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_5->3B) (_5, block_6(D), id_7(D), buffer_8(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:192:33: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_5->5B) (_5, block_6(D), id_7(D), buffer_8(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:133:31: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_6->3B) (_6, block_7(D), id_8(D), buffer_9(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:172:33: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_6->5B) (_6, block_7(D), id_8(D), buffer_9(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:139:43: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_5->6B) (_5, block_6(D), id_7(D), buffer_8(D), child_9(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:145:43: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_5->7B) (_5, block_6(D), id_7(D), buffer_8(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:178:45: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_5->10B) (_5, block_6(D), id_7(D), buffer_8(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:184:45: missed: statement clobbers memory: OBJ_TYPE_REF(_2;_5->11B) (_5, block_6(D), id_7(D), buffer_8(D), child_9(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/blockforest/BlockDataHandling.h:54:30: missed: statement clobbers memory: _8 = OBJ_TYPE_REF(_2;this_5(D)->12B) (this_5(D), block_6(D));
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:591:9: missed: statement clobbers memory: _10 (_11, &__args#0, &__args#1);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/blockforest/BlockDataHandling.h:67:78: missed: statement clobbers memory: _7 = OBJ_TYPE_REF(_2;this_4(D)->13B) (this_4(D), block_5(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/blockforest/BlockDataHandling.h:69:89: missed: statement clobbers memory: _7 = OBJ_TYPE_REF(_2;this_4(D)->13B) (this_4(D), block_5(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/blockforest/BlockDataHandling.h:70:89: missed: statement clobbers memory: _7 = OBJ_TYPE_REF(_2;this_4(D)->13B) (this_4(D), block_5(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:69:78: missed: statement clobbers memory: _8 = OBJ_TYPE_REF(_3;_1->2B) (_1, block_6(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:70:89: missed: statement clobbers memory: _8 = OBJ_TYPE_REF(_3;_1->2B) (_1, block_6(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockDataHandling.h:71:89: missed: statement clobbers memory: _8 = OBJ_TYPE_REF(_3;_1->2B) (_1, block_6(D));
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_construct.h:88:18: missed: statement clobbers memory: OBJ_TYPE_REF(_5;_4->0B) (_4);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_construct.h:88:18: missed: statement clobbers memory: OBJ_TYPE_REF(_5;_4->0B) (_4);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/BlockID.h:260:7: missed: statement clobbers memory: operator delete (this_2(D), 16);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 72);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 80);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 80);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 72);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 184);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 184);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:419:11: missed: statement clobbers memory: operator delete (this_2(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:419:11: missed: statement clobbers memory: operator delete (this_1(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:419:11: missed: statement clobbers memory: operator delete (this_2(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:419:11: missed: statement clobbers memory: operator delete (this_1(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:419:11: missed: statement clobbers memory: operator delete (this_2(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:419:11: missed: statement clobbers memory: operator delete (this_1(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:611:45: missed: statement clobbers memory: operator delete (this_2(D), 88);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:244:12: missed: statement clobbers memory: _6 (_7, _7, 3);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/shared_ptr_base.h:428:9: missed: statement clobbers memory: operator delete (_4, 32);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (_9, _12);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (_5, _8);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (_5, _8);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (_4, _7);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.h:173:7: missed: statement clobbers memory: operator delete (this_2(D), 56);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/communication/PackInfo.h:53:4: missed: statement clobbers memory: operator delete (this_2(D), 32);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/timeloop/Timeloop.h:59:10: missed: statement clobbers memory: operator delete (this_2(D), 16);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 80);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 80);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 72);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 184);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 184);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 88);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/allocation/FieldAllocator.h:238:10: missed: statement clobbers memory: operator delete (this_2(D), 16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/allocation/FieldAllocator.h:330:10: missed: statement clobbers memory: operator delete (this_2(D), 8);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 64);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/new_allocator.h:172:26: missed: statement clobbers memory: operator delete (this_1(D), 72);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:182:16: missed: splitting region at control altering definition _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:185:43: missed: statement clobbers memory: _10 = OBJ_TYPE_REF(_2;_7->4B) (_7, block_8(D));
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:186:20: missed: statement clobbers memory: _12 = operator new (24);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: splitting region at dominance boundary bb4
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:186:20: missed: statement clobbers memory: operator delete (_12, 24);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:186:20: missed: splitting region at dominance boundary bb5
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/BlockDataHandling.h:169:16: missed: splitting region at control altering definition _14 = operator new (16);

@@ -63,9 +63,11 @@ expected signal.
   companion to `fftw/` and `gromacs/`. *No repo dir.*
 - [ ] **MetalWalls** (`21.06.1-foss-2023b`) — constant-potential electrochem MD;
   heavy on Ewald/FFT + dense linear algebra → BLAS/FFT backend A/B. *2023b only.*
-- [ ] **waLBerla** (`foss-2025b`, dev repo) — lattice-Boltzmann CFD framework;
-  memory-bandwidth-bound stencils → good RVV vectorization + bandwidth-wall
-  study on the X60. **New in the 2025b port, never benchmarked.** *No repo dir.*
+- [x] **waLBerla** (`7.2-foss-2025b`, RV2) — campaign in [`walberla/`](walberla):
+  BasicLBM ISA ~1–4%; HeatEquation gcv **1.64×** np1; UniformGrid `--not-fused`
+  WALL **1.30×** / collide **1.54×**; hand RVV `simd` loses to FORCE_SCALAR;
+  plain SoA auto-vec ~**2.4×** vs novec (~**9×** vs hand simd); collide/stream
+  split slower than fused stock. Prefer contiguous auto-vec over hand simd.
 - [ ] **PLUMED** (`2.9.4-foss-2025b` / `2.9.2-2023b`) — enhanced-sampling library;
   bench its internal matrix/CV kernels, or use as a GROMACS/LAMMPS plugin to
   measure RVV overhead on collective-variable evaluation. *No repo dir.*
@@ -193,8 +195,8 @@ Access notes: see `riscv-learnings` `docs/riscv-u74.md` (`ubuntu@192.168.1.219`)
    done; remaining = repo benchmark dir / Force RVV A/B if pursued).
 6. **PETSc/SLEPc + MUMPS + SuperLU_DIST** (B2) — the sparse-solver column,
    complementary to the dense eigen probes.
-7. **waLBerla + ScaFaCoS** (B1/B2) — newest 2025b additions; bandwidth-bound
-   LBM and long-range Coulomb, no prior RV2 data.
+7. **ScaFaCoS** (B2) — long-range Coulomb / FMM companion; waLBerla RVV/auto-vec
+   campaign is done ([`walberla/`](walberla): HeatEq/UG wins; hand simd lesson).
 8. **QuantumESPRESSO build** (C2) — bump `7.4-foss-2024a` → 2025b and build;
    this is the single item that unblocks the already-present `qe/` benchmark.
 9. **CP2K + OpenFOAM + WRF** (C2) — flagship DFT / CFD / NWP whole-app probes;

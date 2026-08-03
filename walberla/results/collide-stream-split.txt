@@ -1,0 +1,98 @@
+======== collide-SoA-then-stream A/B 2026-08-02T11:56:45+00:00 ========
+board: Linux orangepirv2 6.6.63-ky #1.0.0 SMP PREEMPT Wed Mar 12 09:04:00 CST 2025 riscv64 GNU/Linux
+binary: /home/orangepi/walberla-bench/build-gcv/apps/tutorials/lbm/01_BasicLBM_CollideStreamSplit
+CXX_FLAGS: CMAKE_CXX_FLAGS:STRING=-O2 -ftree-vectorize -march=rv64gcv -mabi=lp64d -fno-math-errno -fPIC
+
+--- vectorize notes (SoaCollideKernels.cpp) ---
+/home/orangepi/walberla-bench/src/walberla-7.2/apps/tutorials/lbm/SoaCollideKernels.cpp:35:26: optimized: loop vectorized using variable length vectors
+
+==== RUN stock_np1 np=1 mode=stock 2026-08-02T11:56:45+00:00 ====
+RUN_RC=0 name=stock_np1
+WALL 133.764
+WALL_date_s 137
+[0][RESULT  ]----(133.954 sec) MLUPS 4.78455 (cells≈320000 steps=2000)
+[0][RESULT  ]----(133.974 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+[0][RESULT  ]------(0.000 sec) sweepMode=stock
+[0][INFO    ]-----(10.418 sec)[ 150] Estimated Remaining Time:   2m 4s 
+[0][INFO    ]-----(20.426 sec)[ 300] Estimated Remaining Time:  1m 53s 
+[0][INFO    ]-----(30.438 sec)[ 450] Estimated Remaining Time:  1m 43s 
+[0][INFO    ]-----(40.463 sec)[ 600] Estimated Remaining Time:  1m 33s 
+[0][INFO    ]-----(50.492 sec)[ 750] Estimated Remaining Time:  1m 23s 
+[0][INFO    ]-----(60.512 sec)[ 900] Estimated Remaining Time:  1m 13s 
+[0][INFO    ]-----(70.534 sec)[1050] Estimated Remaining Time:   1m 3s 
+[0][INFO    ]-----(80.556 sec)[1200] Estimated Remaining Time:     53s 
+[0][INFO    ]-----(90.581 sec)[1350] Estimated Remaining Time:     43s 
+[0][INFO    ]----(100.610 sec)[1500] Estimated Remaining Time:     33s 
+[0][INFO    ]----(110.636 sec)[1650] Estimated Remaining Time:     23s 
+[0][INFO    ]----(120.658 sec)[1800] Estimated Remaining Time:     13s 
+[0][INFO    ]----(130.678 sec)[1950] Estimated Remaining Time:      3s 
+[0][RESULT  ]----(133.954 sec) WALL 133.764
+[0][RESULT  ]----(133.954 sec) MLUPS 4.78455 (cells≈320000 steps=2000)
+[0][RESULT  ]----(133.954 sec) sweepMode=stock
+[0][RESULT  ]----(133.974 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+
+==== RUN split_np1 np=1 mode=split 2026-08-02T11:59:03+00:00 ====
+RUN_RC=0 name=split_np1
+WALL 175.923
+WALL_date_s 180
+[0][RESULT  ]----(176.113 sec) MLUPS 3.63795 (cells≈320000 steps=2000)
+[0][RESULT  ]----(176.126 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+[0][INFO    ]-----(20.452 sec)[ 228] Estimated Remaining Time:  2m 36s 
+[0][INFO    ]-----(30.482 sec)[ 342] Estimated Remaining Time:  2m 26s 
+[0][INFO    ]-----(40.498 sec)[ 456] Estimated Remaining Time:  2m 16s 
+[0][INFO    ]-----(50.522 sec)[ 570] Estimated Remaining Time:   2m 6s 
+[0][INFO    ]-----(60.542 sec)[ 684] Estimated Remaining Time:  1m 56s 
+[0][INFO    ]-----(70.555 sec)[ 798] Estimated Remaining Time:  1m 46s 
+[0][INFO    ]-----(80.573 sec)[ 912] Estimated Remaining Time:  1m 36s 
+[0][INFO    ]-----(90.591 sec)[1026] Estimated Remaining Time:  1m 26s 
+[0][INFO    ]----(100.608 sec)[1140] Estimated Remaining Time:  1m 15s 
+[0][INFO    ]----(110.629 sec)[1254] Estimated Remaining Time:   1m 5s 
+[0][INFO    ]----(120.643 sec)[1368] Estimated Remaining Time:     55s 
+[0][INFO    ]----(130.667 sec)[1482] Estimated Remaining Time:     45s 
+[0][INFO    ]----(140.685 sec)[1596] Estimated Remaining Time:     35s 
+[0][INFO    ]----(150.706 sec)[1710] Estimated Remaining Time:     25s 
+[0][INFO    ]----(160.727 sec)[1824] Estimated Remaining Time:     15s 
+[0][INFO    ]----(170.748 sec)[1938] Estimated Remaining Time:      5s 
+[0][RESULT  ]----(176.113 sec) WALL 175.923
+[0][RESULT  ]----(176.113 sec) MLUPS 3.63795 (cells≈320000 steps=2000)
+[0][RESULT  ]----(176.113 sec) sweepMode=split
+[0][RESULT  ]----(176.126 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+
+==== RUN stock_np4 np=4 mode=stock 2026-08-02T12:02:03+00:00 ====
+RUN_RC=0 name=stock_np4
+WALL 41.3441
+WALL_date_s 47
+[0][RESULT  ]-----(41.406 sec) MLUPS 15.4798 (cells≈320000 steps=2000)
+[0][RESULT  ]-----(41.411 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+[0][RESULT  ]------(0.000 sec) sweepMode=stock
+[0][INFO    ]-----(10.147 sec)[ 485] Estimated Remaining Time:     31s 
+[0][INFO    ]-----(20.157 sec)[ 970] Estimated Remaining Time:     21s 
+[0][INFO    ]-----(30.171 sec)[1455] Estimated Remaining Time:     11s 
+[0][INFO    ]-----(40.188 sec)[1940] Estimated Remaining Time:      1s 
+[0][RESULT  ]-----(41.406 sec) WALL 41.3441
+[0][RESULT  ]-----(41.406 sec) MLUPS 15.4798 (cells≈320000 steps=2000)
+[0][RESULT  ]-----(41.406 sec) sweepMode=stock
+[0][RESULT  ]-----(41.411 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+
+==== RUN split_np4 np=4 mode=split 2026-08-02T12:02:50+00:00 ====
+RUN_RC=0 name=split_np4
+WALL 64.6987
+WALL_date_s 69
+[0][RESULT  ]-----(64.760 sec) MLUPS 9.89201 (cells≈320000 steps=2000)
+[0][RESULT  ]-----(64.765 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+[0][RESULT  ]------(0.000 sec) sweepMode=split
+[0][INFO    ]-----(10.166 sec)[ 310] Estimated Remaining Time:     55s 
+[0][INFO    ]-----(20.187 sec)[ 620] Estimated Remaining Time:     45s 
+[0][INFO    ]-----(30.204 sec)[ 930] Estimated Remaining Time:     35s 
+[0][INFO    ]-----(40.225 sec)[1240] Estimated Remaining Time:     25s 
+[0][INFO    ]-----(50.246 sec)[1550] Estimated Remaining Time:     15s 
+[0][INFO    ]-----(60.265 sec)[1860] Estimated Remaining Time:      4s 
+[0][RESULT  ]-----(64.759 sec) WALL 64.6987
+[0][RESULT  ]-----(64.760 sec) MLUPS 9.89201 (cells≈320000 steps=2000)
+[0][RESULT  ]-----(64.760 sec) sweepMode=split
+[0][RESULT  ]-----(64.765 sec) checksum_density_sum=320994 fluid_cells=320000 mean_density=1.00311
+
+--- speedup (stock_WALL / split_WALL; >1 => split faster) ---
+np1: stock=133.764s split=175.923s speedup=0.760x
+np4: stock=41.344s split=64.699s speedup=0.639x
+======== DONE 2026-08-02T12:04:00+00:00 ========

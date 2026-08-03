@@ -1,0 +1,120 @@
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _44 = *_45;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _31 = *_30;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _45 = *_46;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _32 = *_31;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _45 = *_46;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _32 = *_31;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _44 = *_45;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _31 = *_30;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _45 = *_46;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:108:14: missed: not vectorized: no vectype for stmt: _32 = *_31;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _44 = *_45;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/Density.h:72:14: missed: not vectorized: no vectype for stmt: _31 = *_30;
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1084:13: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:1096:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/DensityAndMomentumDensity.h:94:13: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/lbm/field/DensityAndMomentumDensity.h:94:13: optimized: loop vectorized using variable length vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/math/Vector3.h:526:10: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/math/Vector3.h:526:10: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/field/Field.impl.h:711:21: missed: not vectorized: vectorization is not profitable.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _15 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _15 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/domain_decomposition/IBlock.h:85:15: missed: not vectorized: statement can throw an exception: _14 = operator new (16);
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:409:41: missed: not vectorized: number of iterations cannot be computed.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:418:9: missed: not vectorized: could not determine main exit from loop with multiple exits.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:448:10: missed: not vectorized: could not determine main exit from loop with multiple exits.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/BufferSystemHelper.impl.h:448:10: missed: not vectorized: could not determine main exit from loop with multiple exits.
+/home/orangepi/walberla-bench/src/walberla-7.2/src/core/mpi/RecvBuffer.h:549:9: missed: not vectorized: vectorization is not profitable.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct ._anon_197 *)__dest_5(D)] = MEM[(const struct ._anon_197 &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct BlockSweep *)__dest_5(D)] = MEM[(const struct BlockSweep &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct ._anon_253 *)__dest_5(D)] = MEM[(const struct ._anon_253 &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:152:6: missed: not vectorized: more than one data ref in stmt: MEM[(struct ._anon_261 *)__dest_5(D)] = MEM[(const struct ._anon_261 &)__source_4(D)];
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/list.tcc:71:20: missed: not vectorized: number of iterations cannot be computed.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_list.h:153:16: missed: not vectorized: vectorization is not profitable.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/stl_list.h:153:16: missed: not vectorized: vectorization is not profitable.
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:391:10: missed: not vectorized: statement can throw an exception: _16 (_17, _18, 2);
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:267:7: missed: not vectorized: statement can throw an exception: resx 3
+/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/include/c++/14.3.0/bits/std_function.h:393:17: optimized: basic block part vectorized using 16 byte vectors
+/home/orangepi/walberla-bench/src/walberla-7.2/src/blockforest/communication/UniformBufferedScheme.h:550:24: missed: not vectorized: statement can throw an exception: OBJ_TYPE_REF(_20;_18->4B) (_18, _6, _23, &recvBuffer);

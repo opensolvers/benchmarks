@@ -1,0 +1,219 @@
+================================================================================
+|       BEGIN LOGGING - Sunday, 02.August 2026, 17:57:56                       |
+================================================================================
+[0][INFO    ]------(0.000 sec) Creating the block structure ...
+[0][INFO    ]------(0.002 sec) SetupBlockForest created successfully:
+[0]                            - AABB: [ <0,0,0>, <128,128,64> ]
+[0]                            - initial decomposition: 2 x 2 x 1 (= forest size)
+[0]                            - periodicity: false x false x false
+[0]                            - number of blocks discarded from the initial grid: 0 (= 0 %)
+[0]                            - number of levels: 1
+[0]                            - tree ID digits: 3 (-> block ID bytes = 1)
+[0]                            - total number of blocks: 4
+[0]                            - number of processes: 4 (4 worker process(es) / 0 empty buffer process(es))
+[0]                            - buffer processes are inserted into the process network: no
+[0]                            - process ID bytes: 1
+[0]                            - blocks/memory/workload per process:
+[0]                               + blocks:
+[0]                                  - min       = 1
+[0]                                  - max       = 1
+[0]                                  - avg       = 1
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0]                               + memory:
+[0]                                  - min       = 1
+[0]                                  - max       = 1
+[0]                                  - avg       = 1
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0]                               + workload:
+[0]                                  - min       = 1
+[0]                                  - max       = 1
+[0]                                  - avg       = 1
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0][INFO    ]------(0.244 sec) BlockForest information:
+[0]                            - LBM-specific block structure data:
+[0]                               + AABB:        [ <0,0,0>, <128,128,64> ]
+[0]                               + forest size: 2 x 2 x 1 blocks
+[0]                               + periodicity: false x false x false
+[0]                               + blocks:      4
+[0]                               + block size:  64 x 64 x 64 cells
+[0]                               + cells:       1048576
+[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+[0]                               + pseudo 2D:   no
+[0]                            - data structure specific parameters:
+[0]                               + tree ID digits: 3 (-> block ID bytes = 1)
+[0]                               + process ID bytes: 1
+[0]                            - blocks per process:
+[0]                               + min       = 1
+[0]                               + max       = 1
+[0]                               + avg       = 1
+[0]                               + stdDev    = 0
+[0]                               + relStdDev = 0
+[0][INFO    ]------(0.244 sec) Benchmark parameters:
+[0]                            - collision model:                 SRT
+[0]                            - stencil:                         D3Q19
+[0]                            - compressible:                    no
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+[0]                            - communication:                   direction-aware optimizations
+[0]                            - direct communication:            disabled
+[0][RESULT  ]------(5.998 sec) Time loop timing:
+[0]                            Timer                           |       % |          Total|        Average|          Count|            Min|            Max|       Variance|
+[0]                            -------------------------------------------------------------------------------------------------------------------------------------------
+[0]                            LB boundary sweep               |   4.12% |           0.95|          0.009|            100|          0.007|          0.028|          0.000|
+[0]                            LB communication                |   4.87% |           1.12|          0.011|            100|          0.009|          0.016|          0.000|
+[0]                            split pure LB sweep (collide)   |  53.21% |          12.23|          0.122|            100|          0.119|          0.132|          0.000|
+[0]                            split pure LB sweep (stream)    |  37.80% |           8.69|          0.087|            100|          0.078|          0.225|          0.001|
+[0]                            
+[0][RESULT  ]------(5.998 sec) Simulation performance:
+[0]                            - processes:   4
+[0]                            - threads:     4 (threads per process = 1, threads per core = n/a *))
+[0]                            - cores:       n/a *)
+[0]                            - time steps:  25
+[0]                            - time:        5.75064 sec
+[0]                            - cells:       1048576
+[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+[0]                            - performance: 4.55852 MLUPS (million lattice cell updates per second)
+[0]                                           1.13963 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                                           4.27914 MFLUPS (million fluid lattice cell updates per second)
+[0]                                           1.06979 MFLUPS / process
+[0]                                           n/a *) MFLUPS / core
+[0]                                           4.34735 time steps / second
+[0]                            - build / run information:
+[0]                               + host machine:   orangepirv2
+[0]                               + build machine:  orangepirv2
+[0]                               + git SHA1:       GITDIR-NOTFOUND
+[0]                               + build type:     Release
+[0]                               + compiler flags: -O3 -DNDEBUG -O2 -ftree-vectorize -march=rv64gc -mabi=lp64d -fno-math-errno -fPIC -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread 
+[0]                            
+[0]                              *) only available if environment variable 'THREADS_PER_CORE' is set
+[0][RESULT  ]-----(11.558 sec) Time loop timing:
+[0]                            Timer                           |       % |          Total|        Average|          Count|            Min|            Max|       Variance|
+[0]                            -------------------------------------------------------------------------------------------------------------------------------------------
+[0]                            LB boundary sweep               |   3.95% |           0.88|          0.009|            100|          0.008|          0.010|          0.000|
+[0]                            LB communication                |   4.90% |           1.09|          0.011|            100|          0.009|          0.014|          0.000|
+[0]                            split pure LB sweep (collide)   |  54.49% |          12.10|          0.121|            100|          0.118|          0.128|          0.000|
+[0]                            split pure LB sweep (stream)    |  36.66% |           8.14|          0.081|            100|          0.079|          0.088|          0.000|
+[0]                            
+[0][RESULT  ]-----(11.559 sec) Simulation performance:
+[0]                            - processes:   4
+[0]                            - threads:     4 (threads per process = 1, threads per core = n/a *))
+[0]                            - cores:       n/a *)
+[0]                            - time steps:  25
+[0]                            - time:        5.55999 sec
+[0]                            - cells:       1048576
+[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+[0]                            - performance: 4.71483 MLUPS (million lattice cell updates per second)
+[0]                                           1.17871 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                                           4.42587 MFLUPS (million fluid lattice cell updates per second)
+[0]                                           1.10647 MFLUPS / process
+[0]                                           n/a *) MFLUPS / core
+[0]                                           4.49641 time steps / second
+[0]                            - build / run information:
+[0]                               + host machine:   orangepirv2
+[0]                               + build machine:  orangepirv2
+[0]                               + git SHA1:       GITDIR-NOTFOUND
+[0]                               + build type:     Release
+[0]                               + compiler flags: -O3 -DNDEBUG -O2 -ftree-vectorize -march=rv64gc -mabi=lp64d -fno-math-errno -fPIC -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread 
+[0]                            
+[0]                              *) only available if environment variable 'THREADS_PER_CORE' is set
+[0][RESULT  ]-----(17.061 sec) Time loop timing:
+[0]                            Timer                           |       % |          Total|        Average|          Count|            Min|            Max|       Variance|
+[0]                            -------------------------------------------------------------------------------------------------------------------------------------------
+[0]                            LB boundary sweep               |   3.73% |           0.82|          0.008|            100|          0.007|          0.009|          0.000|
+[0]                            LB communication                |   4.88% |           1.07|          0.011|            100|          0.008|          0.030|          0.000|
+[0]                            split pure LB sweep (collide)   |  55.47% |          12.19|          0.122|            100|          0.117|          0.138|          0.000|
+[0]                            split pure LB sweep (stream)    |  35.92% |           7.90|          0.079|            100|          0.076|          0.083|          0.000|
+[0]                            
+[0][RESULT  ]-----(17.061 sec) Simulation performance:
+[0]                            - processes:   4
+[0]                            - threads:     4 (threads per process = 1, threads per core = n/a *))
+[0]                            - cores:       n/a *)
+[0]                            - time steps:  25
+[0]                            - time:        5.50197 sec
+[0]                            - cells:       1048576
+[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+[0]                            - performance: 4.76455 MLUPS (million lattice cell updates per second)
+[0]                                           1.19114 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                                           4.47254 MFLUPS (million fluid lattice cell updates per second)
+[0]                                           1.11814 MFLUPS / process
+[0]                                           n/a *) MFLUPS / core
+[0]                                           4.54383 time steps / second
+[0]                            - build / run information:
+[0]                               + host machine:   orangepirv2
+[0]                               + build machine:  orangepirv2
+[0]                               + git SHA1:       GITDIR-NOTFOUND
+[0]                               + build type:     Release
+[0]                               + compiler flags: -O3 -DNDEBUG -O2 -ftree-vectorize -march=rv64gc -mabi=lp64d -fno-math-errno -fPIC -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread 
+[0]                            
+[0]                              *) only available if environment variable 'THREADS_PER_CORE' is set
+[0][RESULT  ]-----(22.534 sec) Time loop timing:
+[0]                            Timer                           |       % |          Total|        Average|          Count|            Min|            Max|       Variance|
+[0]                            -------------------------------------------------------------------------------------------------------------------------------------------
+[0]                            LB boundary sweep               |   3.72% |           0.81|          0.008|            100|          0.007|          0.009|          0.000|
+[0]                            LB communication                |   4.77% |           1.04|          0.010|            100|          0.009|          0.019|          0.000|
+[0]                            split pure LB sweep (collide)   |  55.47% |          12.13|          0.121|            100|          0.118|          0.135|          0.000|
+[0]                            split pure LB sweep (stream)    |  36.03% |           7.88|          0.079|            100|          0.077|          0.086|          0.000|
+[0]                            
+[0][RESULT  ]-----(22.534 sec) Simulation performance:
+[0]                            - processes:   4
+[0]                            - threads:     4 (threads per process = 1, threads per core = n/a *))
+[0]                            - cores:       n/a *)
+[0]                            - time steps:  25
+[0]                            - time:        5.47182 sec
+[0]                            - cells:       1048576
+[0]                            - fluid cells: 984312 (93.8713 % of all cells)
+[0]                            - performance: 4.79081 MLUPS (million lattice cell updates per second)
+[0]                                           1.1977 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                                           4.49719 MFLUPS (million fluid lattice cell updates per second)
+[0]                                           1.1243 MFLUPS / process
+[0]                                           n/a *) MFLUPS / core
+[0]                                           4.56887 time steps / second
+[0]                            - build / run information:
+[0]                               + host machine:   orangepirv2
+[0]                               + build machine:  orangepirv2
+[0]                               + git SHA1:       GITDIR-NOTFOUND
+[0]                               + build type:     Release
+[0]                               + compiler flags: -O3 -DNDEBUG -O2 -ftree-vectorize -march=rv64gc -mabi=lp64d -fno-math-errno -fPIC -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread 
+[0]                            
+[0]                              *) only available if environment variable 'THREADS_PER_CORE' is set
+[0][INFO    ]-----(22.534 sec) BlockForest information:
+[0]                            - LBM-specific block structure data:
+[0]                               + AABB:        [ <0,0,0>, <128,128,64> ]
+[0]                               + forest size: 2 x 2 x 1 blocks
+[0]                               + periodicity: false x false x false
+[0]                               + blocks:      4
+[0]                               + block size:  64 x 64 x 64 cells
+[0]                               + cells:       1048576
+[0]                               + fluid cells: 984312 (93.8713 % of all cells)
+[0]                               + pseudo 2D:   no
+[0]                            - data structure specific parameters:
+[0]                               + tree ID digits: 3 (-> block ID bytes = 1)
+[0]                               + process ID bytes: 1
+[0]                            - blocks per process:
+[0]                               + min       = 1
+[0]                               + max       = 1
+[0]                               + avg       = 1
+[0]                               + stdDev    = 0
+[0]                               + relStdDev = 0
+[0][INFO    ]-----(22.534 sec) Benchmark parameters:
+[0]                            - collision model:                 SRT
+[0]                            - stencil:                         D3Q19
+[0]                            - compressible:                    no
+[0]                            - fused (stream & collide) kernel: no
+[0]                            - split (collision) kernel:        yes
+[0]                            - pure kernel:                     yes (collision is also performed within obstacle cells)
+[0]                            - data layout:                     fzyx (structure of arrays [SoA])
+[0]                            - communication:                   direction-aware optimizations
+[0]                            - direct communication:            disabled
+================================================================================
+|         END LOGGING - Sunday, 02.August 2026, 17:58:19                       |
+================================================================================

@@ -1,0 +1,8 @@
+date=2026-08-02T10:30:14+00:00
+compile: RVV.h POD alignas(32) double d[4]; VL=4 locals; vbool32_t masks — COMPILE_OK
+smoke: usedInstructionSet=RVV SMOKE_OK
+equiv: usedInstructionSet=RVV EQUIV_OK (vs Scalar.h, C++20)
+ISA_RVV=RVV
+ISA_FORCE_SCALAR=scalar emulation
+BasicLBM_short_100steps: WALL=10.024 (existing build-gcv binary; CellwiseSweep scalar)
+caveat: 01_BasicLBM does not call simd::double4_t; RVV backend is for SIMD API users; field align 32B under RVV

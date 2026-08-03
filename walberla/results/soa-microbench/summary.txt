@@ -1,0 +1,47 @@
+soa_lbm_simd A/B — RVV vector_size(32) vs WALBERLA_SIMD_FORCE_SCALAR
+date=2026-08-02T11:20:24+00:00
+host=orangepirv2
+backend=GCC f64x4_t __attribute__((vector_size(32))) inside double4_t
+nx=262144 iters=80 reps=3
+cxxflags=-std=c++20 -O2 -march=rv64gcv -mabi=lp64d -fno-math-errno
+
+----- RVV (vector_size) -----
+usedInstructionSet=RVV
+nx=262144 Q=9 VL=4 iters=80 omega=1 reps=3
+working_set_MiB=18.00
+rep=0 WALL_s=14.615559 checksum=2.896455724331424e-07
+rep=1 WALL_s=14.598986 checksum=2.896455724331424e-07
+rep=2 WALL_s=14.595330 checksum=2.896455724331424e-07
+BEST_WALL_s=14.595330
+MLUPS=1.437
+approx_GB_s=0.207
+checksum=2.896455724331424e-07
+
+----- SCALAR -----
+usedInstructionSet=scalar emulation
+nx=262144 Q=9 VL=4 iters=80 omega=1 reps=3
+working_set_MiB=18.00
+rep=0 WALL_s=8.338721 checksum=2.896455724331424e-07
+rep=1 WALL_s=8.335790 checksum=2.896455724331424e-07
+rep=2 WALL_s=8.372320 checksum=2.896455724331424e-07
+BEST_WALL_s=8.335790
+MLUPS=2.516
+approx_GB_s=0.362
+checksum=2.896455724331424e-07
+
+----- objdump -----
+name=rvv
+hot_lines=356
+hot_vle64=48 hot_vse64=18 hot_vfadd=22 hot_vfmul=20 hot_vfmacc=14 hot_vfsqrt=2
+binary_vle64_total=48 binary_vse64_total=18 binary_vfadd_total=22
+name=scalar
+hot_lines=307
+hot_vle64=38 hot_vse64=27 hot_vfadd=8 hot_vfmul=20 hot_vfmacc=14 hot_vfsqrt=2
+binary_vle64_total=38 binary_vse64_total=27 binary_vfadd_total=8
+
+BEST_WALL_rvv_s=14.595330
+BEST_WALL_scalar_s=8.335790
+PREV_POD_RVV_BEST_WALL_s=22.802704
+speedup_vs_old_POD_RVV=1.5623x (lower wall is better)
+speedup_rvv_over_scalar=0.5711x
+speedup_scalar_over_rvv=1.7509x

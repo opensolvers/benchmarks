@@ -1,0 +1,12 @@
+build_has_riscv_v=1
+optimize=1
+nx=262144 Q=9 iters=80 omega=1 reps=3
+kernel=plain_double_SoA_autovec (no walberla::simd)
+working_set_MiB=18.00
+rep=0 WALL_s=3.764932 checksum=2.8964557243312758e-07
+rep=1 WALL_s=3.765121 checksum=2.8964557243312758e-07
+rep=2 WALL_s=3.767137 checksum=2.8964557243312758e-07
+BEST_WALL_s=3.764932
+MLUPS=5.570
+approx_GB_s=0.802
+checksum=2.8964557243312758e-07

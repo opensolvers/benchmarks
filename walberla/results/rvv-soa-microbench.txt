@@ -1,0 +1,41 @@
+soa_lbm_simd A/B — RVV vector_size(32) vs WALBERLA_SIMD_FORCE_SCALAR
+date=2026-08-02T11:20:24+00:00
+host=orangepirv2 (Orange Pi RV2 / Ky X1 X60)
+nx=262144 iters=80 reps=3 working_set_MiB=18.00
+Q=9 (D2Q9-ish SoA BGK collide) VL=4 (double4_t)
+cxxflags=-std=c++20 -O2 -march=rv64gcv -mabi=lp64d -fno-math-errno
+compiler=g++ (GCC) 14.3.0 via EESSI foss/2025b
+source=microbench/soa_lbm_simd.cpp
+script=scripts/rvv-soa-microbench.sh
+board=/home/orangepi/walberla-bench/
+backend=typedef double f64x4_t __attribute__((vector_size(32))); struct double4_t { f64x4_t v; };
+
+----- ISA -----
+RVV binary:    usedInstructionSet=RVV
+Scalar binary: usedInstructionSet=scalar emulation  (-DWALBERLA_SIMD_FORCE_SCALAR)
+
+----- WALL (best of 3) -----
+RVV vector_size: BEST_WALL_s=14.595330   MLUPS≈1.437   ≈0.21 GB/s
+Scalar:          BEST_WALL_s=8.335790    MLUPS≈2.516   ≈0.36 GB/s
+Prev POD RVV:    BEST_WALL_s=22.802704   MLUPS≈0.92    (same nx/iters/reps)
+
+speedup_vs_old_POD_RVV=1.562x   (14.60s vs 22.80s)
+speedup_rvv_over_scalar=0.571x  (still slower than FORCE_SCALAR)
+speedup_scalar_over_rvv=1.751x
+
+Checksums match across RVV / scalar (same kernel math).
+
+----- objdump collideSoA (hot) -----
+POD RVV (previous):  vle64=71  vse64=61  vfadd=11  vfmul=17  vfmacc≈0  vfsqrt=1
+                     mem ops ≈132,  vf* ≈29,  ratio vf*/mem ≈0.22
+vector_size RVV:     vle64=48  vse64=18  vfadd=22  vfmul=20  vfmacc=14  vfsqrt=2
+                     mem ops ≈66,   vf* ≈58,  ratio vf*/mem ≈0.88
+Scalar (auto-vec):   vle64=38  vse64=27  vfadd=8   vfmul=20  vfmacc=14  vfsqrt=2
+
+Fewer spill stores (vse 61→18), more live arithmetic / FMA formation.
+
+----- Caveat -----
+vector_size fixes the POD-per-op spill pattern and is ~1.56× faster than the
+old RVV.h, but FORCE_SCALAR still wins ~1.75× on this microbench (working set
+~18 MiB, bandwidth-sensitive; Scalar.h + auto-vec under -march=rv64gcv is a
+strong baseline). Shuffle helpers still lane-extract; fq[Q] arrays may spill.

@@ -1,0 +1,62 @@
+=== rv2-ab-canaries 2026-08-10T13:05:02+00:00 ===
+GCC152=/home/orangepi/gcc-tune/install/gcc-15.2.0-x60/bin/gcc
+gcc (GCC) 15.2.0
+flags: -O3 -march=rv64gcv_zba_zbb_zbc_zvl256b -mabi=lp64d
+governor=performance freq=1600000 kHz
+BUILD generic-ooo: /home/orangepi/gcc-tune/install/gcc-15.2.0-x60/bin/gcc -mtune=generic-ooo -B/home/orangepi/gcc-tune/tools/bin/ -L/home/orangepi/gcc-tune/install/gcc-15.2.0-x60/lib -Wl,-rpath,/home/orangepi/gcc-tune/install/gcc-15.2.0-x60/lib
+BUILD x60: /home/orangepi/gcc-tune/install/gcc-15.2.0-x60/bin/gcc -mtune=spacemit-x60 -B/home/orangepi/gcc-tune/tools/bin/ -L/home/orangepi/gcc-tune/install/gcc-15.2.0-x60/lib -Wl,-rpath,/home/orangepi/gcc-tune/install/gcc-15.2.0-x60/lib
+BUILD default-tune: /home/orangepi/gcc-tune/install/gcc-15.2.0-x60/bin/gcc  -B/home/orangepi/gcc-tune/tools/bin/ -L/home/orangepi/gcc-tune/install/gcc-15.2.0-x60/lib -Wl,-rpath,/home/orangepi/gcc-tune/install/gcc-15.2.0-x60/lib
+EESSI_GCC=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/bin/gcc
+BUILD eessi-14.3: /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0/bin/gcc  
+=== pass 1 ===
+=== RUN generic-ooo 2026-08-10T13:05:30+00:00 ===
+sched_kernels_bench  label=generic-ooo  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=8029.7 ±192.1  med=7963.7  min=7742.0 max=8380.9  cyc/elem mean=3.137 med=3.111
+fma_chain         ns/call mean=22973.3 ±206.4  med=22976.4  min=22678.2 max=23375.5  cyc/elem mean=8.974 med=8.975
+div_mix           ns/call mean=38691.7 ±1073.8  med=38088.9  min=37912.8 max=40841.3  cyc/elem mean=15.114 med=14.878
+sh1add            ns/call mean=10654.3 ±50.4  med=10636.7  min=10600.8 max=10771.5  cyc/elem mean=4.162 med=4.155
+=== RUN x60 2026-08-10T13:05:30+00:00 ===
+sched_kernels_bench  label=x60  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7822.4 ±159.1  med=7752.0  min=7740.4 max=8287.1  cyc/elem mean=3.056 med=3.028
+fma_chain         ns/call mean=20316.8 ±224.9  med=20316.1  min=19790.7 max=20605.6  cyc/elem mean=7.936 med=7.936
+div_mix           ns/call mean=35385.9 ±64.7  med=35372.9  min=35333.0 max=35572.9  cyc/elem mean=13.823 med=13.818
+sh1add            ns/call mean=10481.7 ±30.1  med=10483.6  min=10445.5 max=10557.5  cyc/elem mean=4.094 med=4.095
+=== RUN default-tune 2026-08-10T13:05:30+00:00 ===
+sched_kernels_bench  label=default-tune  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7867.3 ±193.3  med=7810.7  min=7746.4 max=8393.2  cyc/elem mean=3.073 med=3.051
+fma_chain         ns/call mean=21623.4 ±116.5  med=21658.5  min=21336.6 max=21745.1  cyc/elem mean=8.447 med=8.460
+div_mix           ns/call mean=37941.2 ±36.2  med=37933.1  min=37901.0 max=37992.3  cyc/elem mean=14.821 med=14.818
+sh1add            ns/call mean=10691.8 ±36.3  med=10698.1  min=10639.5 max=10758.8  cyc/elem mean=4.176 med=4.179
+=== RUN eessi-14.3 2026-08-10T13:05:30+00:00 ===
+sched_kernels_bench  label=eessi-14.3  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7955.0 ±548.3  med=7819.2  min=7742.3 max=9602.5  cyc/elem mean=3.107 med=3.054
+fma_chain         ns/call mean=21889.5 ±74.4  med=21866.9  min=21787.4 max=21990.2  cyc/elem mean=8.551 med=8.542
+div_mix           ns/call mean=37952.8 ±90.7  med=37925.1  min=37888.5 max=38207.0  cyc/elem mean=14.825 med=14.815
+sh1add            ns/call mean=10569.1 ±168.4  med=10517.1  min=10485.7 max=11071.3  cyc/elem mean=4.129 med=4.108
+=== pass 2 ===
+=== RUN generic-ooo 2026-08-10T13:05:31+00:00 ===
+sched_kernels_bench  label=generic-ooo  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7839.6 ±135.1  med=7753.7  min=7742.5 max=8096.7  cyc/elem mean=3.062 med=3.029
+fma_chain         ns/call mean=21591.1 ±156.7  med=21554.7  min=21366.1 max=21912.8  cyc/elem mean=8.434 med=8.420
+div_mix           ns/call mean=37971.0 ±48.2  med=37964.2  min=37913.7 max=38066.2  cyc/elem mean=14.832 med=14.830
+sh1add            ns/call mean=10639.4 ±32.8  med=10645.5  min=10593.3 max=10696.0  cyc/elem mean=4.156 med=4.158
+=== RUN x60 2026-08-10T13:05:31+00:00 ===
+sched_kernels_bench  label=x60  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7831.5 ±117.6  med=7806.5  min=7746.4 max=8135.4  cyc/elem mean=3.059 med=3.049
+fma_chain         ns/call mean=20383.2 ±224.5  med=20463.1  min=19864.4 max=20691.2  cyc/elem mean=7.962 med=7.993
+div_mix           ns/call mean=35399.6 ±56.2  med=35394.5  min=35342.0 max=35514.5  cyc/elem mean=13.828 med=13.826
+sh1add            ns/call mean=10608.8 ±48.5  med=10594.6  min=10560.5 max=10713.7  cyc/elem mean=4.144 med=4.139
+=== RUN default-tune 2026-08-10T13:05:31+00:00 ===
+sched_kernels_bench  label=default-tune  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7800.6 ±58.2  med=7804.9  min=7747.1 max=7920.9  cyc/elem mean=3.047 med=3.049
+fma_chain         ns/call mean=21449.0 ±118.0  med=21490.1  min=21238.9 max=21579.4  cyc/elem mean=8.379 med=8.395
+div_mix           ns/call mean=37943.7 ±49.6  med=37938.6  min=37890.3 max=38036.1  cyc/elem mean=14.822 med=14.820
+sh1add            ns/call mean=10442.5 ±61.1  med=10425.8  min=10383.8 max=10585.1  cyc/elem mean=4.079 med=4.073
+=== RUN eessi-14.3 2026-08-10T13:05:32+00:00 ===
+sched_kernels_bench  label=eessi-14.3  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7852.5 ±181.8  med=7805.5  min=7742.4 max=8356.3  cyc/elem mean=3.067 med=3.049
+fma_chain         ns/call mean=21825.4 ±136.5  med=21801.8  min=21670.9 max=22106.8  cyc/elem mean=8.526 med=8.516
+div_mix           ns/call mean=37970.9 ±66.2  med=37960.8  min=37893.9 max=38065.8  cyc/elem mean=14.832 med=14.828
+sh1add            ns/call mean=10768.7 ±50.2  med=10752.3  min=10717.0 max=10876.6  cyc/elem mean=4.207 med=4.200
+=== latency probe ===
+DONE 2026-08-10T13:05:34+00:00  results in /home/orangepi/gcc-tune/measurements/results/rv2-gcc152-x60-ab-clean

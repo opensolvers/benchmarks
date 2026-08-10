@@ -1,0 +1,20 @@
+=== BEGIN 2026-08-10T17:12:04+00:00 ===
+>>> Fresh copy of stock 15.2.0
+>>> patch -p1 --fuzz=0
+patching file gcc/common/config/riscv/riscv-common.cc
+patching file gcc/config/riscv/riscv.cc
+patching file gcc/config/riscv/riscv-cores.def
+patching file gcc/config/riscv/riscv.md
+patching file gcc/config/riscv/riscv.opt
+patching file gcc/config/riscv/riscv-opts.h
+patching file gcc/config/riscv/spacemit-x60.md
+VERIFY_APPLY_OK
+PASS load@4
+PASS store@4
+PASS atomic@12
+PASS clmul@2
+PASS vector_cost
+PASS no_shadd
+  4,						/* memory_cost */
+=== OVERALL PASS (cleaned patch) ===
+-rw-rw-r-- 1 orangepi orangepi 22997 Aug 10 17:12 /home/orangepi/gcc-tune/patches/easybuild/GCC-15.2.0-spacemit-x60.patch

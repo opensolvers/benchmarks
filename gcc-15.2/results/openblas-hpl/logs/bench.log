@@ -1,0 +1,31 @@
+=== bench retry 2026-08-10T16:11:26+00:00 ===
+governor=performance freq=1600000kHz
+linked bench-ooo
+linked bench-x60
+N=256 reps=2 best_gflops=2.543255 mean_gflops=2.540896 checksum=7.863980e+03 best_s=0.013194 mean_s=0.013206
+N=256 reps=2 best_gflops=2.467926 mean_gflops=2.449806 checksum=7.863980e+03 best_s=0.013596 mean_s=0.013697
+RUN ooo N=512
+N=512 reps=7 best_gflops=2.259226 mean_gflops=2.242488 checksum=3.145692e+04 best_s=0.118817 mean_s=0.119704
+RUN ooo N=1024
+N=1024 reps=7 best_gflops=2.273570 mean_gflops=2.269640 checksum=1.258288e+05 best_s=0.944543 mean_s=0.946178
+RUN ooo N=2048
+N=2048 reps=5 best_gflops=2.276430 mean_gflops=2.276095 checksum=5.033164e+05 best_s=7.546848 mean_s=7.547957
+RUN x60 N=512
+N=512 reps=7 best_gflops=2.287932 mean_gflops=2.282488 checksum=3.145692e+04 best_s=0.117327 mean_s=0.117606
+RUN x60 N=1024
+N=1024 reps=7 best_gflops=2.336031 mean_gflops=2.332280 checksum=1.258288e+05 best_s=0.919287 mean_s=0.920766
+RUN x60 N=2048
+N=2048 reps=5 best_gflops=2.392628 mean_gflops=2.391396 checksum=5.033164e+05 best_s=7.180334 mean_s=7.184033
+RUN x60 N=512
+N=512 reps=7 best_gflops=2.266188 mean_gflops=2.262471 checksum=3.145692e+04 best_s=0.118452 mean_s=0.118647
+RUN x60 N=1024
+N=1024 reps=7 best_gflops=2.324556 mean_gflops=2.319275 checksum=1.258288e+05 best_s=0.923825 mean_s=0.925929
+RUN x60 N=2048
+N=2048 reps=5 best_gflops=2.375726 mean_gflops=2.374539 checksum=5.033164e+05 best_s=7.231419 mean_s=7.235033
+RUN ooo N=512
+N=512 reps=7 best_gflops=2.211380 mean_gflops=2.204890 checksum=3.145692e+04 best_s=0.121388 mean_s=0.121745
+RUN ooo N=1024
+N=1024 reps=7 best_gflops=2.281179 mean_gflops=2.279534 checksum=1.258288e+05 best_s=0.941392 mean_s=0.942071
+RUN ooo N=2048
+N=2048 reps=5 best_gflops=2.316782 mean_gflops=2.315787 checksum=5.033164e+05 best_s=7.415403 mean_s=7.418586
+DGEMM BENCH DONE 2026-08-10T16:15:37+00:00

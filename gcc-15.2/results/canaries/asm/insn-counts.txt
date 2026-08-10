@@ -1,0 +1,22 @@
+# asm deltas (insn counts)
+## generic-ooo
+      2 lw
+      1 sh1add
+      1 ld
+      1 divw
+      1 add
+
+## x60
+      2 lw
+      1 sh1add
+      1 ld
+      1 divw
+      1 add
+
+## default-tune
+      2 lw
+      1 sh1add
+      1 ld
+      1 divw
+      1 add
+

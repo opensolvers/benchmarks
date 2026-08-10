@@ -1,0 +1,1553 @@
+
+;; Function canary_load_add_chain (canary_load_add_chain, funcdef_no=0, decl_uid=2895, cgraph_uid=1, symbol_order=0)
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+df_analyze called
+df_worklist_dataflow_doublequeue: n_basic_blocks 7 n_edges 8 count 8 (  1.1)
+
+
+canary_load_add_chain
+
+Dataflow summary:
+def_info->table_size = 28, use_info->table_size = 0
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 10 [a0] 11 [a1] 14 [a4] 15 [a5] 69 [frm]
+;;  ref usage 	r1={1d,1u} r2={1d,6u} r10={5d,8u} r11={2d,3u} r12={1d} r13={1d} r14={2d,1u} r15={3d,3u} r16={1d} r17={1d} r42={1d} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r68={1d,1u} r69={1d,1u} 
+;;    total ref usage 52{28d,24u,0e} in 14{14 regular + 0 call} insns.
+
+( )->[0]->( 2 )
+;; bb 0 artificial_defs: { d0(1){ }d1(2){ }d2(10){ }d7(11){ }d9(12){ }d10(13){ }d11(14){ }d13(15){ }d16(16){ }d17(17){ }d18(42){ }d19(43){ }d20(44){ }d21(45){ }d22(46){ }d23(47){ }d24(48){ }d25(49){ }d26(68){ }d27(69){ }}
+;; bb 0 artificial_uses: { }
+;; lr  in  	
+;; lr  use 	
+;; lr  def 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  in  	
+;; live  gen 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+
+( 0 )->[2]->( 3 6 )
+;; bb 2 artificial_defs: { }
+;; bb 2 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 11 [a1]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+
+( 2 )->[3]->( 4 )
+;; bb 3 artificial_defs: { }
+;; bb 3 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 10 [a0] 11 [a1]
+;; lr  def 	 10 [a0] 11 [a1] 15 [a5]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0] 11 [a1] 15 [a5]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+
+( 4 3 )->[4]->( 4 5 )
+;; bb 4 artificial_defs: { }
+;; bb 4 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 10 [a0] 11 [a1] 15 [a5]
+;; lr  def 	 10 [a0] 14 [a4] 15 [a5]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0] 14 [a4] 15 [a5]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+
+( 4 )->[5]->( 1 )
+;; bb 5 artificial_defs: { }
+;; bb 5 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 10 [a0]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+
+( 2 )->[6]->( 1 )
+;; bb 6 artificial_defs: { }
+;; bb 6 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp]
+;; lr  def 	 10 [a0]
+;; live  in  	 1 [ra] 2 [sp] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+
+( 6 5 )->[1]->( )
+;; bb 1 artificial_defs: { }
+;; bb 1 artificial_uses: { u-1(1){ }u-1(2){ }u-1(10){ }u-1(68){ }u-1(69){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  use 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	
+;; live  out 	
+
+Finding needed instructions:
+  Adding insn 11 to worklist
+  Adding insn 25 to worklist
+  Adding insn 46 to worklist
+  Adding insn 62 to worklist
+  Adding insn 60 to worklist
+  Adding insn 32 to worklist
+Finished finding needed instructions:
+processing block 5 lr out =  1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+processing block 4 lr out =  1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+  Adding insn 22 to worklist
+  Adding insn 23 to worklist
+  Adding insn 19 to worklist
+  Adding insn 21 to worklist
+processing block 3 lr out =  1 [ra] 2 [sp] 10 [a0] 11 [a1] 15 [a5] 68 [vxrm] 69 [frm]
+  Adding insn 5 to worklist
+  Adding insn 15 to worklist
+  Adding insn 13 to worklist
+processing block 6 lr out =  1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+  Adding insn 6 to worklist
+processing block 2 lr out =  1 [ra] 2 [sp] 10 [a0] 11 [a1] 68 [vxrm] 69 [frm]
+df_worklist_dataflow_doublequeue: n_basic_blocks 7 n_edges 8 count 8 (  1.1)
+;;   ======================================================
+;;   -- basic block 2 from 11 to 11 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  11 pc={(a1<=0)?L38:pc}                     :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 0
+;;   new head = 11
+;;   new tail = 11
+
+;;   ======================================================
+;;   -- basic block 3 from 13 to 5 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  13 a5=a0                                   :spacemit_x60_alu
+;;	  1--> b  0: i  15 a1=a1<<0x3+a0                           :spacemit_x60_alu
+;;	  2--> b  0: i   5 a0=0                                    :spacemit_x60_alu
+;;	Ready list (final):  
+;;   total time = 2
+;;   new head = 13
+;;   new tail = 5
+
+rescanning insn with uid = 21.
+rescanning insn with uid = 21.
+;;   ======================================================
+;;   -- basic block 4 from 21 to 25 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  21 a4=[a5]                                 :spacemit_x60_lsu
+;;	  1--> b  0: i  19 a0=a0<<0x1+a0                           :spacemit_x60_alu
+;;	  2--> b  0: i  23 a5=a5+0x8                               :spacemit_x60_alu
+;;	  4--> b  0: i  22 a0=a0+a4                                :spacemit_x60_alu
+;;	  5--> b  0: i  25 pc={(a1!=a5)?L24:pc}                    :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 5
+;;   new head = 21
+;;   new tail = 25
+
+;;   ======================================================
+;;   -- basic block 5 from 62 to 46 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  62 use a0                                  :nothing
+;;	  0--> b  0: i  46 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 0
+;;   new head = 62
+;;   new tail = 46
+
+;;   ======================================================
+;;   -- basic block 6 from 6 to 60 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i   6 a0=0                                    :spacemit_x60_alu
+;;	  1--> b  0: i  32 use a0                                  :nothing
+;;	  1--> b  0: i  60 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 1
+;;   new head = 6
+;;   new tail = 60
+
+
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+
+
+canary_load_add_chain
+
+Dataflow summary:
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 10 [a0] 11 [a1] 14 [a4] 15 [a5] 69 [frm]
+;;  ref usage 	r1={1d,1u} r2={1d,6u} r10={5d,8u} r11={2d,3u} r12={1d} r13={1d} r14={2d,1u} r15={3d,3u} r16={1d} r17={1d} r42={1d} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r68={1d,1u} r69={1d,1u} 
+;;    total ref usage 52{28d,24u,0e} in 14{14 regular + 0 call} insns.
+(note 1 0 48 NOTE_INSN_DELETED)
+(note 48 1 58 2 [bb 2] NOTE_INSN_BASIC_BLOCK)
+(note 58 48 4 2 NOTE_INSN_PROLOGUE_END)
+(note 4 58 11 2 NOTE_INSN_FUNCTION_BEG)
+(jump_insn 11 4 12 2 (set (pc)
+        (if_then_else (le (reg:DI 11 a1 [orig:151 n ] [151])
+                (const_int 0 [0]))
+            (label_ref:DI 38)
+            (pc))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":20:21 discrim 1 370 {*branchdi}
+     (int_list:REG_BR_PROB 118111604 (nil))
+ -> 38)
+(note 12 11 14 3 [bb 3] NOTE_INSN_BASIC_BLOCK)
+(note 14 12 13 3 NOTE_INSN_DELETED)
+(insn 13 14 15 3 (set (reg:DI 15 a5 [orig:140 ivtmp.10 ] [140])
+        (reg/f:DI 10 a0 [orig:150 p ] [150])) 277 {*movdi_64bit}
+     (nil))
+(insn 15 13 5 3 (set (reg:DI 11 a1 [orig:136 _15 ] [136])
+        (plus:DI (ashift:DI (reg:DI 11 a1 [orig:151 n ] [151])
+                (const_int 3 [0x3]))
+            (reg:DI 10 a0 [orig:140 ivtmp.10 ] [140]))) 510 {*shNadd}
+     (expr_list:REG_DEAD (reg:DI 10 a0 [orig:140 ivtmp.10 ] [140])
+        (nil)))
+(insn 5 15 24 3 (set (reg/v:DI 10 a0 [orig:141 <retval> ] [141])
+        (const_int 0 [0])) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":19:12 277 {*movdi_64bit}
+     (expr_list:REG_EQUAL (const_int 0 [0])
+        (nil)))
+(code_label 24 5 16 4 3 (nil) [1 uses])
+(note 16 24 18 4 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(note 18 16 21 4 NOTE_INSN_DELETED)
+(insn 21 18 19 4 (set (reg:DI 14 a4 [orig:148 MEM[(uint64_t *)_22] ] [148])
+        (mem:DI (reg:DI 15 a5 [orig:140 ivtmp.10 ] [140]) [1 MEM[(uint64_t *)_22]+0 S8 A64])) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":21:7 277 {*movdi_64bit}
+     (nil))
+(insn 19 21 23 4 (set (reg:DI 10 a0 [orig:147 _6 ] [147])
+        (plus:DI (ashift:DI (reg/v:DI 10 a0 [orig:141 <retval> ] [141])
+                (const_int 1 [0x1]))
+            (reg/v:DI 10 a0 [orig:141 <retval> ] [141]))) 510 {*shNadd}
+     (nil))
+(insn 23 19 22 4 (set (reg:DI 15 a5 [orig:140 ivtmp.10 ] [140])
+        (plus:DI (reg:DI 15 a5 [orig:140 ivtmp.10 ] [140])
+            (const_int 8 [0x8]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":20:21 discrim 1 5 {adddi3}
+     (nil))
+(insn 22 23 25 4 (set (reg/v:DI 10 a0 [orig:141 <retval> ] [141])
+        (plus:DI (reg:DI 10 a0 [orig:147 _6 ] [147])
+            (reg:DI 14 a4 [orig:148 MEM[(uint64_t *)_22] ] [148]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":21:7 5 {adddi3}
+     (expr_list:REG_DEAD (reg:DI 14 a4 [orig:148 MEM[(uint64_t *)_22] ] [148])
+        (nil)))
+(jump_insn 25 22 45 4 (set (pc)
+        (if_then_else (ne (reg:DI 11 a1 [orig:136 _15 ] [136])
+                (reg:DI 15 a5 [orig:140 ivtmp.10 ] [140]))
+            (label_ref:DI 24)
+            (pc))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":20:21 discrim 1 370 {*branchdi}
+     (int_list:REG_BR_PROB 955630228 (nil))
+ -> 24)
+(note 45 25 62 5 [bb 5] NOTE_INSN_BASIC_BLOCK)
+(insn 62 45 46 5 (use (reg/i:DI 10 a0)) -1
+     (nil))
+(jump_insn 46 62 47 5 (simple_return) 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 47 46 38)
+(code_label 38 47 37 6 4 (nil) [1 uses])
+(note 37 38 50 6 [bb 6] NOTE_INSN_BASIC_BLOCK)
+(note 50 37 6 6 NOTE_INSN_DELETED)
+(insn 6 50 32 6 (set (reg/v:DI 10 a0 [orig:141 <retval> ] [141])
+        (const_int 0 [0])) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":19:12 277 {*movdi_64bit}
+     (nil))
+(insn 32 6 65 6 (use (reg/i:DI 10 a0)) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":23:1 -1
+     (nil))
+(note 65 32 60 6 NOTE_INSN_EPILOGUE_BEG)
+(jump_insn 60 65 61 6 (simple_return) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":23:1 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 61 60 54)
+(note 54 61 55 NOTE_INSN_DELETED)
+(note 55 54 0 NOTE_INSN_DELETED)
+
+;; Function canary_fma_chain (canary_fma_chain, funcdef_no=1, decl_uid=2907, cgraph_uid=2, symbol_order=1)
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+df_analyze called
+df_worklist_dataflow_doublequeue: n_basic_blocks 6 n_edges 7 count 7 (  1.2)
+
+
+canary_fma_chain
+
+Dataflow summary:
+def_info->table_size = 33, use_info->table_size = 0
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 0 [zero] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 15 [a5] 42 [fa0] 66 [vl] 67 [vtype] 69 [frm] 97 [v1] 98 [v2] 99 [v3] 100 [v4]
+;;  ref usage 	r0={6u} r1={1d,1u} r2={1d,5u} r10={2d,2u} r11={2d,2u} r12={2d,2u} r13={2d,5u} r14={1d} r15={2d,5u} r16={1d} r17={1d} r42={3d,4u} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r66={3d,6u} r67={3d,7u} r68={1d,1u} r69={1d,3u} r97={2d,2u} r98={2d,2u} r99={1d,1u} r100={1d,1u} 
+;;    total ref usage 94{39d,55u,0e} in 21{21 regular + 0 call} insns.
+
+( )->[0]->( 2 )
+;; bb 0 artificial_defs: { d0(1){ }d1(2){ }d2(10){ }d4(11){ }d6(12){ }d8(13){ }d10(14){ }d11(15){ }d13(16){ }d14(17){ }d15(42){ }d18(43){ }d19(44){ }d20(45){ }d21(46){ }d22(47){ }d23(48){ }d24(49){ }d25(68){ }d26(69){ }}
+;; bb 0 artificial_uses: { }
+;; lr  in  	 0 [zero]
+;; lr  use 	
+;; lr  def 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  in  	
+;; live  gen 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  kill	
+;; lr  out 	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 68 [vxrm] 69 [frm]
+
+( 0 )->[2]->( 3 5 )
+;; bb 2 artificial_defs: { }
+;; bb 2 artificial_uses: { u-1(2){ }}
+;; lr  in  	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 13 [a3]
+;; lr  def 	 42 [fa0]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 68 [vxrm] 69 [frm]
+;; live  gen 	 42 [fa0]
+;; live  kill	
+;; lr  out 	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+
+( 3 2 )->[3]->( 3 4 )
+;; bb 3 artificial_defs: { }
+;; bb 3 artificial_uses: { u-1(2){ }}
+;; lr  in  	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+;; lr  use 	 0 [zero] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 69 [frm]
+;; lr  def 	 10 [a0] 11 [a1] 12 [a2] 13 [a3] 15 [a5] 42 [fa0] 66 [vl] 67 [vtype] 97 [v1] 98 [v2] 99 [v3] 100 [v4]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0] 11 [a1] 12 [a2] 13 [a3] 15 [a5] 42 [fa0] 66 [vl] 67 [vtype] 97 [v1] 98 [v2] 99 [v3] 100 [v4]
+;; live  kill	
+;; lr  out 	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+
+( 3 )->[4]->( 1 )
+;; bb 4 artificial_defs: { }
+;; bb 4 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 42 [fa0]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+
+( 2 )->[5]->( 1 )
+;; bb 5 artificial_defs: { }
+;; bb 5 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 42 [fa0]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+
+( 5 4 )->[1]->( )
+;; bb 1 artificial_defs: { }
+;; bb 1 artificial_uses: { u-1(1){ }u-1(2){ }u-1(42){ }u-1(68){ }u-1(69){ }}
+;; lr  in  	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; lr  use 	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	
+;; live  out 	
+
+Finding needed instructions:
+  Adding insn 13 to worklist
+  Adding insn 29 to worklist
+  Adding insn 53 to worklist
+  Adding insn 72 to worklist
+  Adding insn 70 to worklist
+  Adding insn 36 to worklist
+Finished finding needed instructions:
+processing block 4 lr out =  1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+processing block 3 lr out =  0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+  Adding insn 57 to worklist
+  Adding insn 56 to worklist
+  Adding insn 22 to worklist
+  Adding insn 80 to worklist
+  Adding insn 26 to worklist
+  Adding insn 25 to worklist
+  Adding insn 24 to worklist
+  Adding insn 27 to worklist
+  Adding insn 55 to worklist
+  Adding insn 79 to worklist
+  Adding insn 21 to worklist
+  Adding insn 20 to worklist
+  Adding insn 19 to worklist
+  Adding insn 73 to worklist
+processing block 5 lr out =  1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+processing block 2 lr out =  0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 42 [fa0] 68 [vxrm] 69 [frm]
+  Adding insn 7 to worklist
+df_worklist_dataflow_doublequeue: n_basic_blocks 6 n_edges 7 count 7 (  1.2)
+;;   ======================================================
+;;   -- basic block 2 from 7 to 13 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i   7 fa0=0.0                                 :spacemit_x60_alu
+;;	  1--> b  0: i  13 pc={(a3<=0)?L42:pc}                     :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 1
+;;   new head = 7
+;;   new tail = 13
+
+;;   ======================================================
+;;   -- basic block 3 from 73 to 29 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  73 {a5=unspec[a3,0x8,0x5,0x2,0x2] 91;vl=unspec[a3,0x8,0x5] 91;vtype=unspec[0x8,0x5,0x2,0x2] 91;}:vxu_ooo_issue
+;;	  1--> b  0: i  19 v4={(unspec[const_vector,0,0x2,0x2,0,vl,vtype] 93)?[a0]:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	  2--> b  0: i  20 v2={(unspec[const_vector,0,0x2,0x2,0,vl,vtype] 93)?[a1]:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	  3--> b  0: i  21 v3={(unspec[const_vector,0,0x2,0x2,0,vl,vtype] 93)?[a2]:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	  4--> b  0: i  79 {vl=unspec[0x1,0x40,0] 91;vtype=unspec[0x40,0,0x1,0x1] 91;}:vxu_ooo_issue
+;;	  5--> b  0: i  55 v1={(unspec[const_vector,0x1,0x2,0x2,0,vl,vtype] 93)?vec_duplicate(fa0):unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	  6--> b  0: i  80 {vl=unspec[a5,0x40,0] 91;vtype=unspec[0x40,0,0x1,0x1] 91;}:vxu_ooo_issue
+;;	  7--> b  0: i  27 a3=a3-a5                                :spacemit_x60_alu
+;;	  8--> b  0: i  24 a0=a5<<0x3+a0                           :spacemit_x60_alu
+;;	  9--> b  0: i  22 v2={(unspec[const_vector,0,0,0x2,0,0x7,vl,vtype,frm] 93)?v2*v4+v3:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	 10--> b  0: i  25 a1=a5<<0x3+a1                           :spacemit_x60_alu
+;;	 11--> b  0: i  26 a2=a5<<0x3+a2                           :spacemit_x60_alu
+;;	 15--> b  0: i  56 v1=unspec[unspec[const_vector,0,0x2,0,0x7,vl,vtype,frm] 93,unspec[v2,v1] 147,unspec[zero] 92] 142:vxu_ooo_issue,vxu_ooo_multicycle*3
+;;	 25--> b  0: i  57 fa0=unspec[vec_select(v1,parallel),vtype] 93:vxu_ooo_issue,vxu_ooo_alu
+;;	 26--> b  0: i  29 pc={(a3!=0)?L28:pc}                     :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 26
+;;   new head = 73
+;;   new tail = 29
+
+;;   ======================================================
+;;   -- basic block 4 from 72 to 53 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  72 use fa0                                 :nothing
+;;	  0--> b  0: i  53 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 0
+;;   new head = 72
+;;   new tail = 53
+
+;;   ======================================================
+;;   -- basic block 5 from 36 to 70 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  36 use fa0                                 :nothing
+;;	  0--> b  0: i  70 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 0
+;;   new head = 36
+;;   new tail = 70
+
+
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+
+
+canary_fma_chain
+
+Dataflow summary:
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 42 [fa0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 0 [zero] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 15 [a5] 42 [fa0] 66 [vl] 67 [vtype] 69 [frm] 97 [v1] 98 [v2] 99 [v3] 100 [v4]
+;;  ref usage 	r0={6u} r1={1d,1u} r2={1d,5u} r10={2d,2u} r11={2d,2u} r12={2d,2u} r13={2d,5u} r14={1d} r15={2d,5u} r16={1d} r17={1d} r42={3d,4u} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r66={3d,6u} r67={3d,7u} r68={1d,1u} r69={1d,3u} r97={2d,2u} r98={2d,2u} r99={1d,1u} r100={1d,1u} 
+;;    total ref usage 94{39d,55u,0e} in 21{21 regular + 0 call} insns.
+(note 1 0 58 NOTE_INSN_DELETED)
+(note 58 1 68 2 [bb 2] NOTE_INSN_BASIC_BLOCK)
+(note 68 58 6 2 NOTE_INSN_PROLOGUE_END)
+(note 6 68 7 2 NOTE_INSN_FUNCTION_BEG)
+(insn 7 6 13 2 (set (reg/v:DF 42 fa0 [orig:145 <retval> ] [145])
+        (const_double:DF 0.0 [0x0.0p+0])) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":27:10 288 {*movdf_hardfloat_rv64}
+     (nil))
+(jump_insn 13 7 28 2 (set (pc)
+        (if_then_else (le (reg:DI 13 a3 [orig:156 n ] [156])
+                (const_int 0 [0]))
+            (label_ref:DI 42)
+            (pc))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":28:21 discrim 1 370 {*branchdi}
+     (int_list:REG_BR_PROB 118111604 (nil))
+ -> 42)
+(code_label 28 13 16 3 10 (nil) [1 uses])
+(note 16 28 18 3 [bb 3] NOTE_INSN_BASIC_BLOCK)
+(note 18 16 73 3 NOTE_INSN_DELETED)
+(insn 73 18 19 3 (parallel [
+            (set (reg:DI 15 a5 [orig:134 _11 ] [134])
+                (unspec:DI [
+                        (reg:DI 13 a3 [orig:135 ivtmp_12 ] [135])
+                        (const_int 8 [0x8])
+                        (const_int 5 [0x5])
+                        (const_int 2 [0x2]) repeated x2
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 66 vl)
+                (unspec:SI [
+                        (reg:DI 13 a3 [orig:135 ivtmp_12 ] [135])
+                        (const_int 8 [0x8])
+                        (const_int 5 [0x5])
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 67 vtype)
+                (unspec:SI [
+                        (const_int 8 [0x8])
+                        (const_int 5 [0x5])
+                        (const_int 2 [0x2]) repeated x2
+                    ] UNSPEC_VSETVL))
+        ]) 3645 {vsetvldi}
+     (nil))
+(insn 19 73 20 3 (set (reg:RVVM1DF 100 v4 [orig:142 vect__4.21 ] [142])
+        (if_then_else:RVVM1DF (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (mem:RVVM1DF (reg/v/f:DI 10 a0 [orig:146 a ] [146]) [2  S[32, 32] A64])
+            (unspec:RVVM1DF [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:10 3695 {*pred_movrvvm1df}
+     (nil))
+(insn 20 19 21 3 (set (reg:RVVM1DF 98 v2 [orig:140 vect__6.24 ] [140])
+        (if_then_else:RVVM1DF (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (mem:RVVM1DF (reg/v/f:DI 11 a1 [orig:147 b ] [147]) [2  S[32, 32] A64])
+            (unspec:RVVM1DF [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:17 3695 {*pred_movrvvm1df}
+     (nil))
+(insn 21 20 79 3 (set (reg:RVVM1DF 99 v3 [151])
+        (if_then_else:RVVM1DF (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (mem:RVVM1DF (reg/v/f:DI 12 a2 [orig:148 c ] [148]) [2  S[32, 32] A64])
+            (unspec:RVVM1DF [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:7 3695 {*pred_movrvvm1df}
+     (expr_list:REG_DEAD (reg:SI 67 vtype)
+        (expr_list:REG_DEAD (reg:SI 66 vl)
+            (nil))))
+(insn 79 21 55 3 (parallel [
+            (set (reg:SI 66 vl)
+                (unspec:SI [
+                        (const_int 1 [0x1])
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 67 vtype)
+                (unspec:SI [
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                        (const_int 1 [0x1]) repeated x2
+                    ] UNSPEC_VSETVL))
+        ]) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:7 3648 {vsetvl_discard_resultdi}
+     (nil))
+(insn 55 79 80 3 (set (reg:RVVM1DF 97 v1 [157])
+        (if_then_else:RVVM1DF (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI [
+                            (const_int 1 [0x1])
+                            repeat [
+                                (const_int 0 [0])
+                            ]
+                        ])
+                    (const_int 1 [0x1])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (vec_duplicate:RVVM1DF (reg/v:DF 42 fa0 [orig:145 <retval> ] [145]))
+            (unspec:RVVM1DF [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:7 4131 {*pred_broadcastrvvm1df_zvfh}
+     (expr_list:REG_DEAD (reg:SI 67 vtype)
+        (expr_list:REG_DEAD (reg:SI 66 vl)
+            (expr_list:REG_DEAD (reg/v:DF 42 fa0 [orig:145 <retval> ] [145])
+                (nil)))))
+(insn 80 55 27 3 (parallel [
+            (set (reg:SI 66 vl)
+                (unspec:SI [
+                        (reg:DI 15 a5 [orig:134 _11 ] [134])
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 67 vtype)
+                (unspec:SI [
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                        (const_int 1 [0x1]) repeated x2
+                    ] UNSPEC_VSETVL))
+        ]) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:7 3648 {vsetvl_discard_resultdi}
+     (expr_list:REG_DEAD (reg:DI 15 a5 [orig:134 _11 ] [134])
+        (nil)))
+(insn 27 80 24 3 (set (reg:DI 13 a3 [orig:135 ivtmp_12 ] [135])
+        (minus:DI (reg:DI 13 a3 [orig:135 ivtmp_12 ] [135])
+            (reg:DI 15 a5 [orig:134 _11 ] [134]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":28:21 discrim 1 15 {subdi3}
+     (nil))
+(insn 24 27 22 3 (set (reg/v/f:DI 10 a0 [orig:146 a ] [146])
+        (plus:DI (ashift:DI (reg:DI 15 a5 [orig:134 _11 ] [134])
+                (const_int 3 [0x3]))
+            (reg/v/f:DI 10 a0 [orig:146 a ] [146]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":28:21 discrim 1 510 {*shNadd}
+     (nil))
+(insn 22 24 25 3 (set (reg:RVVM1DF 98 v2 [150])
+        (if_then_else:RVVM1DF (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0]) repeated x2
+                    (const_int 2 [0x2])
+                    (const_int 0 [0])
+                    (const_int 7 [0x7])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                    (reg:SI 69 frm)
+                ] UNSPEC_VPREDICATE)
+            (plus:RVVM1DF (mult:RVVM1DF (reg:RVVM1DF 98 v2 [orig:140 vect__6.24 ] [140])
+                    (reg:RVVM1DF 100 v4 [orig:142 vect__4.21 ] [142]))
+                (reg:RVVM1DF 99 v3 [151]))
+            (unspec:RVVM1DF [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:7 15284 {*pred_mul_addrvvm1df_undef}
+     (expr_list:REG_DEAD (reg:RVVM1DF 100 v4 [orig:142 vect__4.21 ] [142])
+        (expr_list:REG_DEAD (reg:RVVM1DF 99 v3 [151])
+            (nil))))
+(insn 25 22 26 3 (set (reg/v/f:DI 11 a1 [orig:147 b ] [147])
+        (plus:DI (ashift:DI (reg:DI 15 a5 [orig:134 _11 ] [134])
+                (const_int 3 [0x3]))
+            (reg/v/f:DI 11 a1 [orig:147 b ] [147]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":28:21 discrim 1 510 {*shNadd}
+     (nil))
+(insn 26 25 56 3 (set (reg/v/f:DI 12 a2 [orig:148 c ] [148])
+        (plus:DI (ashift:DI (reg:DI 15 a5 [orig:134 _11 ] [134])
+                (const_int 3 [0x3]))
+            (reg/v/f:DI 12 a2 [orig:148 c ] [148]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":28:21 discrim 1 510 {*shNadd}
+     (nil))
+(insn 56 26 57 3 (set (reg:RVVM1DF 97 v1 [158])
+        (unspec:RVVM1DF [
+                (unspec:RVVMF64BI [
+                        (const_vector:RVVMF64BI repeat [
+                                (const_int 1 [0x1])
+                            ])
+                        (const_int 0 [0])
+                        (const_int 2 [0x2])
+                        (const_int 0 [0])
+                        (const_int 7 [0x7])
+                        (reg:SI 66 vl)
+                        (reg:SI 67 vtype)
+                        (reg:SI 69 frm)
+                    ] UNSPEC_VPREDICATE)
+                (unspec:RVVM1DF [
+                        (reg:RVVM1DF 98 v2 [150])
+                        (reg:RVVM1DF 97 v1 [157])
+                    ] UNSPEC_REDUC_SUM_ORDERED_VL0_SAFE)
+                (unspec:RVVM1DF [
+                        (reg:DI 0 zero)
+                    ] UNSPEC_VUNDEF)
+            ] UNSPEC_REDUC)) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:7 19747 {pred_redosum_vl0srvvm1df}
+     (expr_list:REG_DEAD (reg:RVVM1DF 98 v2 [150])
+        (expr_list:REG_DEAD (reg:SI 66 vl)
+            (expr_list:REG_DEAD (reg:DI 0 zero)
+                (nil)))))
+(insn 57 56 29 3 (set (reg/v:DF 42 fa0 [orig:145 <retval> ] [145])
+        (unspec:DF [
+                (vec_select:DF (reg:RVVM1DF 97 v1 [158])
+                    (parallel [
+                            (const_int 0 [0])
+                        ]))
+                (reg:SI 67 vtype)
+            ] UNSPEC_VPREDICATE)) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":29:7 20047 {*pred_extract_firstrvvm1df}
+     (expr_list:REG_DEAD (reg:RVVM1DF 97 v1 [158])
+        (expr_list:REG_DEAD (reg:SI 67 vtype)
+            (nil))))
+(jump_insn 29 57 52 3 (set (pc)
+        (if_then_else (ne (reg:DI 13 a3 [orig:135 ivtmp_12 ] [135])
+                (const_int 0 [0]))
+            (label_ref:DI 28)
+            (pc))) 370 {*branchdi}
+     (int_list:REG_BR_PROB 955630228 (nil))
+ -> 28)
+(note 52 29 72 4 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(insn 72 52 53 4 (use (reg/i:DF 42 fa0)) -1
+     (nil))
+(jump_insn 53 72 54 4 (simple_return) 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 54 53 42)
+(code_label 42 54 41 5 11 (nil) [1 uses])
+(note 41 42 60 5 [bb 5] NOTE_INSN_BASIC_BLOCK)
+(note 60 41 36 5 NOTE_INSN_DELETED)
+(insn 36 60 81 5 (use (reg/i:DF 42 fa0)) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":31:1 -1
+     (nil))
+(note 81 36 70 5 NOTE_INSN_EPILOGUE_BEG)
+(jump_insn 70 81 71 5 (simple_return) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":31:1 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 71 70 64)
+(note 64 71 65 NOTE_INSN_DELETED)
+(note 65 64 0 NOTE_INSN_DELETED)
+
+;; Function canary_div_mix (canary_div_mix, funcdef_no=2, decl_uid=2918, cgraph_uid=3, symbol_order=2)
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+df_analyze called
+df_worklist_dataflow_doublequeue: n_basic_blocks 7 n_edges 8 count 8 (  1.1)
+
+
+canary_div_mix
+
+Dataflow summary:
+def_info->table_size = 33, use_info->table_size = 0
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 69 [frm]
+;;  ref usage 	r1={1d,1u} r2={1d,6u} r10={5d,7u} r11={2d,2u} r12={2d,3u} r13={3d,2u} r14={3d,3u} r15={3d,3u} r16={2d,2u} r17={1d} r42={1d} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r68={1d,1u} r69={1d,1u} 
+;;    total ref usage 64{33d,31u,0e} in 19{19 regular + 0 call} insns.
+
+( )->[0]->( 2 )
+;; bb 0 artificial_defs: { d0(1){ }d1(2){ }d2(10){ }d7(11){ }d9(12){ }d11(13){ }d14(14){ }d17(15){ }d20(16){ }d22(17){ }d23(42){ }d24(43){ }d25(44){ }d26(45){ }d27(46){ }d28(47){ }d29(48){ }d30(49){ }d31(68){ }d32(69){ }}
+;; bb 0 artificial_uses: { }
+;; lr  in  	
+;; lr  use 	
+;; lr  def 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  in  	
+;; live  gen 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+
+( 0 )->[2]->( 3 6 )
+;; bb 2 artificial_defs: { }
+;; bb 2 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 12 [a2]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+
+( 2 )->[3]->( 4 )
+;; bb 3 artificial_defs: { }
+;; bb 3 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 10 [a0] 12 [a2]
+;; lr  def 	 10 [a0] 12 [a2] 14 [a4]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0] 12 [a2] 14 [a4]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+
+( 4 3 )->[4]->( 4 5 )
+;; bb 4 artificial_defs: { }
+;; bb 4 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4]
+;; lr  def 	 10 [a0] 11 [a1] 13 [a3] 14 [a4] 15 [a5] 16 [a6]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0] 11 [a1] 13 [a3] 14 [a4] 15 [a5] 16 [a6]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+
+( 4 )->[5]->( 1 )
+;; bb 5 artificial_defs: { }
+;; bb 5 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 10 [a0]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+
+( 2 )->[6]->( 1 )
+;; bb 6 artificial_defs: { }
+;; bb 6 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp]
+;; lr  def 	 10 [a0]
+;; live  in  	 1 [ra] 2 [sp] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+
+( 6 5 )->[1]->( )
+;; bb 1 artificial_defs: { }
+;; bb 1 artificial_uses: { u-1(1){ }u-1(2){ }u-1(10){ }u-1(68){ }u-1(69){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  use 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	
+;; live  out 	
+
+Finding needed instructions:
+  Adding insn 12 to worklist
+  Adding insn 34 to worklist
+  Adding insn 55 to worklist
+  Adding insn 71 to worklist
+  Adding insn 69 to worklist
+  Adding insn 42 to worklist
+Finished finding needed instructions:
+processing block 5 lr out =  1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+processing block 4 lr out =  1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+  Adding insn 30 to worklist
+  Adding insn 24 to worklist
+  Adding insn 27 to worklist
+  Adding insn 22 to worklist
+  Adding insn 21 to worklist
+  Adding insn 32 to worklist
+  Adding insn 31 to worklist
+  Adding insn 19 to worklist
+  Adding insn 20 to worklist
+processing block 3 lr out =  1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 14 [a4] 68 [vxrm] 69 [frm]
+  Adding insn 6 to worklist
+  Adding insn 17 to worklist
+  Adding insn 14 to worklist
+processing block 6 lr out =  1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+  Adding insn 7 to worklist
+processing block 2 lr out =  1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+df_worklist_dataflow_doublequeue: n_basic_blocks 7 n_edges 8 count 8 (  1.1)
+;;   ======================================================
+;;   -- basic block 2 from 12 to 12 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  12 pc={(a2<=0)?L48:pc}                     :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 0
+;;   new head = 12
+;;   new tail = 12
+
+;;   ======================================================
+;;   -- basic block 3 from 14 to 6 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  14 a4=a0                                   :spacemit_x60_alu
+;;	  1--> b  0: i  17 a2=a2<<0x2+a0                           :spacemit_x60_alu
+;;	  2--> b  0: i   6 a0=0x1                                  :spacemit_x60_alu
+;;	Ready list (final):  
+;;   total time = 2
+;;   new head = 14
+;;   new tail = 6
+
+rescanning insn with uid = 20.
+rescanning insn with uid = 20.
+rescanning insn with uid = 19.
+rescanning insn with uid = 19.
+;;   ======================================================
+;;   -- basic block 4 from 20 to 34 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  20 a6=sxn([a1])                            :spacemit_x60_lsu
+;;	  1--> b  0: i  19 a5=sxn([a4])                            :spacemit_x60_lsu
+;;	  2--> b  0: i  31 a4=a4+0x4                               :spacemit_x60_alu
+;;	  3--> b  0: i  32 a1=a1+0x4                               :spacemit_x60_alu
+;;	  4--> b  0: i  21 a3=a6|0x1                               :spacemit_x60_alu
+;;	  5--> b  0: i  22 a3=sxn(a5/a3)                           :spacemit_x60_alu0*20
+;;	 25--> b  0: i  27 a5=sxn(a5+a6)                           :spacemit_x60_alu
+;;	 26--> b  0: i  24 a0=sxn(a3+a0)                           :spacemit_x60_alu
+;;	 27--> b  0: i  30 a0=a0^a5                                :spacemit_x60_alu
+;;	 28--> b  0: i  34 pc={(a2!=a4)?L33:pc}                    :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 28
+;;   new head = 20
+;;   new tail = 34
+
+;;   ======================================================
+;;   -- basic block 5 from 71 to 55 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  71 use a0                                  :nothing
+;;	  0--> b  0: i  55 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 0
+;;   new head = 71
+;;   new tail = 55
+
+;;   ======================================================
+;;   -- basic block 6 from 7 to 69 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i   7 a0=0x1                                  :spacemit_x60_alu
+;;	  1--> b  0: i  42 use a0                                  :nothing
+;;	  1--> b  0: i  69 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 1
+;;   new head = 7
+;;   new tail = 69
+
+
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+
+
+canary_div_mix
+
+Dataflow summary:
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 69 [frm]
+;;  ref usage 	r1={1d,1u} r2={1d,6u} r10={5d,7u} r11={2d,2u} r12={2d,3u} r13={3d,2u} r14={3d,3u} r15={3d,3u} r16={2d,2u} r17={1d} r42={1d} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r68={1d,1u} r69={1d,1u} 
+;;    total ref usage 64{33d,31u,0e} in 19{19 regular + 0 call} insns.
+(note 1 0 57 NOTE_INSN_DELETED)
+(note 57 1 67 2 [bb 2] NOTE_INSN_BASIC_BLOCK)
+(note 67 57 5 2 NOTE_INSN_PROLOGUE_END)
+(note 5 67 12 2 NOTE_INSN_FUNCTION_BEG)
+(jump_insn 12 5 13 2 (set (pc)
+        (if_then_else (le (reg:DI 12 a2 [orig:164 n ] [164])
+                (const_int 0 [0]))
+            (label_ref:DI 48)
+            (pc))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":36:21 discrim 1 370 {*branchdi}
+     (int_list:REG_BR_PROB 118111604 (nil))
+ -> 48)
+(note 13 12 16 3 [bb 3] NOTE_INSN_BASIC_BLOCK)
+(note 16 13 14 3 NOTE_INSN_DELETED)
+(insn 14 16 17 3 (set (reg:DI 14 a4 [orig:146 ivtmp.39 ] [146])
+        (reg/f:DI 10 a0 [orig:162 a ] [162])) 277 {*movdi_64bit}
+     (nil))
+(insn 17 14 6 3 (set (reg:DI 12 a2 [orig:140 _35 ] [140])
+        (plus:DI (ashift:DI (reg:DI 12 a2 [orig:164 n ] [164])
+                (const_int 2 [0x2]))
+            (reg:DI 10 a0 [orig:146 ivtmp.39 ] [146]))) 510 {*shNadd}
+     (expr_list:REG_DEAD (reg:DI 10 a0 [orig:146 ivtmp.39 ] [146])
+        (nil)))
+(insn 6 17 33 3 (set (reg/v:DI 10 a0 [orig:147 <retval> ] [147])
+        (const_int 1 [0x1])) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":35:11 277 {*movdi_64bit}
+     (expr_list:REG_EQUAL (const_int 1 [0x1])
+        (nil)))
+(code_label 33 6 18 4 17 (nil) [1 uses])
+(note 18 33 29 4 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(note 29 18 20 4 NOTE_INSN_DELETED)
+(insn 20 29 19 4 (set (reg:DI 16 a6 [orig:135 _6 ] [135])
+        (sign_extend:DI (mem:SI (reg:DI 11 a1 [orig:145 ivtmp.40 ] [145]) [3 MEM[(int32_t *)_39]+0 S4 A32]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":37:19 127 {*extendsidi2_internal}
+     (nil))
+(insn 19 20 31 4 (set (reg:DI 15 a5 [orig:134 _4 ] [134])
+        (sign_extend:DI (mem:SI (reg:DI 14 a4 [orig:146 ivtmp.39 ] [146]) [3 MEM[(int32_t *)_40]+0 S4 A32]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":37:11 127 {*extendsidi2_internal}
+     (nil))
+(insn 31 19 32 4 (set (reg:DI 14 a4 [orig:146 ivtmp.39 ] [146])
+        (plus:DI (reg:DI 14 a4 [orig:146 ivtmp.39 ] [146])
+            (const_int 4 [0x4]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":36:21 discrim 1 5 {adddi3}
+     (nil))
+(insn 32 31 21 4 (set (reg:DI 11 a1 [orig:145 ivtmp.40 ] [145])
+        (plus:DI (reg:DI 11 a1 [orig:145 ivtmp.40 ] [145])
+            (const_int 4 [0x4]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":36:21 discrim 1 5 {adddi3}
+     (nil))
+(insn 21 32 22 4 (set (reg:DI 13 a3 [152])
+        (ior:DI (reg:DI 16 a6 [orig:135 _6 ] [135])
+            (const_int 1 [0x1]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":37:23 109 {*iordi3}
+     (nil))
+(insn 22 21 27 4 (set (reg:DI 13 a3 [155])
+        (sign_extend:DI (div:SI (reg:SI 15 a5 [orig:134 _4 ] [134])
+                (reg:SI 13 a3 [152])))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":37:15 44 {divsi3_extended}
+     (nil))
+(insn 27 22 24 4 (set (reg:DI 15 a5 [159])
+        (sign_extend:DI (plus:SI (reg:SI 15 a5 [orig:134 _4 ] [134])
+                (reg:SI 16 a6 [orig:135 _6 ] [135])))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":38:15 8 {addsi3_extended}
+     (expr_list:REG_DEAD (reg:SI 16 a6 [orig:135 _6 ] [135])
+        (nil)))
+(insn 24 27 30 4 (set (reg:DI 10 a0 [157])
+        (sign_extend:DI (plus:SI (reg:SI 13 a3 [155])
+                (reg:SI 10 a0 [orig:147 <retval> ] [147])))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":37:7 8 {addsi3_extended}
+     (expr_list:REG_DEAD (reg:SI 13 a3 [155])
+        (nil)))
+(insn 30 24 34 4 (set (reg/v:DI 10 a0 [orig:147 <retval> ] [147])
+        (xor:DI (reg:DI 10 a0 [157])
+            (reg:DI 15 a5 [159]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":38:7 110 {*xordi3}
+     (expr_list:REG_DEAD (reg:DI 15 a5 [159])
+        (nil)))
+(jump_insn 34 30 54 4 (set (pc)
+        (if_then_else (ne (reg:DI 12 a2 [orig:140 _35 ] [140])
+                (reg:DI 14 a4 [orig:146 ivtmp.39 ] [146]))
+            (label_ref:DI 33)
+            (pc))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":36:21 discrim 1 370 {*branchdi}
+     (int_list:REG_BR_PROB 955630228 (nil))
+ -> 33)
+(note 54 34 71 5 [bb 5] NOTE_INSN_BASIC_BLOCK)
+(insn 71 54 55 5 (use (reg/i:DI 10 a0)) -1
+     (nil))
+(jump_insn 55 71 56 5 (simple_return) 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 56 55 48)
+(code_label 48 56 47 6 18 (nil) [1 uses])
+(note 47 48 59 6 [bb 6] NOTE_INSN_BASIC_BLOCK)
+(note 59 47 7 6 NOTE_INSN_DELETED)
+(insn 7 59 42 6 (set (reg/v:DI 10 a0 [orig:147 <retval> ] [147])
+        (const_int 1 [0x1])) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":35:11 277 {*movdi_64bit}
+     (nil))
+(insn 42 7 72 6 (use (reg/i:DI 10 a0)) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":41:1 -1
+     (nil))
+(note 72 42 69 6 NOTE_INSN_EPILOGUE_BEG)
+(jump_insn 69 72 70 6 (simple_return) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":41:1 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 70 69 63)
+(note 63 70 64 NOTE_INSN_DELETED)
+(note 64 63 0 NOTE_INSN_DELETED)
+
+;; Function canary_sh1add (canary_sh1add, funcdef_no=3, decl_uid=2929, cgraph_uid=4, symbol_order=3)
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+df_analyze called
+df_worklist_dataflow_doublequeue: n_basic_blocks 7 n_edges 8 count 8 (  1.1)
+
+
+canary_sh1add
+
+Dataflow summary:
+def_info->table_size = 36, use_info->table_size = 0
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 0 [zero] 10 [a0] 11 [a1] 12 [a2] 15 [a5] 66 [vl] 67 [vtype] 69 [frm] 97 [v1] 98 [v2] 99 [v3]
+;;  ref usage 	r0={10u} r1={1d,1u} r2={1d,6u} r10={4d,5u} r11={2d,2u} r12={2d,5u} r13={1d} r14={1d} r15={4d,3u} r16={1d} r17={1d} r42={1d} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r66={3d,8u} r67={3d,9u} r68={1d,1u} r69={1d,1u} r97={4d,6u} r98={3d,3u} r99={1d,1u} 
+;;    total ref usage 103{42d,61u,0e} in 22{22 regular + 0 call} insns.
+
+( )->[0]->( 2 )
+;; bb 0 artificial_defs: { d0(1){ }d1(2){ }d2(10){ }d6(11){ }d8(12){ }d10(13){ }d11(14){ }d12(15){ }d16(16){ }d17(17){ }d18(42){ }d19(43){ }d20(44){ }d21(45){ }d22(46){ }d23(47){ }d24(48){ }d25(49){ }d26(68){ }d27(69){ }}
+;; bb 0 artificial_uses: { }
+;; lr  in  	 0 [zero]
+;; lr  use 	
+;; lr  def 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  in  	
+;; live  gen 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;; live  kill	
+;; lr  out 	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+
+( 0 )->[2]->( 3 6 )
+;; bb 2 artificial_defs: { }
+;; bb 2 artificial_uses: { u-1(2){ }}
+;; lr  in  	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp] 12 [a2]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+
+( 2 )->[3]->( 4 )
+;; bb 3 artificial_defs: { }
+;; bb 3 artificial_uses: { u-1(2){ }}
+;; lr  in  	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; lr  use 	 0 [zero] 2 [sp]
+;; lr  def 	 15 [a5] 66 [vl] 67 [vtype] 97 [v1]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+;; live  gen 	 15 [a5] 66 [vl] 67 [vtype] 97 [v1]
+;; live  kill	
+;; lr  out 	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+
+( 4 3 )->[4]->( 4 5 )
+;; bb 4 artificial_defs: { }
+;; bb 4 artificial_uses: { u-1(2){ }}
+;; lr  in  	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+;; lr  use 	 0 [zero] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 97 [v1]
+;; lr  def 	 10 [a0] 11 [a1] 12 [a2] 15 [a5] 66 [vl] 67 [vtype] 97 [v1] 98 [v2] 99 [v3]
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+;; live  gen 	 10 [a0] 11 [a1] 12 [a2] 15 [a5] 66 [vl] 67 [vtype] 97 [v1] 98 [v2] 99 [v3]
+;; live  kill	
+;; lr  out 	 0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+
+( 4 )->[5]->( 1 )
+;; bb 5 artificial_defs: { }
+;; bb 5 artificial_uses: { u-1(2){ }}
+;; lr  in  	 0 [zero] 1 [ra] 2 [sp] 68 [vxrm] 69 [frm] 97 [v1]
+;; lr  use 	 0 [zero] 2 [sp] 97 [v1]
+;; lr  def 	 10 [a0] 15 [a5] 66 [vl] 67 [vtype] 97 [v1] 98 [v2]
+;; live  in  	 1 [ra] 2 [sp] 68 [vxrm] 69 [frm] 97 [v1]
+;; live  gen 	 10 [a0] 15 [a5] 66 [vl] 67 [vtype] 97 [v1] 98 [v2]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+
+( 2 )->[6]->( 1 )
+;; bb 6 artificial_defs: { }
+;; bb 6 artificial_uses: { u-1(2){ }}
+;; lr  in  	 1 [ra] 2 [sp] 68 [vxrm] 69 [frm]
+;; lr  use 	 2 [sp]
+;; lr  def 	 10 [a0]
+;; live  in  	 1 [ra] 2 [sp] 68 [vxrm] 69 [frm]
+;; live  gen 	 10 [a0]
+;; live  kill	
+;; lr  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  out 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+
+( 6 5 )->[1]->( )
+;; bb 1 artificial_defs: { }
+;; bb 1 artificial_uses: { u-1(1){ }u-1(2){ }u-1(10){ }u-1(68){ }u-1(69){ }}
+;; lr  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  use 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; lr  def 	
+;; live  in  	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;; live  gen 	
+;; live  kill	
+;; lr  out 	
+;; live  out 	
+
+Finding needed instructions:
+  Adding insn 13 to worklist
+  Adding insn 28 to worklist
+  Adding insn 48 to worklist
+  Adding insn 71 to worklist
+  Adding insn 69 to worklist
+  Adding insn 37 to worklist
+Finished finding needed instructions:
+processing block 5 lr out =  1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+  Adding insn 54 to worklist
+  Adding insn 53 to worklist
+  Adding insn 51 to worklist
+  Adding insn 78 to worklist
+processing block 4 lr out =  0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+  Adding insn 23 to worklist
+  Adding insn 56 to worklist
+  Adding insn 20 to worklist
+  Adding insn 24 to worklist
+  Adding insn 25 to worklist
+  Adding insn 26 to worklist
+  Adding insn 21 to worklist
+  Adding insn 19 to worklist
+  Adding insn 72 to worklist
+processing block 3 lr out =  0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm] 97 [v1]
+  Adding insn 7 to worklist
+  Adding insn 77 to worklist
+processing block 6 lr out =  1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+  Adding insn 8 to worklist
+processing block 2 lr out =  0 [zero] 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 68 [vxrm] 69 [frm]
+df_worklist_dataflow_doublequeue: n_basic_blocks 7 n_edges 8 count 8 (  1.1)
+;;   ======================================================
+;;   -- basic block 2 from 13 to 13 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  13 pc={(a2<=0)?L42:pc}                     :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 0
+;;   new head = 13
+;;   new tail = 13
+
+;;   ======================================================
+;;   -- basic block 3 from 77 to 7 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  77 {a5=unspec[zero,0x40,0,0x1,0x1] 91;vl=unspec[zero,0x40,0] 91;vtype=unspec[0x40,0,0x1,0x1] 91;}:vxu_ooo_issue
+;;	  1--> b  0: i   7 v1={(unspec[const_vector,0,0x2,0x2,0x1,vl,vtype] 93)?const_vector:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	Ready list (final):  
+;;   total time = 1
+;;   new head = 77
+;;   new tail = 7
+
+;;   ======================================================
+;;   -- basic block 4 from 72 to 28 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  72 {a5=unspec[a2,0x40,0,0,0x1] 91;vl=unspec[a2,0x40,0] 91;vtype=unspec[0x40,0,0,0x1] 91;}:vxu_ooo_issue
+;;	  1--> b  0: i  19 v3={(unspec[const_vector,0,0x2,0x2,0,vl,vtype] 93)?[a1]:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	  2--> b  0: i  21 v2={(unspec[const_vector,0,0x2,0x2,0,vl,vtype] 93)?[a0]:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	  3--> b  0: i  26 a2=a2-a5                                :spacemit_x60_alu
+;;	  4--> b  0: i  25 a1=a5<<0x3+a1                           :spacemit_x60_alu
+;;	  5--> b  0: i  24 a0=a5<<0x3+a0                           :spacemit_x60_alu
+;;	  7--> b  0: i  20 v1={(unspec[const_vector,0,0,0x2,0,vl,vtype] 93)?v1+v3:v1}:vxu_ooo_issue,vxu_ooo_alu
+;;	  8--> b  0: i  56 v2={(unspec[const_vector,0,0x2,0x2,0,vl,vtype] 93)?v2<<0x1:unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	 11--> b  0: i  23 v1={(unspec[const_vector,0,0,0x2,0,vl,vtype] 93)?v1+v2:v1}:vxu_ooo_issue,vxu_ooo_alu
+;;	 12--> b  0: i  28 pc={(a2!=0)?L27:pc}                     :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 12
+;;   new head = 72
+;;   new tail = 28
+
+;;   ======================================================
+;;   -- basic block 5 from 78 to 48 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i  78 {a5=unspec[zero,0x40,0,0x1,0x1] 91;vl=unspec[zero,0x40,0] 91;vtype=unspec[0x40,0,0x1,0x1] 91;}:vxu_ooo_issue
+;;	  1--> b  0: i  51 v2={(unspec[const_vector,0,0x2,0x2,0x1,vl,vtype] 93)?vec_duplicate(0):unspec[zero] 92}:vxu_ooo_issue,vxu_ooo_alu
+;;	  3--> b  0: i  53 v1=unspec[unspec[const_vector,0,0x2,0x1,vl,vtype] 93,unspec[v1,v2] 143,unspec[zero] 92] 142:vxu_ooo_issue,vxu_ooo_multicycle
+;;	 11--> b  0: i  54 a0=unspec[vec_select(v1,parallel),vtype] 93:vxu_ooo_issue,vxu_ooo_alu
+;;	 12--> b  0: i  71 use a0                                  :nothing
+;;	 12--> b  0: i  48 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 12
+;;   new head = 78
+;;   new tail = 48
+
+;;   ======================================================
+;;   -- basic block 6 from 8 to 69 -- after reload
+;;   ======================================================
+
+;;	  0--> b  0: i   8 a0=0                                    :spacemit_x60_alu
+;;	  1--> b  0: i  37 use a0                                  :nothing
+;;	  1--> b  0: i  69 simple_return                           :spacemit_x60_alu0
+;;	Ready list (final):  
+;;   total time = 1
+;;   new head = 8
+;;   new tail = 69
+
+
+
+starting the processing of deferred insns
+ending the processing of deferred insns
+
+
+canary_sh1add
+
+Dataflow summary:
+;;  fully invalidated by EH 	 0 [zero] 1 [ra] 3 [gp] 4 [tp] 5 [t0] 6 [t1] 7 [t2] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 28 [t3] 29 [t4] 30 [t5] 31 [t6] 32 [ft0] 33 [ft1] 34 [ft2] 35 [ft3] 36 [ft4] 37 [ft5] 38 [ft6] 39 [ft7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 60 [ft8] 61 [ft9] 62 [ft10] 63 [ft11] 66 [vl] 67 [vtype] 68 [vxrm] 69 [frm] 70 [vxsat] 71 [N/A] 72 [N/A] 73 [N/A] 74 [N/A] 75 [N/A] 76 [N/A] 77 [N/A] 78 [N/A] 79 [N/A] 80 [N/A] 81 [N/A] 82 [N/A] 83 [N/A] 84 [N/A] 85 [N/A] 86 [N/A] 87 [N/A] 88 [N/A] 89 [N/A] 90 [N/A] 91 [N/A] 92 [N/A] 93 [N/A] 94 [N/A] 95 [N/A] 96 [v0] 97 [v1] 98 [v2] 99 [v3] 100 [v4] 101 [v5] 102 [v6] 103 [v7] 104 [v8] 105 [v9] 106 [v10] 107 [v11] 108 [v12] 109 [v13] 110 [v14] 111 [v15] 112 [v16] 113 [v17] 114 [v18] 115 [v19] 116 [v20] 117 [v21] 118 [v22] 119 [v23] 120 [v24] 121 [v25] 122 [v26] 123 [v27] 124 [v28] 125 [v29] 126 [v30] 127 [v31]
+;;  hardware regs used 	 2 [sp] 68 [vxrm] 69 [frm]
+;;  regular block artificial uses 	 2 [sp]
+;;  eh block artificial uses 	 2 [sp] 64 [arg]
+;;  entry block defs 	 1 [ra] 2 [sp] 10 [a0] 11 [a1] 12 [a2] 13 [a3] 14 [a4] 15 [a5] 16 [a6] 17 [a7] 42 [fa0] 43 [fa1] 44 [fa2] 45 [fa3] 46 [fa4] 47 [fa5] 48 [fa6] 49 [fa7] 68 [vxrm] 69 [frm]
+;;  exit block uses 	 1 [ra] 2 [sp] 10 [a0] 68 [vxrm] 69 [frm]
+;;  regs ever live 	 0 [zero] 10 [a0] 11 [a1] 12 [a2] 15 [a5] 66 [vl] 67 [vtype] 69 [frm] 97 [v1] 98 [v2] 99 [v3]
+;;  ref usage 	r0={10u} r1={1d,1u} r2={1d,6u} r10={4d,5u} r11={2d,2u} r12={2d,5u} r13={1d} r14={1d} r15={4d,3u} r16={1d} r17={1d} r42={1d} r43={1d} r44={1d} r45={1d} r46={1d} r47={1d} r48={1d} r49={1d} r66={3d,8u} r67={3d,9u} r68={1d,1u} r69={1d,1u} r97={4d,6u} r98={3d,3u} r99={1d,1u} 
+;;    total ref usage 103{42d,61u,0e} in 22{22 regular + 0 call} insns.
+(note 1 0 57 NOTE_INSN_DELETED)
+(note 57 1 67 2 [bb 2] NOTE_INSN_BASIC_BLOCK)
+(note 67 57 5 2 NOTE_INSN_PROLOGUE_END)
+(note 5 67 13 2 NOTE_INSN_FUNCTION_BEG)
+(jump_insn 13 5 14 2 (set (pc)
+        (if_then_else (le (reg:DI 12 a2 [orig:155 n ] [155])
+                (const_int 0 [0]))
+            (label_ref:DI 42)
+            (pc))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":46:21 discrim 1 370 {*branchdi}
+     (int_list:REG_BR_PROB 118111604 (nil))
+ -> 42)
+(note 14 13 77 3 [bb 3] NOTE_INSN_BASIC_BLOCK)
+(insn 77 14 7 3 (parallel [
+            (set (reg:DI 15 a5 [148])
+                (unspec:DI [
+                        (reg:DI 0 zero)
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                        (const_int 1 [0x1]) repeated x2
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 66 vl)
+                (unspec:SI [
+                        (reg:DI 0 zero)
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 67 vtype)
+                (unspec:SI [
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                        (const_int 1 [0x1]) repeated x2
+                    ] UNSPEC_VSETVL))
+        ]) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":46:21 discrim 1 3645 {vsetvldi}
+     (expr_list:REG_UNUSED (reg:DI 15 a5 [148])
+        (nil)))
+(insn 7 77 27 3 (set (reg:RVVM1DI 97 v1 [orig:135 vect_s_19.56 ] [135])
+        (if_then_else:RVVM1DI (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 1 [0x1])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (const_vector:RVVM1DI repeat [
+                    (const_int 0 [0])
+                ])
+            (unspec:RVVM1DI [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":46:21 discrim 1 4370 {*pred_broadcastrvvm1di_imm}
+     (expr_list:REG_DEAD (reg:SI 67 vtype)
+        (expr_list:REG_DEAD (reg:SI 66 vl)
+            (expr_list:REG_DEAD (reg:DI 0 zero)
+                (expr_list:REG_EQUAL (const_vector:RVVM1DI repeat [
+                            (const_int 0 [0])
+                        ])
+                    (nil))))))
+(code_label 27 7 16 4 23 (nil) [1 uses])
+(note 16 27 18 4 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(note 18 16 72 4 NOTE_INSN_DELETED)
+(insn 72 18 19 4 (parallel [
+            (set (reg:DI 15 a5 [orig:143 _41 ] [143])
+                (unspec:DI [
+                        (reg:DI 12 a2 [orig:134 ivtmp_8 ] [134])
+                        (const_int 64 [0x40])
+                        (const_int 0 [0]) repeated x2
+                        (const_int 1 [0x1])
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 66 vl)
+                (unspec:SI [
+                        (reg:DI 12 a2 [orig:134 ivtmp_8 ] [134])
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 67 vtype)
+                (unspec:SI [
+                        (const_int 64 [0x40])
+                        (const_int 0 [0]) repeated x2
+                        (const_int 1 [0x1])
+                    ] UNSPEC_VSETVL))
+        ]) 3645 {vsetvldi}
+     (nil))
+(insn 19 72 21 4 (set (reg:RVVM1DI 99 v3 [149])
+        (if_then_else:RVVM1DI (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (mem:RVVM1DI (reg/v/f:DI 11 a1 [orig:146 b ] [146]) [1  S[32, 32] A64])
+            (unspec:RVVM1DI [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) 3668 {*pred_movrvvm1di}
+     (nil))
+(insn 21 19 26 4 (set (reg:RVVM1DI 98 v2 [150])
+        (if_then_else:RVVM1DI (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (mem:RVVM1DI (reg/v/f:DI 10 a0 [orig:145 a ] [145]) [1  S[32, 32] A64])
+            (unspec:RVVM1DI [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":47:16 3668 {*pred_movrvvm1di}
+     (nil))
+(insn 26 21 25 4 (set (reg:DI 12 a2 [orig:134 ivtmp_8 ] [134])
+        (minus:DI (reg:DI 12 a2 [orig:134 ivtmp_8 ] [134])
+            (reg:DI 15 a5 [orig:143 _41 ] [143]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":46:21 discrim 1 15 {subdi3}
+     (nil))
+(insn 25 26 24 4 (set (reg/v/f:DI 11 a1 [orig:146 b ] [146])
+        (plus:DI (ashift:DI (reg:DI 15 a5 [orig:143 _41 ] [143])
+                (const_int 3 [0x3]))
+            (reg/v/f:DI 11 a1 [orig:146 b ] [146]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":46:21 discrim 1 510 {*shNadd}
+     (nil))
+(insn 24 25 20 4 (set (reg/v/f:DI 10 a0 [orig:145 a ] [145])
+        (plus:DI (ashift:DI (reg:DI 15 a5 [orig:143 _41 ] [143])
+                (const_int 3 [0x3]))
+            (reg/v/f:DI 10 a0 [orig:145 a ] [145]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":46:21 discrim 1 510 {*shNadd}
+     (expr_list:REG_DEAD (reg:DI 15 a5 [orig:143 _41 ] [143])
+        (nil)))
+(insn 20 24 56 4 (set (reg:RVVM1DI 97 v1 [orig:136 vect__10.57 ] [136])
+        (if_then_else:RVVM1DI (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0]) repeated x2
+                    (const_int 2 [0x2])
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (plus:RVVM1DI (reg:RVVM1DI 97 v1 [orig:135 vect_s_19.56 ] [135])
+                (reg:RVVM1DI 99 v3 [149]))
+            (reg:RVVM1DI 97 v1 [orig:135 vect_s_19.56 ] [135]))) 5754 {pred_addrvvm1di}
+     (expr_list:REG_DEAD (reg:RVVM1DI 99 v3 [149])
+        (nil)))
+(insn 56 20 23 4 (set (reg:RVVM1DI 98 v2 [orig:151 vect__5.52_30 ] [151])
+        (if_then_else:RVVM1DI (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (ashift:RVVM1DI (reg:RVVM1DI 98 v2 [150])
+                (const_int 1 [0x1]))
+            (unspec:RVVM1DI [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":47:16 6700 {pred_ashlrvvm1di_scalar}
+     (expr_list:REG_DEAD (reg:DI 0 zero)
+        (nil)))
+(insn 23 56 28 4 (set (reg:RVVM1DI 97 v1 [orig:135 vect_s_19.56 ] [135])
+        (if_then_else:RVVM1DI (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI repeat [
+                            (const_int 1 [0x1])
+                        ])
+                    (const_int 0 [0]) repeated x2
+                    (const_int 2 [0x2])
+                    (const_int 0 [0])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (plus:RVVM1DI (reg:RVVM1DI 97 v1 [orig:136 vect__10.57 ] [136])
+                (reg:RVVM1DI 98 v2 [orig:151 vect__5.52_30 ] [151]))
+            (reg:RVVM1DI 97 v1 [orig:136 vect__10.57 ] [136]))) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":47:7 5754 {pred_addrvvm1di}
+     (expr_list:REG_DEAD (reg:RVVM1DI 98 v2 [orig:151 vect__5.52_30 ] [151])
+        (expr_list:REG_DEAD (reg:SI 67 vtype)
+            (expr_list:REG_DEAD (reg:SI 66 vl)
+                (nil)))))
+(jump_insn 28 23 29 4 (set (pc)
+        (if_then_else (ne (reg:DI 12 a2 [orig:134 ivtmp_8 ] [134])
+                (const_int 0 [0]))
+            (label_ref:DI 27)
+            (pc))) 370 {*branchdi}
+     (int_list:REG_BR_PROB 955630228 (nil))
+ -> 27)
+(note 29 28 78 5 [bb 5] NOTE_INSN_BASIC_BLOCK)
+(insn 78 29 51 5 (parallel [
+            (set (reg:DI 15 a5 [157])
+                (unspec:DI [
+                        (reg:DI 0 zero)
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                        (const_int 1 [0x1]) repeated x2
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 66 vl)
+                (unspec:SI [
+                        (reg:DI 0 zero)
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                    ] UNSPEC_VSETVL))
+            (set (reg:SI 67 vtype)
+                (unspec:SI [
+                        (const_int 64 [0x40])
+                        (const_int 0 [0])
+                        (const_int 1 [0x1]) repeated x2
+                    ] UNSPEC_VSETVL))
+        ]) 3645 {vsetvldi}
+     (expr_list:REG_UNUSED (reg:DI 15 a5 [157])
+        (nil)))
+(insn 51 78 53 5 (set (reg:RVVM1DI 98 v2 [156])
+        (if_then_else:RVVM1DI (unspec:RVVMF64BI [
+                    (const_vector:RVVMF64BI [
+                            (const_int 1 [0x1])
+                            repeat [
+                                (const_int 0 [0])
+                            ]
+                        ])
+                    (const_int 0 [0])
+                    (const_int 2 [0x2]) repeated x2
+                    (const_int 1 [0x1])
+                    (reg:SI 66 vl)
+                    (reg:SI 67 vtype)
+                ] UNSPEC_VPREDICATE)
+            (vec_duplicate:RVVM1DI (const_int 0 [0]))
+            (unspec:RVVM1DI [
+                    (reg:DI 0 zero)
+                ] UNSPEC_VUNDEF))) 4064 {*pred_broadcastrvvm1di}
+     (nil))
+(insn 53 51 54 5 (set (reg:RVVM1DI 97 v1 [158])
+        (unspec:RVVM1DI [
+                (unspec:RVVMF64BI [
+                        (const_vector:RVVMF64BI repeat [
+                                (const_int 1 [0x1])
+                            ])
+                        (const_int 0 [0])
+                        (const_int 2 [0x2])
+                        (const_int 1 [0x1])
+                        (reg:SI 66 vl)
+                        (reg:SI 67 vtype)
+                    ] UNSPEC_VPREDICATE)
+                (unspec:RVVM1DI [
+                        (reg:RVVM1DI 97 v1 [orig:135 vect_s_19.56 ] [135])
+                        (reg:RVVM1DI 98 v2 [156])
+                    ] UNSPEC_REDUC_SUM)
+                (unspec:RVVM1DI [
+                        (reg:DI 0 zero)
+                    ] UNSPEC_VUNDEF)
+            ] UNSPEC_REDUC)) 18247 {pred_redsumrvvm1di}
+     (expr_list:REG_DEAD (reg:RVVM1DI 98 v2 [156])
+        (expr_list:REG_DEAD (reg:SI 66 vl)
+            (expr_list:REG_DEAD (reg:DI 0 zero)
+                (nil)))))
+(insn 54 53 71 5 (set (reg/v:DI 10 a0 [orig:144 <retval> ] [144])
+        (unspec:DI [
+                (vec_select:DI (reg:RVVM1DI 97 v1 [158])
+                    (parallel [
+                            (const_int 0 [0])
+                        ]))
+                (reg:SI 67 vtype)
+            ] UNSPEC_VPREDICATE)) 19966 {*pred_extract_firstrvvm1di}
+     (expr_list:REG_DEAD (reg:RVVM1DI 97 v1 [158])
+        (expr_list:REG_DEAD (reg:SI 67 vtype)
+            (nil))))
+(insn 71 54 48 5 (use (reg/i:DI 10 a0)) -1
+     (nil))
+(jump_insn 48 71 49 5 (simple_return) 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 49 48 42)
+(code_label 42 49 41 6 24 (nil) [1 uses])
+(note 41 42 59 6 [bb 6] NOTE_INSN_BASIC_BLOCK)
+(note 59 41 8 6 NOTE_INSN_DELETED)
+(insn 8 59 37 6 (set (reg/v:DI 10 a0 [orig:144 <retval> ] [144])
+        (const_int 0 [0])) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":45:12 277 {*movdi_64bit}
+     (nil))
+(insn 37 8 79 6 (use (reg/i:DI 10 a0)) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":49:1 -1
+     (nil))
+(note 79 37 69 6 NOTE_INSN_EPILOGUE_BEG)
+(jump_insn 69 79 70 6 (simple_return) "/home/orangepi/gcc-tune/measurements/canaries/sched_kernels.c":49:1 449 {simple_return}
+     (nil)
+ -> simple_return)
+(barrier 70 69 63)
+(note 63 70 64 NOTE_INSN_DELETED)
+(note 64 63 0 NOTE_INSN_DELETED)

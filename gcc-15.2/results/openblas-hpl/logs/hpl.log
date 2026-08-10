@@ -1,0 +1,203 @@
+=== HPL attempt 2026-08-10T16:16:30+00:00 ===
+EESSI has selected riscv64/generic as the compatible CPU target for EESSI/2025.06
+EESSI did not identify an accelerator on the system
+(for debug information when loading the EESSI module, set the environment variable EESSI_MODULE_DEBUG_INIT)
+
+---- /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/modules/all ----
+   OpenMPI/5.0.7-GCC-14.2.0    OpenMPI/5.0.8-llvm-compilers-20.1.8 (D)
+   OpenMPI/5.0.8-GCC-14.3.0
+
+  Where:
+   D:  Default Module
+
+If the avail list is too long consider trying:
+
+"module --default avail" or "ml -d av" to just list the default modules.
+"module overview" or "ml ov" to display the number of modules for each name.
+
+Use "module spider" to find all possible modules and extensions.
+Use "module keyword key1 key2 ..." to search for all possible modules matching
+any of the "keys".
+
+
+mpicc=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenMPI/5.0.8-GCC-14.3.0/bin/mpicc
+mpirun=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenMPI/5.0.8-GCC-14.3.0/bin/mpirun
+gcc (GCC) 14.3.0
+Copyright (C) 2024 Free Software Foundation, Inc.
+HPL skip: MPI or source missing
+=== HPL rebuild 2026-08-10T16:17:28+00:00 ===
+=== building xhpl-ooo ===
+build failed ooo
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x31e): undefined reference to `HPL_pdmatgen'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x336): undefined reference to `HPL_pdlange'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x352): undefined reference to `HPL_pdlange'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x36e): undefined reference to `HPL_pdlange'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x38a): undefined reference to `HPL_pdlange'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x3b0): undefined reference to `HPL_indxg2p'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x3c8): undefined reference to `HPL_indxg2p'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x3de): undefined reference to `HPL_broadcast'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x3f0): undefined reference to `HPL_indxg2p'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x41c): undefined reference to `HPL_sum'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x422): undefined reference to `HPL_sum'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x42e): undefined reference to `HPL_reduce'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x446): undefined reference to `HPL_pdlange'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x4c4): undefined reference to `HPL_pwarn'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x50e): undefined reference to `HPL_dgemv'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x530): undefined reference to `HPL_max'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x53e): undefined reference to `HPL_all_reduce'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x55c): undefined reference to `HPL_fprintf'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x590): undefined reference to `HPL_fprintf'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x5b8): undefined reference to `HPL_fprintf'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x5d2): undefined reference to `HPL_fprintf'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x5ec): undefined reference to `HPL_fprintf'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.o:HPL_pdtest.c:(.text+0x606): more undefined references to `HPL_fprintf' follow
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.o: in function `HPL_pdtest':
+HPL_pdtest.c:(.text+0x6ac): undefined reference to `HPL_idamax'
+/cvmfs/software.eessi.io/versions/2025.06/compat/linux/riscv64/usr/bin/ld: HPL_pdtest.c:(.text+0x6f8): undefined reference to `HPL_pwarn'
+collect2: error: ld returned 1 exit status
+make[6]: *** [Makefile:76: dexe.grd] Error 1
+make[6]: Leaving directory '/home/orangepi/hpl-2.3/testing/ptest/Linux_RISCV64_ooo'
+make[5]: *** [Make.top:68: build_tst] Error 2
+make[5]: Leaving directory '/home/orangepi/hpl-2.3'
+make[4]: *** [Makefile:73: build] Error 2
+make[4]: Leaving directory '/home/orangepi/hpl-2.3'
+make[3]: *** [Make.top:54: build_src] Error 2
+make[3]: Leaving directory '/home/orangepi/hpl-2.3'
+make[2]: *** [Makefile:72: build] Error 2
+make[2]: Leaving directory '/home/orangepi/hpl-2.3'
+make[1]: *** [Make.top:54: build_src] Error 2
+make[1]: Leaving directory '/home/orangepi/hpl-2.3'
+make: *** [Makefile:72: build] Error 2
+=== HPL via Make.rv64_blis template 2026-08-10T16:22:27+00:00 ===
+=== building rv64_ob_ooo ===
+built xhpl-ooo
+=== building rv64_ob_x60 ===
+built xhpl-x60
+HPL RUN ooo
+================================================================================
+HPLinpack 2.3  --  High-Performance Linpack benchmark  --   December 2, 2018
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :    3000 
+NB     :     192 
+PMAP   : Row-major process mapping
+P      :       2 
+Q      :       4 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :   1ring 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR10C2R4        3000   192     2     4               3.40             5.2989e+00
+HPL_pdgesv() start time Mon Aug 10 16:31:17 2026
+
+HPL_pdgesv() end time   Mon Aug 10 16:31:21 2026
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   6.65395422e-03 ...... PASSED
+================================================================================
+
+Finished      1 tests with the following results:
+              1 tests completed and passed residual checks,
+              0 tests completed and failed residual checks,
+              0 tests skipped because of illegal input values.
+--------------------------------------------------------------------------------
+
+End of Tests.
+================================================================================
+HPL RUN x60
+================================================================================
+HPLinpack 2.3  --  High-Performance Linpack benchmark  --   December 2, 2018
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :    3000 
+NB     :     192 
+PMAP   : Row-major process mapping
+P      :       2 
+Q      :       4 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :   1ring 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR10C2R4        3000   192     2     4               3.37             5.3408e+00
+HPL_pdgesv() start time Mon Aug 10 16:31:28 2026
+
+HPL_pdgesv() end time   Mon Aug 10 16:31:32 2026
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   6.65395422e-03 ...... PASSED
+================================================================================
+
+Finished      1 tests with the following results:
+              1 tests completed and passed residual checks,
+              0 tests completed and failed residual checks,
+              0 tests skipped because of illegal input values.
+--------------------------------------------------------------------------------
+
+End of Tests.
+================================================================================

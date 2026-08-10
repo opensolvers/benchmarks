@@ -1,0 +1,1 @@
+N=2048 reps=5 best_gflops=2.375726 mean_gflops=2.374539 checksum=5.033164e+05 best_s=7.231419 mean_s=7.235033

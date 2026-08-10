@@ -1,0 +1,5 @@
+sched_kernels_bench  label=eessi-14.3  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7852.5 ±181.8  med=7805.5  min=7742.4 max=8356.3  cyc/elem mean=3.067 med=3.049
+fma_chain         ns/call mean=21825.4 ±136.5  med=21801.8  min=21670.9 max=22106.8  cyc/elem mean=8.526 med=8.516
+div_mix           ns/call mean=37970.9 ±66.2  med=37960.8  min=37893.9 max=38065.8  cyc/elem mean=14.832 med=14.828
+sh1add            ns/call mean=10768.7 ±50.2  med=10752.3  min=10717.0 max=10876.6  cyc/elem mean=4.207 med=4.200

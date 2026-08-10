@@ -25,6 +25,7 @@ RV2 numbers.
 | Dir | What it measures | Axis swapped | Kind |
 |---|---|---|---|
 | [`cores/`](cores) | X60 and SiFive U74 ISA / codegen notes (what the silicon implements, how to target it) | — | reference |
+| [`gcc-15.2/`](gcc-15.2) | GCC 15.2 EasyBuild SpacemiT X60 patch + RV2 mtune A/Bs (canaries, OpenBLAS DGEMM, HPL) | **mtune** (`spacemit-x60` vs `generic-ooo`) | patch + results |
 | [`OpenBLAS/`](OpenBLAS) | OpenBLAS on RISC-V: DGEMM + differential correctness + TRSM sweep; localizes two broken RVV kernels (`gemv_n` NaN, `_rvv_v1` TRSM VLEN bug) | BLAS | microbench + verification |
 | [`BLIS/`](BLIS) | BLIS (FLAME) RVV build + DGEMM A/B vs OpenBLAS (RV2 + F3) | BLAS | microbench + verification |
 | [`numpy/`](numpy) | BLAS/LAPACK backend as seen through NumPy/SciPy | BLAS | application proxy |
@@ -97,6 +98,9 @@ Common ground for reproducing any of these:
 
 ## Headline findings so far
 
+- **GCC 15.2 SpacemiT X60 mtune** (EasyBuild patch in [`gcc-15.2`](gcc-15.2)):
+  scheduler canaries **−8.7%** / **−7.7%** on `fma_chain` / `div_mix`; OpenBLAS
+  DGEMM **+2–4%**; modest HPL **+0.8%** (local RV2 proof, not EESSI yet).
 - **OpenBLAS RVV `gemv_n`** on stock EESSI returns NaN → HPL / ELPA / QE / NumPy
   fail; ScaLAPACK **hangs**. The patched build restores correctness (HPL
   **~10.5–11.5 GFLOP/s** on X60).

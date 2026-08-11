@@ -12,10 +12,10 @@ line).
 > **Change one variable.** Same `-march`, same canary binary — only GCC
 > **mtune** (and the patch that teaches GCC about X60) differs.
 
-> **Bottom line (RV2 canaries):** `load_add_chain` **−1.45%**, `fma_chain`
+> **Bottom line (RV2):** canaries `load_add_chain` **−1.45%**, `fma_chain`
 > **−5.04%**, `div_mix` **−6.73%**, `sh1add` **−0.20%** ns/call vs
-> `generic-ooo`. Same direction as the GCC 15.2 clean series; OpenBLAS/HPL not
-> re-run on 14.3. Local proof only — not an EESSI PR yet.
+> `generic-ooo`. OpenBLAS DGEMM **−6.9/−6.7/−3.0%** at N=512/1024/2048 (sign
+> flip vs 15.2); modest HPL N=3000 **+6.8%** (both PASSED). Local proof only.
 
 ---
 
@@ -77,11 +77,20 @@ Source set: `rv2-gcc143-x60-ab` (install
 
 Full tables + asm/logs: [`results/canaries/`](results/canaries/).
 
-**Omitted from git (rebuildable):** ELF `bin/bench-*` / `x60_latency_probe`.
+**Omitted from git (rebuildable):** ELF `bin/bench-*` / `x60_latency_probe`,
+static OpenBLAS `.a`.
 
-OpenBLAS DGEMM / HPL mtune A/Bs for this line live under
-[`gcc-15.2/results/openblas-hpl/`](../gcc-15.2/results/openblas-hpl/) (15.2
-only so far).
+### OpenBLAS DGEMM + modest HPL
+
+[`results/openblas-hpl/`](results/openblas-hpl/) — same harness as 15.2
+(`RISCV64_ZVL256B`, static, interleaved DGEMM, HPL N=3000 NB=192 2×4).
+
+| Metric | 14.3 Δ% (x60 vs ooo) | 15.2 Δ% |
+|--------|----------------------|---------|
+| DGEMM N=512 | **−6.88%** | +2.19% |
+| DGEMM N=1024 | **−6.69%** | +2.25% |
+| DGEMM N=2048 | **−3.02%** | +3.79% |
+| HPL N=3000 | **+6.75%** | +0.79% |
 
 ---
 
@@ -96,6 +105,7 @@ gcc-14.3/
     easybuild-unified-14.3-verify.log
     pristine-apply-14.3.log
     canaries/          # scheduler A/B (no ELF bins)
+    openblas-hpl/      # DGEMM + modest HPL mtune A/B
 ```
 
 Related: [`gcc-15.2/`](../gcc-15.2/), ISA notes in [`cores/x60/`](../cores/x60/).

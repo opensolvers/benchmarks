@@ -1,0 +1,85 @@
+================================================================================
+HPLinpack 2.3  --  High-Performance Linpack benchmark  --   December 2, 2018
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :    3000 
+NB     :     192 
+PMAP   : Row-major process mapping
+P      :       2 
+Q      :       4 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :   1ring 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+Column=000000192 Fraction= 6.4% Gflops=3.229e+01
+Column=000000384 Fraction=12.8% Gflops=1.064e+01
+Column=000000576 Fraction=19.2% Gflops=7.913e+00
+Column=000000768 Fraction=25.6% Gflops=7.249e+00
+Column=000000960 Fraction=32.0% Gflops=6.254e+00
+Column=000001152 Fraction=38.4% Gflops=6.299e+00
+Column=000001344 Fraction=44.8% Gflops=6.126e+00
+Column=000001536 Fraction=51.2% Gflops=6.052e+00
+Column=000001728 Fraction=57.6% Gflops=5.797e+00
+Column=000001920 Fraction=64.0% Gflops=5.736e+00
+Column=000002112 Fraction=70.4% Gflops=5.636e+00
+Column=000002304 Fraction=76.8% Gflops=5.555e+00
+Column=000002496 Fraction=83.2% Gflops=5.451e+00
+Column=000002688 Fraction=89.6% Gflops=5.382e+00
+Column=000002880 Fraction=96.0% Gflops=5.307e+00
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR10C2R4        3000   192     2     4               3.42             5.2704e+00
+HPL_pdgesv() start time Tue Aug 11 17:21:52 2026
+
+HPL_pdgesv() end time   Tue Aug 11 17:21:55 2026
+
+--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV-
+Max aggregated wall time rfact . . . :               0.46
++ Max aggregated wall time pfact . . :               0.36
++ Max aggregated wall time mxswp . . :               0.33
+Max aggregated wall time update  . . :               3.06
++ Max aggregated wall time laswp . . :               0.87
+Max aggregated wall time up tr sv  . :               0.02
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   6.65395422e-03 ...... PASSED
+================================================================================
+
+Finished      1 tests with the following results:
+              1 tests completed and passed residual checks,
+              0 tests completed and failed residual checks,
+              0 tests skipped because of illegal input values.
+--------------------------------------------------------------------------------
+
+End of Tests.
+================================================================================

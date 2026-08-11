@@ -25,7 +25,7 @@ RV2 numbers.
 | Dir | What it measures | Axis swapped | Kind |
 |---|---|---|---|
 | [`cores/`](cores) | X60 and SiFive U74 ISA / codegen notes (what the silicon implements, how to target it) | — | reference |
-| [`gcc-14.3/`](gcc-14.3) | GCC 14.3 EasyBuild SpacemiT X60 patch + RV2 mtune canaries (EESSI GCCcore line) | **mtune** (`spacemit-x60` vs `generic-ooo`) | patch + results |
+| [`gcc-14.3/`](gcc-14.3) | GCC 14.3 EasyBuild SpacemiT X60 patch + RV2 mtune A/Bs (canaries, OpenBLAS DGEMM, HPL) | **mtune** (`spacemit-x60` vs `generic-ooo`) | patch + results |
 | [`gcc-15.2/`](gcc-15.2) | GCC 15.2 EasyBuild SpacemiT X60 patch + RV2 mtune A/Bs (canaries, OpenBLAS DGEMM, HPL) | **mtune** (`spacemit-x60` vs `generic-ooo`) | patch + results |
 | [`OpenBLAS/`](OpenBLAS) | OpenBLAS on RISC-V: DGEMM + differential correctness + TRSM sweep; localizes two broken RVV kernels (`gemv_n` NaN, `_rvv_v1` TRSM VLEN bug) | BLAS | microbench + verification |
 | [`BLIS/`](BLIS) | BLIS (FLAME) RVV build + DGEMM A/B vs OpenBLAS (RV2 + F3) | BLAS | microbench + verification |
@@ -100,8 +100,8 @@ Common ground for reproducing any of these:
 ## Headline findings so far
 
 - **GCC 14.3 SpacemiT X60 mtune** (EasyBuild patch in [`gcc-14.3`](gcc-14.3)):
-  scheduler canaries **−5.0%** / **−6.7%** on `fma_chain` / `div_mix` vs
-  `generic-ooo` (local RV2; OpenBLAS/HPL not re-run on 14.3).
+  scheduler canaries **−5.0%** / **−6.7%** on `fma_chain` / `div_mix`; OpenBLAS
+  DGEMM **−3…−7%** vs `generic-ooo` on this run; modest HPL **+6.8%** (local RV2).
 - **GCC 15.2 SpacemiT X60 mtune** (EasyBuild patch in [`gcc-15.2`](gcc-15.2)):
   scheduler canaries **−8.7%** / **−7.7%** on `fma_chain` / `div_mix`; OpenBLAS
   DGEMM **+2–4%**; modest HPL **+0.8%** (local RV2 proof, not EESSI yet).

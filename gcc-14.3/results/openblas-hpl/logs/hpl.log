@@ -1,0 +1,195 @@
+MPICC=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenMPI/5.0.8-GCC-14.3.0/bin/mpicc MPIRUN=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenMPI/5.0.8-GCC-14.3.0/bin/mpirun GCC14=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/GCCcore/14.3.0
+=== building rv64_ob143_ooo 2026-08-11T17:12:55+00:00 ===
+make -f Make.top startup_dir     arch=rv64_ob143_ooo
+make -f Make.top refresh_src     arch=rv64_ob143_ooo
+make -f Make.top build_src       arch=rv64_ob143_ooo
+mkdir include/rv64_ob143_ooo
+cp makes/Make.auxil    src/auxil/rv64_ob143_ooo/Makefile
+mkdir lib
+( cd src/auxil/rv64_ob143_ooo;         make )
+/bin/sh: 1: cd: can't cd to src/auxil/rv64_ob143_ooo
+cp: cannot create regular file 'src/auxil/rv64_ob143_ooo/Makefile'mkdir: cannot create directory ‘lib’: No such file or directory
+cp makes/Make.blas     src/blas/rv64_ob143_ooo/Makefile
+: File exists
+mkdir lib/rv64_ob143_ooo
+make -f Make.top startup_dir     arch=rv64_ob143_ooo
+mkdir bin
+cp: cannot create regular file 'src/blas/rv64_ob143_ooo/Makefile'make -f Make.top refresh_src     arch=rv64_ob143_ooo
+: No such file or directory
+cp makes/Make.comm     src/comm/rv64_ob143_ooo/Makefile
+mkdir include/rv64_ob143_ooo
+make -f Make.top build_src       arch=rv64_ob143_ooo
+mkdir: cannot create directory ‘bin’: File exists
+...
+HPL RUN ooo
+================================================================================
+HPLinpack 2.3  --  High-Performance Linpack benchmark  --   December 2, 2018
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :    3000 
+NB     :     192 
+PMAP   : Row-major process mapping
+P      :       2 
+Q      :       4 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :   1ring 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+Column=000000192 Fraction= 6.4% Gflops=3.229e+01
+Column=000000384 Fraction=12.8% Gflops=1.064e+01
+Column=000000576 Fraction=19.2% Gflops=7.913e+00
+Column=000000768 Fraction=25.6% Gflops=7.249e+00
+Column=000000960 Fraction=32.0% Gflops=6.254e+00
+Column=000001152 Fraction=38.4% Gflops=6.299e+00
+Column=000001344 Fraction=44.8% Gflops=6.126e+00
+Column=000001536 Fraction=51.2% Gflops=6.052e+00
+Column=000001728 Fraction=57.6% Gflops=5.797e+00
+Column=000001920 Fraction=64.0% Gflops=5.736e+00
+Column=000002112 Fraction=70.4% Gflops=5.636e+00
+Column=000002304 Fraction=76.8% Gflops=5.555e+00
+Column=000002496 Fraction=83.2% Gflops=5.451e+00
+Column=000002688 Fraction=89.6% Gflops=5.382e+00
+Column=000002880 Fraction=96.0% Gflops=5.307e+00
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR10C2R4        3000   192     2     4               3.42             5.2704e+00
+HPL_pdgesv() start time Tue Aug 11 17:21:52 2026
+
+HPL_pdgesv() end time   Tue Aug 11 17:21:55 2026
+
+--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV-
+Max aggregated wall time rfact . . . :               0.46
++ Max aggregated wall time pfact . . :               0.36
++ Max aggregated wall time mxswp . . :               0.33
+Max aggregated wall time update  . . :               3.06
++ Max aggregated wall time laswp . . :               0.87
+Max aggregated wall time up tr sv  . :               0.02
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   6.65395422e-03 ...... PASSED
+================================================================================
+
+Finished      1 tests with the following results:
+              1 tests completed and passed residual checks,
+              0 tests completed and failed residual checks,
+              0 tests skipped because of illegal input values.
+--------------------------------------------------------------------------------
+
+End of Tests.
+================================================================================
+HPL RUN x60
+================================================================================
+HPLinpack 2.3  --  High-Performance Linpack benchmark  --   December 2, 2018
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :    3000 
+NB     :     192 
+PMAP   : Row-major process mapping
+P      :       2 
+Q      :       4 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :   1ring 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+Column=000000192 Fraction= 6.4% Gflops=4.274e+01
+Column=000000384 Fraction=12.8% Gflops=1.205e+01
+Column=000000576 Fraction=19.2% Gflops=8.505e+00
+Column=000000768 Fraction=25.6% Gflops=7.792e+00
+Column=000000960 Fraction=32.0% Gflops=6.679e+00
+Column=000001152 Fraction=38.4% Gflops=6.830e+00
+Column=000001344 Fraction=44.8% Gflops=6.542e+00
+Column=000001536 Fraction=51.2% Gflops=6.510e+00
+Column=000001728 Fraction=57.6% Gflops=6.186e+00
+Column=000001920 Fraction=64.0% Gflops=6.184e+00
+Column=000002112 Fraction=70.4% Gflops=6.060e+00
+Column=000002304 Fraction=76.8% Gflops=5.959e+00
+Column=000002496 Fraction=83.2% Gflops=5.838e+00
+Column=000002688 Fraction=89.6% Gflops=5.756e+00
+Column=000002880 Fraction=96.0% Gflops=5.669e+00
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR10C2R4        3000   192     2     4               3.20             5.6261e+00
+HPL_pdgesv() start time Tue Aug 11 17:22:04 2026
+
+HPL_pdgesv() end time   Tue Aug 11 17:22:07 2026
+
+--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV--VVV-
+Max aggregated wall time rfact . . . :               0.41
++ Max aggregated wall time pfact . . :               0.32
++ Max aggregated wall time mxswp . . :               0.30
+Max aggregated wall time update  . . :               2.89
++ Max aggregated wall time laswp . . :               0.91
+Max aggregated wall time up tr sv  . :               0.02
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   6.65395422e-03 ...... PASSED
+================================================================================
+
+Finished      1 tests with the following results:
+              1 tests completed and passed residual checks,
+              0 tests completed and failed residual checks,
+              0 tests skipped because of illegal input values.
+--------------------------------------------------------------------------------
+
+End of Tests.
+================================================================================

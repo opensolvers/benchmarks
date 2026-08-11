@@ -1,0 +1,1 @@
+N=512 reps=7 best_gflops=2.141340 mean_gflops=2.132382 checksum=3.145692e+04 best_s=0.125359 mean_s=0.125885

@@ -1,0 +1,45 @@
+=== bench 2026-08-11T16:55:48+00:00 ===
+governor=performance freq=1600000kHz
+linked bench-ooo
+linked bench-x60
+RUN ooo N=512
+N=512 reps=7 best_gflops=2.317194 mean_gflops=2.306069 checksum=3.145692e+04 best_s=0.115845 mean_s=0.116404
+RUN ooo N=1024
+N=1024 reps=7 best_gflops=2.398828 mean_gflops=2.396233 checksum=1.258288e+05 best_s=0.895222 mean_s=0.896192
+RUN ooo N=2048
+N=2048 reps=5 best_gflops=2.455441 mean_gflops=2.421660 checksum=5.033164e+05 best_s=6.996655 mean_s=7.094252
+RUN x60 N=512
+N=512 reps=7 best_gflops=2.141340 mean_gflops=2.132382 checksum=3.145692e+04 best_s=0.125359 mean_s=0.125885
+RUN x60 N=1024
+N=1024 reps=7 best_gflops=2.218487 mean_gflops=2.216367 checksum=1.258288e+05 best_s=0.967995 mean_s=0.968920
+RUN x60 N=2048
+N=2048 reps=5 best_gflops=2.348060 mean_gflops=2.324050 checksum=5.033164e+05 best_s=7.316624 mean_s=7.392212
+RUN x60 N=512
+N=512 reps=7 best_gflops=2.118156 mean_gflops=2.112198 checksum=3.145692e+04 best_s=0.126731 mean_s=0.127088
+RUN x60 N=1024
+N=1024 reps=7 best_gflops=2.295452 mean_gflops=2.288408 checksum=1.258288e+05 best_s=0.935539 mean_s=0.938418
+RUN x60 N=2048
+N=2048 reps=5 best_gflops=2.486008 mean_gflops=2.426114 checksum=5.033164e+05 best_s=6.910625 mean_s=7.081230
+RUN ooo N=512
+N=512 reps=7 best_gflops=2.277872 mean_gflops=2.252015 checksum=3.145692e+04 best_s=0.117845 mean_s=0.119198
+RUN ooo N=1024
+N=1024 reps=7 best_gflops=2.622113 mean_gflops=2.431534 checksum=1.258288e+05 best_s=0.818990 mean_s=0.883181
+RUN ooo N=2048
+N=2048 reps=5 best_gflops=2.507858 mean_gflops=2.476507 checksum=5.033164e+05 best_s=6.850415 mean_s=6.937139
+# OpenBLAS DGEMM mtune A/B (GCC 14.3-x60)
+
+OpenBLAS `RISCV64_ZVL256B`, `NO_SHARED=1`, `USE_OPENMP=1`, built with gcc-14.3.0-x60.
+Flags: `-O3 -march=rv64gcv_zba_zbb_zbc_zvl256b -mabi=lp64d` + `-mtune=generic-ooo` vs `-mtune=spacemit-x60`.
+Bench: `CLOCK_MONOTONIC_RAW`, `taskset -c 0`, `OPENBLAS_NUM_THREADS=1`.
+
+| N | ooo mean GF/s | x60 mean GF/s | Δ% (x60 vs ooo) | ooo best | x60 best |
+|---|---------------|---------------|-----------------|----------|----------|
+| 512 | 2.279 | 2.122 | -6.88% | 2.298 | 2.130 |
+| 1024 | 2.414 | 2.252 | -6.69% | 2.510 | 2.257 |
+| 2048 | 2.449 | 2.375 | -3.02% | 2.482 | 2.417 |
+
+## HPL
+
+- ooo: no run
+- x60: no run
+BENCH ALL DONE 2026-08-11T17:08:46+00:00

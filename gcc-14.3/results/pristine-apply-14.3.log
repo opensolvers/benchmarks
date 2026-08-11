@@ -1,0 +1,25 @@
+=== Layer A ===
+patching file gcc/config/riscv/riscv.cc
+patching file gcc/config/riscv/riscv-cores.def
+patching file gcc/config/riscv/riscv.md
+patching file gcc/config/riscv/riscv-opts.h
+patching file gcc/config/riscv/spacemit-x60.md
+patching file gcc/common/config/riscv/riscv-common.cc
+patching file gcc/config/riscv/riscv.opt
+=== Layer B ===
+-- 0001-riscv-spacemit-x60-align-load-latency-with-hw.md.patch
+patching file gcc/config/riscv/spacemit-x60.md
+-- 0001b-riscv-spacemit-x60-memory-cost.patch
+patching file gcc/config/riscv/riscv.cc
+-- 0002-riscv-spacemit-x60-align-idiv-fdiv-dfa-with-costs.md.patch
+patching file gcc/config/riscv/spacemit-x60.md
+-- 0003-riscv-spacemit-x60-align-fadd-fmadd-dfa-with-hw.md.patch
+patching file gcc/config/riscv/spacemit-x60.md
+patching file gcc/config/riscv/riscv.cc
+-- 0005-riscv-spacemit-x60-split-2cycle-shadd-clmul.md.patch
+patching file gcc/config/riscv/spacemit-x60.md
+-- 0004-riscv-spacemit-x60-scalar-alu-bypasses.md.patch
+patching file gcc/config/riscv/spacemit-x60.md
+-- 0006-riscv-spacemit-x60-vector-cost-table.patch
+patching file gcc/config/riscv/riscv.cc
+PRISTINE APPLY OK

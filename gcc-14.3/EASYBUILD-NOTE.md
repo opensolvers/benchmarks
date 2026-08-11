@@ -1,8 +1,9 @@
-# EasyBuild / GCCcore — single SpacemiT X60 patch (GCC 15.2.0)
+# EasyBuild / GCCcore — single SpacemiT X60 patch (GCC 14.3.0)
 
 ## Patch
 
-`GCC-15.2.0-spacemit-x60.patch` — one file for stock **GCC 15.2.0**.
+`GCC-14.3.0-spacemit-x60.patch` — one file for stock **GCC 14.3.0** (EESSI
+current GCCcore line).
 
 Composition (Layer A then Layer B; **`type=shadd` deferred**):
 
@@ -16,22 +17,23 @@ wired, **clmul@2**, **no** `type=shadd`.
 
 ## Apply
 
-From the extracted `gcc-15.2.0` source root (EasyBuild does this via
+From the extracted `gcc-14.3.0` source root (EasyBuild does this via
 `patches = [...]` with `patch -p1`):
 
 ```bash
-patch -p1 < GCC-15.2.0-spacemit-x60.patch
+patch -p1 < GCC-14.3.0-spacemit-x60.patch
 ```
 
 Proof (fresh stock tree, `--fuzz=0`):
-`measurements/results/easybuild-unified-verify.log`.
+`results/easybuild-unified-14.3-verify.log` (layered:
+`results/pristine-apply-14.3.log`).
 
 ## EasyBuild snippet
 
 ```python
-# In a GCCcore-15.2.0 / GCC-15.2.0 easyconfig (illustrative — not submitted):
+# In a GCCcore-14.3.0 / GCC-14.3.0 easyconfig (illustrative — not submitted):
 patches = [
-    'GCC-15.2.0-spacemit-x60.patch',
+    'GCC-14.3.0-spacemit-x60.patch',
 ]
 ```
 
@@ -43,8 +45,8 @@ Place the patch next to the easyconfig (or in EasyBuild’s patch path).
   (GCC alone never encodes `smt.vmadot`).
 - **`EASYBUILD_OPTARCH`**: only pass `-mtune=spacemit-x60` once this patched
   GCCcore is what hosts use; until then keep march-only (see
-  `notes/eessi-wiring.md`).
-- **GCC 14.3**: unified EasyBuild patch in [`../gcc-14.3/`](../gcc-14.3/).
+  `notes/eessi-wiring.md` in `spacemit-x60-gcc-tune`).
+- **GCC 15.2**: sibling unified patch in [`../gcc-15.2/`](../gcc-15.2/).
 - **`type=shadd`**: still deferred (`patches/deferred/0005b-…`).
 
 Do **not** treat local RV2 proof as an EESSI PR.

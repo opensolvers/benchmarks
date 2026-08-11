@@ -1,0 +1,5 @@
+sched_kernels_bench  label=default-tune  N=4096  INNER=256  reps=11  timer=CLOCK_MONOTONIC_RAW  hz=1600000000
+load_add_chain    ns/call mean=7850.4 ±158.4  med=7811.5  min=7744.3 max=8288.1  cyc/elem mean=3.067 med=3.051
+fma_chain         ns/call mean=21933.5 ±81.7  med=21919.9  min=21828.1 max=22136.1  cyc/elem mean=8.568 med=8.562
+div_mix           ns/call mean=37959.5 ±78.4  med=37947.3  min=37897.8 max=38168.6  cyc/elem mean=14.828 med=14.823
+sh1add            ns/call mean=10748.1 ±204.7  med=10694.7  min=10651.4 max=11361.5  cyc/elem mean=4.198 med=4.178

@@ -1,0 +1,7 @@
+patching file gcc/config/riscv/riscv.cc
+patching file gcc/config/riscv/riscv-cores.def
+patching file gcc/config/riscv/riscv-opts.h
+patching file gcc/config/riscv/riscv.md
+patching file gcc/config/riscv/riscv.opt
+patching file gcc/config/riscv/spacemit-x60.md
+patching file gcc/common/config/riscv/riscv-common.cc

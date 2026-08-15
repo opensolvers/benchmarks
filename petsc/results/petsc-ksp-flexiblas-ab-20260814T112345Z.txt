@@ -1,0 +1,32 @@
+date_utc=20260814T112345Z
+host=orangepirv2
+n=400 reps=3 threads=8
+petsc=/home/orangepi/eessi-overlay/versions/2025.06-001/software/linux/riscv64/generic/software/PETSc/3.24.0-foss-2025b
+flexiblas=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/FlexiBLAS/3.4.5-GCC-14.3.0
+stock_openblas=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+patched_openblas=/home/orangepi/libopenblas_x60_eb_fixed.so
+ldd_petsc_blas:
+	libscalapack.so.2.2 => /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/ScaLAPACK/2.2.2-gompi-2025b-fb/lib/libscalapack.so.2.2 (0x0000003fb0c00000)
+	libflexiblas.so.3 => /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/FlexiBLAS/3.4.5-GCC-14.3.0/lib/libflexiblas.so.3 (0x0000003fb0800000)
+
+==== scalar ====
+cmd: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 OPENBLAS_CORETYPE=RISCV64_GENERIC
+PETSc KSP n=400 dofs=160000: 11.804743 s  its=734 rnorm=6.000002e-12 finite=1 reason=2
+PETSc KSP n=400 dofs=160000: 11.424422 s  its=734 rnorm=6.000002e-12 finite=1 reason=2
+PETSc KSP n=400 dofs=160000: 11.024113 s  its=734 rnorm=6.000002e-12 finite=1 reason=2
+BEST n=400 dofs=160000: 11.024113 s  its=734 rnorm=6.000002e-12 finite=1
+
+==== stock_rvv ====
+cmd: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+PETSc KSP n=400 dofs=160000: 10.573848 s  its=734 rnorm=5.995292e-12 finite=1 reason=2
+PETSc KSP n=400 dofs=160000: 10.573696 s  its=734 rnorm=5.995292e-12 finite=1 reason=2
+PETSc KSP n=400 dofs=160000: 10.571492 s  its=734 rnorm=5.995292e-12 finite=1 reason=2
+BEST n=400 dofs=160000: 10.571492 s  its=734 rnorm=5.995292e-12 finite=1
+
+==== patched_rvv ====
+cmd: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/home/orangepi/libopenblas_x60_eb_fixed.so
+PETSc KSP n=400 dofs=160000: 10.376168 s  its=734 rnorm=5.995292e-12 finite=1 reason=2
+PETSc KSP n=400 dofs=160000: 10.373858 s  its=734 rnorm=5.995292e-12 finite=1 reason=2
+PETSc KSP n=400 dofs=160000: 10.383159 s  its=734 rnorm=5.995292e-12 finite=1 reason=2
+BEST n=400 dofs=160000: 10.373858 s  its=734 rnorm=5.995292e-12 finite=1
+

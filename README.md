@@ -33,6 +33,7 @@ RV2 numbers.
 | [`hpl/`](hpl) | High-Performance Linpack, end-to-end (incl. HPL-on-BLIS) | BLAS (FlexiBLAS / static BLIS) | application A/B |
 | [`elpa/`](elpa) | Dense real-symmetric eigensolver (ELPA, 1-stage) | BLAS | microbench |
 | [`scalapack/`](scalapack) | Distributed dense eigensolver (ScaLAPACK `PDSYEV`, pure-MPI) | BLAS | microbench (MPI) |
+| [`petsc/`](petsc) | PETSc Jacobi-CG + dense MatMult/CG + MUMPS/SuperLU/UMFPACK FlexiBLAS A/B | BLAS | dense **~1.70×**; stock RVV NaN on dense/direct |
 | [`qe/`](qe) | Quantum ESPRESSO `pw.x` plane-wave DFT SCF, end-to-end | **BLAS** (FlexiBLAS) | real-application A/B |
 | [`fftw/`](fftw) | FFTW 3.3.10 RVV (`r5v`) vs scalar, **and** the FFT axis inside a QE SCF (RV2 + F3) | **FFT** (`--enable-r5v`, `LD_PRELOAD`) | microbench + real-application A/B |
 | [`gromacs/`](gromacs) | GROMACS `mdrun` PME: FFT-axis A/B + hand-written RVV `Force` backend (RV2 + F3 FFT) | **FFT** / **SIMD Force** | real-application A/B |

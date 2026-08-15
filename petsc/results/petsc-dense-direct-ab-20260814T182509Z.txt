@@ -1,0 +1,165 @@
+date_utc=20260814T182509Z
+host=orangepirv2
+threads=8 reps=3
+dense_n=2048 dense_cg_n=1024
+mumps_2d_n=200 mumps_3d_n=40
+superlu_2d_n=200 umfpack_2d_n=200
+petsc=/home/orangepi/eessi-overlay/versions/2025.06-001/software/linux/riscv64/generic/software/PETSc/3.24.0-foss-2025b
+stock_openblas=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+patched_openblas=/home/orangepi/libopenblas_x60_eb_fixed.so
+ldd_petsc:
+	libumfpack.so.6 => /home/orangepi/eessi-overlay/versions/2025.06-001/software/linux/riscv64/generic/software/SuiteSparse/7.11.0-gfbf-2025b/lib/libumfpack.so.6 (0x0000003fb67f8000)
+	libcholmod.so.5 => /home/orangepi/eessi-overlay/versions/2025.06-001/software/linux/riscv64/generic/software/SuiteSparse/7.11.0-gfbf-2025b/lib/libcholmod.so.5 (0x0000003fb4c00000)
+	libdmumps.so => /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/MUMPS/5.8.1-foss-2025b-metis/lib/libdmumps.so (0x0000003fb4945000)
+	libmumps_common.so => /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/MUMPS/5.8.1-foss-2025b-metis/lib/libmumps_common.so (0x0000003fb4888000)
+	libpord.so => /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/MUMPS/5.8.1-foss-2025b-metis/lib/libpord.so (0x0000003fb4eba000)
+	libflexiblas.so.3 => /cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/FlexiBLAS/3.4.5-GCC-14.3.0/lib/libflexiblas.so.3 (0x0000003fb4000000)
+
+==== dense_mult_scalar ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 OPENBLAS_CORETYPE=RISCV64_GENERIC
+cmd: /home/orangepi/petsc-bench/petsc_dense_bench 2048 3 mult
+PETSc dense MatMult n=2048: 0.010236 s  0.819 GF/s  |y|=9.731135e+04 finite=1
+PETSc dense MatMult n=2048: 0.010241 s  0.819 GF/s  |y|=9.731135e+04 finite=1
+PETSc dense MatMult n=2048: 0.010198 s  0.823 GF/s  |y|=9.731135e+04 finite=1
+BEST dense MatMult n=2048: 0.010198 s  0.823 GF/s  finite=1
+
+==== dense_cg_scalar ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 OPENBLAS_CORETYPE=RISCV64_GENERIC
+cmd: /home/orangepi/petsc-bench/petsc_dense_bench 1024 3 cg
+PETSc dense CG n=1024: 0.023185 s  its=3 rnorm=6.722359e-08 finite=1 reason=2
+PETSc dense CG n=1024: 0.023456 s  its=3 rnorm=6.722359e-08 finite=1 reason=2
+PETSc dense CG n=1024: 0.023481 s  its=3 rnorm=6.722359e-08 finite=1 reason=2
+BEST dense CG n=1024: 0.023185 s  its=3 finite=1
+
+==== mumps_2d_scalar ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 OPENBLAS_CORETYPE=RISCV64_GENERIC
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 mumps 2
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.097261 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.097077 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.097190 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct mumps dim=2 n=200 dofs=40000: 0.097077 s  finite=1
+
+==== mumps_3d_scalar ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 OPENBLAS_CORETYPE=RISCV64_GENERIC
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 40 3 mumps 3
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.607985 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.585891 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.608219 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct mumps dim=3 n=40 dofs=64000: 0.585891 s  finite=1
+
+==== superlu_2d_scalar ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 OPENBLAS_CORETYPE=RISCV64_GENERIC
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 superlu_dist 2
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.030461 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.030518 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.031024 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct superlu_dist dim=2 n=200 dofs=40000: 0.030461 s  finite=1
+
+==== umfpack_2d_scalar ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 OPENBLAS_CORETYPE=RISCV64_GENERIC
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 umfpack 2
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.038111 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.038171 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.037944 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct umfpack dim=2 n=200 dofs=40000: 0.037944 s  finite=1
+
+==== dense_mult_stock_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+cmd: /home/orangepi/petsc-bench/petsc_dense_bench 2048 3 mult
+PETSc dense MatMult n=2048: 0.027963 s  0.300 GF/s  |y|=nan finite=0
+PETSc dense MatMult n=2048: 0.028046 s  0.299 GF/s  |y|=nan finite=0
+PETSc dense MatMult n=2048: 0.028210 s  0.297 GF/s  |y|=nan finite=0
+BEST dense MatMult n=2048: 0.027963 s  0.300 GF/s  finite=0
+FAILED rc=1
+
+==== dense_cg_stock_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+cmd: /home/orangepi/petsc-bench/petsc_dense_bench 1024 3 cg
+PETSc dense CG n=1024: 0.007811 s  its=1 rnorm=3.200000e+01 finite=0 reason=-9
+PETSc dense CG n=1024: 0.007474 s  its=1 rnorm=3.200000e+01 finite=0 reason=-9
+PETSc dense CG n=1024: 0.007433 s  its=1 rnorm=3.200000e+01 finite=0 reason=-9
+BEST dense CG n=1024: 0.007433 s  its=1 finite=0
+FAILED rc=1
+
+==== mumps_2d_stock_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 mumps 2
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.112224 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.112441 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.112150 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct mumps dim=2 n=200 dofs=40000: 0.112150 s  finite=1
+
+==== mumps_3d_stock_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 40 3 mumps 3
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.635492 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.634873 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.661232 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct mumps dim=3 n=40 dofs=64000: 0.634873 s  finite=1
+
+==== superlu_2d_stock_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 superlu_dist 2
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.032351 s  |x|=nan rnorm=0.000000e+00 finite=0 reason=4
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.032210 s  |x|=nan rnorm=0.000000e+00 finite=0 reason=4
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.032387 s  |x|=nan rnorm=0.000000e+00 finite=0 reason=4
+BEST direct superlu_dist dim=2 n=200 dofs=40000: 0.032210 s  finite=0
+FAILED rc=1
+
+==== umfpack_2d_stock_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenBLAS/0.3.30-GCC-14.3.0/lib/libopenblas.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 umfpack 2
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.178415 s  |x|=nan rnorm=0.000000e+00 finite=0 reason=4
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.178524 s  |x|=nan rnorm=0.000000e+00 finite=0 reason=4
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.178594 s  |x|=nan rnorm=0.000000e+00 finite=0 reason=4
+BEST direct umfpack dim=2 n=200 dofs=40000: 0.178415 s  finite=0
+FAILED rc=1
+
+==== dense_mult_patched_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/home/orangepi/libopenblas_x60_eb_fixed.so
+cmd: /home/orangepi/petsc-bench/petsc_dense_bench 2048 3 mult
+PETSc dense MatMult n=2048: 0.006004 s  1.397 GF/s  |y|=9.731135e+04 finite=1
+PETSc dense MatMult n=2048: 0.006810 s  1.232 GF/s  |y|=9.731135e+04 finite=1
+PETSc dense MatMult n=2048: 0.007620 s  1.101 GF/s  |y|=9.731135e+04 finite=1
+BEST dense MatMult n=2048: 0.006004 s  1.397 GF/s  finite=1
+
+==== dense_cg_patched_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/home/orangepi/libopenblas_x60_eb_fixed.so
+cmd: /home/orangepi/petsc-bench/petsc_dense_bench 1024 3 cg
+PETSc dense CG n=1024: 0.006738 s  its=3 rnorm=6.722359e-08 finite=1 reason=2
+PETSc dense CG n=1024: 0.006595 s  its=3 rnorm=6.722359e-08 finite=1 reason=2
+PETSc dense CG n=1024: 0.006850 s  its=3 rnorm=6.722359e-08 finite=1 reason=2
+BEST dense CG n=1024: 0.006595 s  its=3 finite=1
+
+==== mumps_2d_patched_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/home/orangepi/libopenblas_x60_eb_fixed.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 mumps 2
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.111532 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.112373 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=2 n=200 dofs=40000: 0.111765 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct mumps dim=2 n=200 dofs=40000: 0.111532 s  finite=1
+
+==== mumps_3d_patched_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/home/orangepi/libopenblas_x60_eb_fixed.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 40 3 mumps 3
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.646268 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.633703 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct mumps dim=3 n=40 dofs=64000: 0.633135 s  |x|=6.553238e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct mumps dim=3 n=40 dofs=64000: 0.633135 s  finite=1
+
+==== superlu_2d_patched_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/home/orangepi/libopenblas_x60_eb_fixed.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 superlu_dist 2
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.032196 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.031886 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct superlu_dist dim=2 n=200 dofs=40000: 0.031924 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct superlu_dist dim=2 n=200 dofs=40000: 0.031886 s  finite=1
+
+==== umfpack_2d_patched_rvv ====
+env: OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/home/orangepi/libopenblas_x60_eb_fixed.so
+cmd: /home/orangepi/petsc-bench/petsc_direct_bench 200 3 umfpack 2
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.037701 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.037844 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+PETSc direct umfpack dim=2 n=200 dofs=40000: 0.037845 s  |x|=8.293389e+00 rnorm=0.000000e+00 finite=1 reason=4
+BEST direct umfpack dim=2 n=200 dofs=40000: 0.037701 s  finite=1
+

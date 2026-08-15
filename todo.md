@@ -2,6 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
+**Active:** PETSc denser A/Bs **done** on RV2 — dense MatMult patched RVV
+**~1.70×** vs scalar; stock RVV **NaN** on dense / SuperLU / UMFPACK. See [`petsc/`](petsc).
+
 Two RISC-V software sources are mounted on the board:
 
 - **`riscv.eessi.io` `20240402`** — production RISC-V stack, **`foss-2023b`**
@@ -76,15 +79,13 @@ expected signal.
 
 ### B2 — sparse / eigen solvers (one FlexiBLAS-or-link swap validates several)
 
-- [ ] **PETSc** (`3.20.3-foss-2023b`) + **SLEPc** (`3.20.1`) — sparse KSP solve /
-  eigensolve; the sparse-iterative counterpart to the dense `elpa`/`scalapack`
-  probes. *No repo dir.*
-- [ ] **MUMPS** (`5.6.1-2023b` and 2025b) — multifrontal sparse direct solver;
-  BLAS-3-heavy in the frontal factor → clean FlexiBLAS/BLIS backend A/B.
-- [ ] **SuperLU_DIST** (`8.2.1-foss-2023b`) — distributed sparse LU; MPI-scaling
-  + BLAS-backend probe. *No repo dir.*
-- [ ] **SuiteSparse** (`7.1.0-foss-2023b`) — CHOLMOD/UMFPACK; sparse Cholesky/LU
-  micro-benchmarks against the RVV BLAS. *No repo dir.*
+- [x] **PETSc** (`3.24.0-foss-2025b` overlay) — Jacobi-CG ~1.06×; **dense MatMult
+  ~1.70×** (stock RVV NaN); SuperLU/UMFPACK need patched OpenBLAS; MUMPS finite
+  but no speedup at tested sizes ([`petsc/`](petsc)). SLEPc not built.
+- [ ] **MUMPS** standalone microbench — PETSc-wrapped MUMPS done in `petsc/`; optional
+  larger 3D frontal A/B still open.
+- [x] **SuperLU_DIST** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
+- [x] **SuiteSparse / UMFPACK** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
 - [ ] **ScaFaCoS** (`foss-2025b`, dev repo) — scalable long-range Coulomb solver
   (FMM/P3M); FFT + MPI probe, new in the 2025b port. *No repo dir.*
 

@@ -2,8 +2,8 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** PETSc denser A/Bs **done** on RV2 — dense MatMult patched RVV
-**~1.70×** vs scalar; stock RVV **NaN** on dense / SuperLU / UMFPACK. See [`petsc/`](petsc).
+**Active:** PETSc hand-RVV SpMV probe **done** — CSR RVV ≈ no win; structured
+5-pt stencil RVV **~3.6×** vs PETSc `MatMult` on RV2. See [`petsc/`](petsc).
 
 Two RISC-V software sources are mounted on the board:
 

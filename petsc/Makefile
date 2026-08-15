@@ -12,7 +12,7 @@ FLEX_LIB  := $(EBROOTFLEXIBLAS)/lib
 RPATH := -Wl,-rpath,$(PETSC_LIB) -Wl,-rpath,$(FLEX_LIB)
 LIBS  := -L$(PETSC_LIB) -L$(FLEX_LIB) $(RPATH) -lpetsc -lflexiblas -lm
 
-BINS := petsc_ksp_bench petsc_dense_bench petsc_direct_bench
+BINS := petsc_ksp_bench petsc_dense_bench petsc_direct_bench petsc_spmv_rvv_bench
 
 all: $(BINS)
 
@@ -28,6 +28,13 @@ petsc_dense_bench: petsc_dense_bench.c
 petsc_direct_bench: petsc_direct_bench.c
 	@test -n "$(EBROOTPETSC)" || { echo "ERROR: load PETSc first"; exit 1; }
 	$(CC) $(CFLAGS) -I$(PETSC_INC) $< -o $@ $(LIBS)
+
+# RVV SpMV needs vector ISA in the march string.
+RVV_CFLAGS ?= -O3 -Wall -march=rv64gcv -mabi=lp64d
+
+petsc_spmv_rvv_bench: petsc_spmv_rvv_bench.c
+	@test -n "$(EBROOTPETSC)" || { echo "ERROR: load PETSc first"; exit 1; }
+	$(CC) $(RVV_CFLAGS) -I$(PETSC_INC) $< -o $@ $(LIBS)
 
 clean:
 	rm -f $(BINS)

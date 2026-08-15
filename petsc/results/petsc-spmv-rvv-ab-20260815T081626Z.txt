@@ -1,0 +1,15 @@
+date_utc=20260815T081626Z
+host=orangepirv2
+n=800 reps=20
+petsc=/home/orangepi/eessi-overlay/versions/2025.06-001/software/linux/riscv64/generic/software/PETSc/3.24.0-foss-2025b
+compiler=gcc -I/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/generic/software/OpenMPI/5.0.8-GCC-14.3.0/include -L/cvmfs/dev.eessi.io/riscv/versions/2025.06-001/software/linux/riscv64/ge
+
+check CSR scalar vs PETSc: ok=1 max_abs=0.000e+00  HAVE_RVV=1
+BEST PETSc MatMult      n=800 dofs=640000: 0.041679 s  ~0.153 GF/s (2*nnz/t)
+BEST CSR scalar         n=800 dofs=640000: 0.049385 s  ~0.129 GF/s (2*nnz/t)
+check CSR RVV vs PETSc: ok=1 max_abs=0.000e+00
+BEST CSR RVV            n=800 dofs=640000: 0.048850 s  ~0.131 GF/s (2*nnz/t)
+check stencil5 scalar vs PETSc: ok=1 max_abs=0.000e+00
+BEST stencil5 scalar    n=800 dofs=640000: 0.013766 s  ~0.464 GF/s (2*nnz/t)
+check stencil5 RVV vs PETSc: ok=1 max_abs=0.000e+00
+BEST stencil5 RVV       n=800 dofs=640000: 0.011607 s  ~0.551 GF/s (2*nnz/t)

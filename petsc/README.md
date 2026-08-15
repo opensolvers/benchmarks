@@ -12,13 +12,15 @@ that A/B the **BLAS / LAPACK backend** through FlexiBLAS.
 | `petsc_ksp_bench.c` | Sparse AIJ 2D Laplacian, Jacobi-CG |
 | `petsc_dense_bench.c` | `MATDENSE` MatMult + dense CG |
 | `petsc_direct_bench.c` | Sparse-direct LU: MUMPS / SuperLU_DIST / UMFPACK |
-| `Makefile` | Builds all three against PETSc + FlexiBLAS |
+| `petsc_spmv_rvv_bench.c` | Hand RVV AIJ CSR SpMV + structured 5-pt stencil vs PETSc `MatMult` |
+| `Makefile` | Builds all benches (`petsc_spmv_rvv_bench` with `-march=rv64gcv`) |
 | `run-petsc-ksp-ab.sh` | FlexiBLAS A/B for Jacobi-CG |
 | `run-petsc-dense-direct-ab.sh` | FlexiBLAS A/B for dense + direct suite |
+| `run-petsc-spmv-rvv-ab.sh` | SpMV kernel A/B (PETSc / CSR / stencil × scalar/RVV) |
 
 ---
 
-## Status (2026-08-14)
+## Status (2026-08-15)
 
 | Item | State |
 |---|---|
@@ -26,6 +28,7 @@ that A/B the **BLAS / LAPACK backend** through FlexiBLAS.
 | Overlay module | `PETSc/3.24.0-foss-2025b` (+ SuiteSparse, Hypre, SuperLU_DIST, MUMPS, PnetCDF) |
 | Jacobi-CG A/B | **Done** (~1.06×) |
 | Dense + direct A/B | **Done** — dense MatMult **~1.70×**; stock RVV **NaN** on dense / SuperLU / UMFPACK |
+| Hand RVV SpMV | **Done** — generic CSR RVV ≈ no win; structured 5-pt stencil RVV **~3.6×** vs PETSc `MatMult` |
 | SLEPc | Not installed this cycle |
 
 ---
@@ -55,7 +58,34 @@ cd ~/petsc-bench   # or this directory
 make all
 ./run-petsc-ksp-ab.sh
 ./run-petsc-dense-direct-ab.sh
+./run-petsc-spmv-rvv-ab.sh
 ```
+
+---
+
+## Results — hand RVV SpMV vs PETSc `MatMult` (2026-08-15)
+
+2D 5-point Laplacian, **n=800** (640k dofs), 1 thread, best of 20. All kernels
+bit-match PETSc (`max_abs=0`). Log:
+[`results/petsc-spmv-rvv-ab-20260815T081626Z.txt`](results/petsc-spmv-rvv-ab-20260815T081626Z.txt).
+
+| kernel | BEST WALL | vs PETSc |
+|---|---:|---:|
+| PETSc `MatMult` | 0.0417 s | 1.00× |
+| CSR scalar | 0.0494 s | 0.84× |
+| CSR RVV (gather) | 0.0489 s | 0.85× |
+| stencil5 scalar | 0.0138 s | **3.03×** |
+| stencil5 RVV | **0.0116 s** | **3.59×** |
+
+### Takeaways
+
+1. **Generic CSR RVV does not help** this AIJ (≈5 nnz/row): gather + short vectors
+   ≈ scalar CSR, and both trail PETSc’s tuned `MatMult` slightly.
+2. **Structure-aware stencil** (same operator, contiguous loads) is the real
+   PETSc-local win: **~3.6×** vs `MatMult`, with a further **~1.19×** from hand RVV
+   over scalar stencil.
+3. For upstream PETSc on RVV: invest in **MFD / stencil / BAIJ** kernels, not a
+   naive CSR `vluxei` SpMV for PDE-style matrices.
 
 ---
 
@@ -118,6 +148,6 @@ Patched / scalar ≈ **3.5×** (tiny iteration count; still shows BLAS on the Ma
 
 ## Next steps
 
-1. Optional: larger MUMPS 3D (`MUMPS_3D_N=60+`) for a stronger frontal BLAS-3 signal.
-2. Optional: SLEPc dense eigenprobe.
-3. Commit harness + results when ready.
+1. Optional: wire stencil/`MatProduct` specialization into a PETSc overlay patch.
+2. Optional: larger MUMPS 3D / SLEPc.
+3. Commit SpMV harness + results when ready.

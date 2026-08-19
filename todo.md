@@ -2,8 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** PETSc hand-RVV SpMV probe **done** — CSR RVV ≈ no win; structured
-5-pt stencil RVV **~3.6×** vs PETSc `MatMult` on RV2. See [`petsc/`](petsc).
+**Active:** QuantumESPRESSO overlay **done** — FlexiBLAS A/B on RV2: stock RVV
+aborts SCF; patched vs scalar **1.20×** (`70.56 s → 58.89 s`) on 64-atom Si.
+See [`qe/`](qe).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -39,10 +40,9 @@ board. Unchanged from prior tracking.
 - [ ] **scalapack** — `pdsyev`, pure-MPI 8-rank grid. *Lib:* `ScaLAPACK`.
 - [ ] **fftw** — r5v (RVV) vs scalar FFT MFLOPS. *Artifact:* A/B pair built.
 - [ ] **gromacs** — MD FFT + RVV-Force backend A/B. *Lib:* `GROMACS/2026.2-foss-2025b`.
-- [ ] **qe** — Quantum ESPRESSO `pw.x` SCF, FlexiBLAS swap. **Blocker:** no
-  `QuantumESPRESSO` module in either RISC-V repo yet → must build from an
-  easyconfig (or use the `dev.eessi.io/espresso` tree, which currently ships
-  only aarch64 ESPResSo, not QE). Confirm/produce a `riscv64` QE build first.
+- [x] **qe** — Quantum ESPRESSO `pw.x` SCF, FlexiBLAS swap. Overlay
+  `QuantumESPRESSO/7.5-foss-2025b` on RV2; stock RVV aborts; patched
+  **1.20×** vs scalar on `si-super-64.in`. See [`qe/`](qe).
 
 ---
 
@@ -134,9 +134,8 @@ These are the flagship HPC apps. Each has a mature foss easyconfig one step
 below the board stack; the work is a toolchain rebump + riscv64 fixes, **not** a
 from-scratch port. High scientific impact, high effort.
 
-- [ ] **QuantumESPRESSO** (`7.4-foss-2024a`) — **unblocks the existing `qe/`
-  benchmark**, which currently has no runnable QE module. Highest-value C2 item:
-  bump 7.4 to foss-2025b, build, then the FlexiBLAS/FFT A/B in `qe/` runs.
+- [x] **QuantumESPRESSO** (`7.5-foss-2025b`) — overlay install + FlexiBLAS A/B
+  on RV2 done. See [`qe/`](qe).
 - [ ] **CP2K** (`2023.1-foss-2023a`) — DFT/AIMD; heavy DBCSR sparse-GEMM +
   FFT → premier RVV BLAS/FFT whole-app probe. *No riscv module.*
 - [ ] **WRF** (`4.6.1-foss-2024a-dmpar`) — numerical weather prediction; large
@@ -198,8 +197,7 @@ Access notes: see `riscv-learnings` `docs/riscv-u74.md` (`ubuntu@192.168.1.219`)
    complementary to the dense eigen probes.
 7. **ScaFaCoS** (B2) — long-range Coulomb / FMM companion; waLBerla RVV/auto-vec
    campaign is done ([`walberla/`](walberla): HeatEq/UG wins; hand simd lesson).
-8. **QuantumESPRESSO build** (C2) — bump `7.4-foss-2024a` → 2025b and build;
-   this is the single item that unblocks the already-present `qe/` benchmark.
+8. **QuantumESPRESSO** (C2) — **done** (overlay + FlexiBLAS A/B; see [`qe/`](qe)).
 9. **CP2K + OpenFOAM + WRF** (C2) — flagship DFT / CFD / NWP whole-app probes;
    each a toolchain rebump, high impact, tackle after the QE build proves the
    easyconfig-bump workflow on the X60.
@@ -252,8 +250,10 @@ RISC-V SBCs that ship a **BXM** GPU (both purchasable now):
   (**LAMMPS** was moved off this list — it now has a working **foss-2025b** build
   path via a custom easyconfig against `dev.eessi.io/riscv 2025.06-001`; see
   [`lammps/`](lammps/).)
-- **QuantumESPRESSO has no RISC-V module in either repo** — the `qe/` benchmark
-  needs a from-easyconfig build before it can run end-to-end.
+- **QuantumESPRESSO** — no CVMFS module; **foss-2025b overlay installed** on
+  RV2. Stock RVV `gemv_n` still aborts SCF; patched OpenBLAS
+  (`~/libopenblas_x60_eb_fixed.so`) matches scalar and is **1.20×** on
+  `si-super-64.in`.
 
 ---
 

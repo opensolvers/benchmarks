@@ -36,13 +36,29 @@ the FFT half of the run is untouched by the backend swap.
 ## Setup
 
 ```bash
-# 1. a QE module providing pw.x + mpirun + FlexiBLAS (EESSI riscv dev repo):
+# 1. a QE module providing pw.x + mpirun + FlexiBLAS.
+#    On Orange Pi RV2: overlay (not CVMFS). Load EESSI-extend first:
+export EESSI_VERSION_OVERRIDE=2025.06-001
+export EESSI_USER_INSTALL=$HOME/eessi-overlay
+source /cvmfs/software.eessi.io/versions/2025.06/init/lmod/bash
+module load EasyBuild/5.3.1 EESSI-extend/2025.06-easybuild
 module load QuantumESPRESSO/7.5-foss-2025b
 # 2. the Si pseudopotential the inputs reference (pseudo_dir='.'):
 curl -O https://pseudopotentials.quantum-espresso.org/upf_files/Si.pz-vbc.UPF
 # 3. running as root (e.g. on a dev board) needs OpenMPI 5 / PRRTE opt-in:
 export MPIRUN_FLAGS=--allow-run-as-root      # omit if running as a normal user
+# 4. patched RVV OpenBLAS (stock gemv_n NaNs break SCF) — on RV2:
+export RVV_LIB=$HOME/libopenblas_x60_eb_fixed.so
 ```
+
+### RV2 overlay (done)
+
+| Item | Path / note |
+|---|---|
+| Board | Orange Pi RV2 (`orangepi@192.168.1.37`) |
+| Module | overlay `QuantumESPRESSO/7.5-foss-2025b` (not on CVMFS) |
+| Build dir | `$HOME/eb-build` on **NVMe** — `/tmp` tmpfs (3.9 G) filled during the first link |
+| A/B log | `~/logs/qe-ab-20260818-183627.log` |
 
 ## Run
 
@@ -93,15 +109,45 @@ QE's own end-of-run timer breakdown (WALL), high-bands variant (`nbnd=272`):
 | `fftw` | 54.5 s | 53.8 s | 1.01x | **FFT (untouched)** |
 | **`PWSCF` total** | **144.8 s** | **110.3 s** | **1.31x** | whole SCF |
 
-At the physical default band count (`nbnd=136`) the same cell gives
-**67.6 s -> 57.0 s = 1.19x** overall (`calbec` 1.90x, `rdiaghg` 1.53x). The BLAS
-routines consistently speed up ~1.5-2.0x; the FFT half of the run does not move
+At the physical default band count (`nbnd=136`) the same cell is **~1.19–1.20x**
+overall. Re-run on Orange Pi RV2 overlay QE 7.5 (WALL):
+
+| routine | scalar | patched RVV | speedup | kind |
+|---|--:|--:|--:|---|
+| `calbec` | 5.19 s | 2.31 s | **2.25x** | DGEMM |
+| `rdiaghg` | 3.75 s | 2.48 s | **1.51x** | LAPACK->BLAS3 |
+| `regterg` (subspace iter) | 56.40 s | 45.98 s | 1.23x | mixed (incl. FFT) |
+| `vloc_psi` | 33.48 s | 33.30 s | 1.00x | **FFT** |
+| `fftw` | 35.25 s | 34.51 s | 1.02x | **FFT** |
+| **`PWSCF` total** | **70.56 s** | **58.89 s** | **1.20x** | whole SCF |
+
+The BLAS routines speed up ~1.5–2.2x; the FFT half of the run does not move
 (FlexiBLAS only swaps BLAS), which is what caps the whole-application number.
 
+### Higher-memory probes (Orange Pi RV2, 7.7 GB RAM)
+
+Four extra scalar-vs-patched runs on the same overlay `pw.x`, np=4, `-ndiag 1`
+(log `~/logs/qe-four-probes-20260819-040457.log`). These push past what fit on the
+earlier ~4 GB BPI-F3 board:
+
+| probe | atoms / bands / ecut | scalar WALL | patched WALL | **speedup** | RAM/rank |
+|---|---|--:|--:|--:|--:|
+| `si-super-64.in` (baseline) | 64 / 136 / 22 Ry | 70.56 s | 58.89 s | **1.20×** | ~53 MB |
+| `si-super-64-nbnd272.in` | 64 / **272** / 22 Ry | 186.65 s | 140.84 s | **1.33×** | ~65 MB |
+| `si-super-64-pbe.in` | 64 / 136 / 22 Ry **PBE** | 121.77 s | 90.11 s | **1.35×** | ~53 MB |
+| `si-super-64-ecut40-nbnd272.in` | 64 / 272 / **40 Ry** | 411.94 s | 312.74 s | **1.32×** | ~150 MB |
+| `si-super-216.in` | **216** / 453 / 22 Ry | 1510.31 s | 1033.37 s | **1.46×** | ~361 MB |
+
+High-band 64-atom (`nbnd=272`) matches the old BPI-F3 **1.31×** table (now **1.33×**
+on RV2). The **216-atom** cell is the clearest whole-app win at **1.46×** — more
+GEMM-heavy and only feasible with the extra RAM. PBE/libxc runs cleanly but does
+not change the FlexiBLAS story (XC is not BLAS).
+
+Best 216-atom breakdown (WALL): `calbec` 191.8 → 83.5 s (**2.30×**), `rdiaghg`
+123.6 → 81.3 s (**1.52×**), `fftw` ~400 s unchanged.
+
 Two knobs raise the BLAS fraction (and the overall speedup): **more bands**
-(136 -> 272 took it 1.19x -> 1.31x) and **bigger supercells** (GEMM scales ~N^3
-vs FFT ~N^2 log N). Memory was never the limit here - the 64-atom cell used only
-~292 MB across 4 ranks - so there is headroom on the standard 4-8 GB X60 boards.
+(136 → 272 took it 1.20× → 1.33×) and **bigger supercells** (216-atom → **1.46×**).
 
 ### Where QE sits on the BLAS-dilution spectrum (same X60, patched RVV vs scalar)
 
@@ -110,7 +156,7 @@ vs FFT ~N^2 log N). Memory was never the limit here - the 64-atom cell used only
 | [`../dgemm`](../dgemm) (pure level-3) | ~2.3x | all BLAS-3 |
 | [`../hpl`](../hpl) (Linpack) | ~1.8x | BLAS-3 + `dgemv` panel factorization |
 | [`../elpa`](../elpa) (eigensolver) | ~1.58x | BLAS-3 + BLAS-2 tridiagonalization |
-| **QE** (this dir, full DFT SCF) | **~1.2-1.3x** | BLAS + ~40-50% FFT + MPI |
+| **QE** (this dir, full DFT SCF) | **~1.2–1.5×** | BLAS + ~40-50% FFT + MPI |
 
 Each step down adds more non-BLAS / latency-bound work, diluting the BLAS-3 peak.
 QE is the most realistic whole-application figure - and the reason a raw `dgemm`
@@ -133,14 +179,17 @@ A/B *overstates* what a real code sees.
 ## Files
 
 - `si-scf.in`, `si-super-64.in` - QE inputs (2-atom correctness; 64-atom perf).
+- `si-super-64-nbnd272.in`, `si-super-64-pbe.in`, `si-super-64-ecut40-nbnd272.in`,
+  `si-super-216.in` - higher-memory RV2 probes (more bands / PBE / ecut / atoms).
 - `gen_si_supercell.py` - N^3*8-atom Si supercell generator (MIT licensed).
 - `run-qe-ab.sh` - 3-backend correctness A/B.
 - `run-perf-ab.sh` - scalar-vs-RVV performance A/B with per-routine timers.
 
 ## Measured on
 
-RISC-V SpaceMiT X60 (Banana Pi BPI-F3, K1, 8x X60 @ ~1.6 GHz, 3.7 GB RAM),
-QuantumESPRESSO 7.5 / foss-2025b (EESSI), FlexiBLAS 3.4.5, OpenBLAS 0.3.30.
-Patched vector backend = OpenBLAS 0.3.30 with the RISC-V `gemv_n` NaN fix
-backported (`libopenblas_riscv64_zvl256bp`), the same "good" build used by
-[`../dgemm`](../dgemm), [`../hpl`](../hpl) and [`../elpa`](../elpa).
+RISC-V SpaceMiT X60: Banana Pi BPI-F3 (original high-`nbnd` table) and Orange Pi
+RV2 overlay `QuantumESPRESSO/7.5-foss-2025b` (`nbnd=136` re-run, 2026-08-18).
+FlexiBLAS 3.4.5, OpenBLAS 0.3.30. Patched vector backend = OpenBLAS 0.3.30 with
+the RISC-V `gemv_n` NaN fix backported (`libopenblas_x60_eb_fixed.so` on RV2),
+the same "good" build used by [`../dgemm`](../dgemm), [`../hpl`](../hpl) and
+[`../elpa`](../elpa).

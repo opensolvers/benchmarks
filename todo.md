@@ -2,8 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** ScaFaCoS P3M FFT A/B **done** on RV2 (np=1: r5v ≈ scalar **0.99×**;
-energies match). OSU / ESPResSo / onnx / QE also done. See [`scafacos/`](scafacos).
+**Active:** PLUMED SPRINT FlexiBLAS A/B **done** on RV2 (patched RVV **1.25×**
+vs scalar; checksums match). Voro++ / ScaFaCoS / OSU / ESPResSo / onnx / QE
+also done. See [`plumed/`](plumed).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -68,9 +69,9 @@ expected signal.
   WALL **1.30×** / collide **1.54×**; hand RVV `simd` loses to FORCE_SCALAR;
   plain SoA auto-vec ~**2.4×** vs novec (~**9×** vs hand simd); collide/stream
   split slower than fused stock. Prefer contiguous auto-vec over hand simd.
-- [ ] **PLUMED** (`2.9.4-foss-2025b` / `2.9.2-2023b`) — enhanced-sampling library;
-  bench its internal matrix/CV kernels, or use as a GROMACS/LAMMPS plugin to
-  measure RVV overhead on collective-variable evaluation. *No repo dir.*
+- [x] **PLUMED** (`2.9.4-foss-2025b`) — `driver` + CONTACT_MATRIX/SPRINT FlexiBLAS
+  A/B on RV2: patched RVV OpenBLAS **1.25×** vs scalar (N=200, 20 frames;
+  checksums match). See [`plumed/`](plumed).
 - [ ] **MODFLOW** (`6.4.4-foss-2023b`) — groundwater flow FE solver; sparse-solve
   dominated → pairs with the PETSc/MUMPS column below. *2023b only, no repo dir.*
 
@@ -92,8 +93,9 @@ expected signal.
 - [x] **OSU-Micro-Benchmarks** (`7.5.1-gompi-2025b`) — on-node shared-memory
   baseline on RV2: latency **1.12 μs**, uni-BW peak **~2.1 GB/s**, bi-BW
   **~2.5 GB/s**; collectives np=8 recorded. See [`osu/`](osu).
-- [ ] **Voro++** (`0.4.6`) — Voronoi tessellation; scalar compute-bound kernel,
-  a simple RVV-autovec vs `-fno-tree-vectorize` A/B. *No repo dir.*
+- [x] **Voro++** (`0.4.6`) — RVV-autovec vs novec A/B on RV2: gcv **0.99×**
+  (N=20k cells; RVV emitted but no win on irregular cell kernel). See
+  [`voro++/`](voro++).
 
 ### B4 — data-science / numerical stacks (Python/R, FlexiBLAS-backed)
 

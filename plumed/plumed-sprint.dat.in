@@ -1,0 +1,7 @@
+# PLUMED 2.9: adjacency-matrix SPRINT (largest-eigenvalue CV) — hits LAPACK via FlexiBLAS.
+# Requires: DENSITY SPECIES=… then CONTACT_MATRIX ATOMS=<density-label>.
+UNITS NATURAL
+d: DENSITY SPECIES=1-__NATOMS__
+mat: CONTACT_MATRIX ATOMS=d SWITCH={RATIONAL R_0=__R0__ D_MAX=__DMAX__}
+ss: SPRINT MATRIX=mat
+PRINT ARG=ss.* STRIDE=1 FILE=COLVAR

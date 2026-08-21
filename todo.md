@@ -2,8 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** PETSc hand-RVV SpMV probe **done** — CSR RVV ≈ no win; structured
-5-pt stencil RVV **~3.6×** vs PETSc `MatMult` on RV2. See [`petsc/`](petsc).
+**Active:** PLUMED SPRINT FlexiBLAS A/B **done** on RV2 (patched RVV **1.25×**
+vs scalar; checksums match). Voro++ / ScaFaCoS / OSU / ESPResSo / onnx / QE
+also done. See [`plumed/`](plumed).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -24,10 +25,9 @@ RISC-V apps come from the two repos above.)
 These already have a directory + runner; "ready" = lib/artifact confirmed on
 board. Unchanged from prior tracking.
 
-- [ ] **onnx** — int4 `MatMulNBits` on ONNX Runtime, X60 IME `smt.vmadot` core.
-  Reproduce ~9–10× `accuracy_level=4` CompInt8-vs-CompFp32 + correctness gate.
-  *Lib:* custom `ONNX-Runtime/1.29.0-foss-2025b-xsmtvdot`. **Highest priority —
-  extends the shipped IME work.**
+- [x] **onnx** — int4 `MatMulNBits` on ONNX Runtime, X60 IME `smt.vmadot` core.
+  RV2 re-verify 2026-08-20: CompFp32→CompInt8 **8.5×** (`-x1`), **6.8×** (`-x8`);
+  see [`onnx/`](onnx). *Lib:* custom `ONNX-Runtime/1.29.0-foss-2025b-xsmtvdot`.
 - [ ] **ime** — s8s8s32 int8 GEMM microkernel, bit-exact vs RVV. *(shipped:
   `ime/` + `llamacpp/`; remaining = the `i8i8-selftest` A/B row.)*
 - [ ] **BLIS** — dgemm/trsm BLAS-3 vs OpenBLAS (link A/B). *Lib:* `BLIS`.
@@ -39,10 +39,9 @@ board. Unchanged from prior tracking.
 - [ ] **scalapack** — `pdsyev`, pure-MPI 8-rank grid. *Lib:* `ScaLAPACK`.
 - [ ] **fftw** — r5v (RVV) vs scalar FFT MFLOPS. *Artifact:* A/B pair built.
 - [ ] **gromacs** — MD FFT + RVV-Force backend A/B. *Lib:* `GROMACS/2026.2-foss-2025b`.
-- [ ] **qe** — Quantum ESPRESSO `pw.x` SCF, FlexiBLAS swap. **Blocker:** no
-  `QuantumESPRESSO` module in either RISC-V repo yet → must build from an
-  easyconfig (or use the `dev.eessi.io/espresso` tree, which currently ships
-  only aarch64 ESPResSo, not QE). Confirm/produce a `riscv64` QE build first.
+- [x] **qe** — Quantum ESPRESSO `pw.x` SCF, FlexiBLAS swap. Overlay
+  `QuantumESPRESSO/7.5-foss-2025b` on RV2; stock RVV aborts; patched
+  **1.20×** vs scalar on `si-super-64.in`. See [`qe/`](qe).
 
 ---
 
@@ -61,9 +60,8 @@ expected signal.
   [`kokkos/`](kokkos); RVV Pair prototype + `lj/cut/rvv` plugin:
   [`lammps/rvv-lj/`](lammps/rvv-lj) (microbench ~1.61× vs scalar; in-LAMMPS
   ~1.02× vs stock via indexed gather).
-- [ ] **ESPResSo** (`4.2.2` in **both** 2023b and 2025b) — soft-matter MD;
-  P3M long-range solver → FFT-backend A/B (FFTW r5v vs scalar), the MD
-  companion to `fftw/` and `gromacs/`. *No repo dir.*
+- [x] **ESPResSo** (`4.2.2-foss-2025b`) — P3M FFT A/B on RV2: r5v vs scalar
+  `libfftw3` **1.12×** (N=512, energies match). See [`espresso/`](espresso).
 - [ ] **MetalWalls** (`21.06.1-foss-2023b`) — constant-potential electrochem MD;
   heavy on Ewald/FFT + dense linear algebra → BLAS/FFT backend A/B. *2023b only.*
 - [x] **waLBerla** (`7.2-foss-2025b`, RV2) — campaign in [`walberla/`](walberla):
@@ -71,9 +69,9 @@ expected signal.
   WALL **1.30×** / collide **1.54×**; hand RVV `simd` loses to FORCE_SCALAR;
   plain SoA auto-vec ~**2.4×** vs novec (~**9×** vs hand simd); collide/stream
   split slower than fused stock. Prefer contiguous auto-vec over hand simd.
-- [ ] **PLUMED** (`2.9.4-foss-2025b` / `2.9.2-2023b`) — enhanced-sampling library;
-  bench its internal matrix/CV kernels, or use as a GROMACS/LAMMPS plugin to
-  measure RVV overhead on collective-variable evaluation. *No repo dir.*
+- [x] **PLUMED** (`2.9.4-foss-2025b`) — `driver` + CONTACT_MATRIX/SPRINT FlexiBLAS
+  A/B on RV2: patched RVV OpenBLAS **1.25×** vs scalar (N=200, 20 frames;
+  checksums match). See [`plumed/`](plumed).
 - [ ] **MODFLOW** (`6.4.4-foss-2023b`) — groundwater flow FE solver; sparse-solve
   dominated → pairs with the PETSc/MUMPS column below. *2023b only, no repo dir.*
 
@@ -86,17 +84,18 @@ expected signal.
   larger 3D frontal A/B still open.
 - [x] **SuperLU_DIST** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
 - [x] **SuiteSparse / UMFPACK** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
-- [ ] **ScaFaCoS** (`foss-2025b`, dev repo) — scalable long-range Coulomb solver
-  (FMM/P3M); FFT + MPI probe, new in the 2025b port. *No repo dir.*
+- [x] **ScaFaCoS** (`1.0.4-foss-2025b`) — P3M FFT A/B on RV2: np=1 r5v ≈ scalar
+  **0.99×** (N=32³, energies match); np=4 diluted by stock `fftw3_mpi`. See
+  [`scafacos/`](scafacos).
 
 ### B3 — networking / baseline microbenchmarks (cheap, high-confidence)
 
-- [ ] **OSU-Micro-Benchmarks** (`7.5.1-gompi-2025b` / `7.2-2023b`) — MPI
-  latency/bandwidth baseline for the board's OpenMPI/UCX stack; needed context
-  for interpreting every MPI app above (scalapack/qe/petsc/superlu). **Do this
-  early — it's fast and calibrates the interconnect.** *No repo dir.*
-- [ ] **Voro++** (`0.4.6`) — Voronoi tessellation; scalar compute-bound kernel,
-  a simple RVV-autovec vs `-fno-tree-vectorize` A/B. *No repo dir.*
+- [x] **OSU-Micro-Benchmarks** (`7.5.1-gompi-2025b`) — on-node shared-memory
+  baseline on RV2: latency **1.12 μs**, uni-BW peak **~2.1 GB/s**, bi-BW
+  **~2.5 GB/s**; collectives np=8 recorded. See [`osu/`](osu).
+- [x] **Voro++** (`0.4.6`) — RVV-autovec vs novec A/B on RV2: gcv **0.99×**
+  (N=20k cells; RVV emitted but no win on irregular cell kernel). See
+  [`voro++/`](voro++).
 
 ### B4 — data-science / numerical stacks (Python/R, FlexiBLAS-backed)
 
@@ -134,9 +133,8 @@ These are the flagship HPC apps. Each has a mature foss easyconfig one step
 below the board stack; the work is a toolchain rebump + riscv64 fixes, **not** a
 from-scratch port. High scientific impact, high effort.
 
-- [ ] **QuantumESPRESSO** (`7.4-foss-2024a`) — **unblocks the existing `qe/`
-  benchmark**, which currently has no runnable QE module. Highest-value C2 item:
-  bump 7.4 to foss-2025b, build, then the FlexiBLAS/FFT A/B in `qe/` runs.
+- [x] **QuantumESPRESSO** (`7.5-foss-2025b`) — overlay install + FlexiBLAS A/B
+  on RV2 done. See [`qe/`](qe).
 - [ ] **CP2K** (`2023.1-foss-2023a`) — DFT/AIMD; heavy DBCSR sparse-GEMM +
   FFT → premier RVV BLAS/FFT whole-app probe. *No riscv module.*
 - [ ] **WRF** (`4.6.1-foss-2024a-dmpar`) — numerical weather prediction; large
@@ -187,19 +185,16 @@ Access notes: see `riscv-learnings` `docs/riscv-u74.md` (`ubuntu@192.168.1.219`)
 1. **onnx int4** (Part A) — dramatic, reproducible, extends shipped IME work.
 2. **U74 — BWA** (Part D) — when VisionFive 2 is online; non-vector EasyBuild
    app with real scientific value (post–OpenBLAS/HPL).
-3. **OSU-Micro-Benchmarks** (B3) — fast interconnect baseline that every MPI app
-   result depends on; establish it before scalapack/qe/petsc.
+3. **OSU-Micro-Benchmarks** (B3) — **done** (on-node baseline; see [`osu/`](osu)).
 4. **FlexiBLAS RVV OpenBLAS A/B column** — one backend swap validates
    numpy → hpl → elpa → scalapack → scikit-learn → R → Armadillo at once
    (the `_fixed` lib carries the `gemv_n` NaN + TRSM VLEN corrections).
-5. **ESPResSo** (B1) — soft-matter MD / P3M FFT A/B (LAMMPS build+compute on RV2
-   done; remaining = repo benchmark dir / Force RVV A/B if pursued).
+5. **ESPResSo** (B1) — **done** (P3M FFT A/B **1.12×**; see [`espresso/`](espresso)).
+   LAMMPS build+compute on RV2 also done ([`lammps/`](lammps)).
 6. **PETSc/SLEPc + MUMPS + SuperLU_DIST** (B2) — the sparse-solver column,
    complementary to the dense eigen probes.
-7. **ScaFaCoS** (B2) — long-range Coulomb / FMM companion; waLBerla RVV/auto-vec
-   campaign is done ([`walberla/`](walberla): HeatEq/UG wins; hand simd lesson).
-8. **QuantumESPRESSO build** (C2) — bump `7.4-foss-2024a` → 2025b and build;
-   this is the single item that unblocks the already-present `qe/` benchmark.
+7. **ScaFaCoS** (B2) — **done** (P3M FFT A/B ≈1.0×; see [`scafacos/`](scafacos)).
+8. **QuantumESPRESSO** (C2) — **done** (overlay + FlexiBLAS A/B; see [`qe/`](qe)).
 9. **CP2K + OpenFOAM + WRF** (C2) — flagship DFT / CFD / NWP whole-app probes;
    each a toolchain rebump, high impact, tackle after the QE build proves the
    easyconfig-bump workflow on the X60.
@@ -252,8 +247,10 @@ RISC-V SBCs that ship a **BXM** GPU (both purchasable now):
   (**LAMMPS** was moved off this list — it now has a working **foss-2025b** build
   path via a custom easyconfig against `dev.eessi.io/riscv 2025.06-001`; see
   [`lammps/`](lammps/).)
-- **QuantumESPRESSO has no RISC-V module in either repo** — the `qe/` benchmark
-  needs a from-easyconfig build before it can run end-to-end.
+- **QuantumESPRESSO** — no CVMFS module; **foss-2025b overlay installed** on
+  RV2. Stock RVV `gemv_n` still aborts SCF; patched OpenBLAS
+  (`~/libopenblas_x60_eb_fixed.so`) matches scalar and is **1.20×** on
+  `si-super-64.in`.
 
 ---
 

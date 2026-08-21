@@ -24,6 +24,11 @@ time — the big 4-bit weight GEMMs. Measured with `onnxruntime_perf_test`
 | Single thread (`-x1`)| 31,956 ms                  | 3,522 ms             | **9.1×**   |
 | 8 threads (`-x8`)    | 6,074 ms                   | 590 ms               | **10.3×**  |
 
+**RV2 re-verify** (2026-08-20, same models/build, log
+`~/logs/onnx-acc4-ab-20260820-191335.log`): x1 **29,851 → 3,532 ms = 8.5×**;
+x8 **6,569 → 960 ms = 6.8×**. CompInt8 path confirmed; x8 was softer than the
+original board run (CPU usage logged ~99% on ACC4_x8 vs ~199% previously).
+
 - Peak RSS: ~1023 MB → **842 MB** (no fp32 dequant buffers).
 - P50 latency sits on the mean (x1: min 3.520 / P50 3.522 s) — stable board.
 - x1→x8 thread scaling on the fixed path: 3522/590 = **~6×** across 8 cores.

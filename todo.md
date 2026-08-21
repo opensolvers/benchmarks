@@ -2,9 +2,8 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** QuantumESPRESSO overlay **done** — FlexiBLAS A/B on RV2: stock RVV
-aborts SCF; patched vs scalar **1.20×** (`70.56 s → 58.89 s`) on 64-atom Si.
-See [`qe/`](qe).
+**Active:** onnx IME `accuracy_level` A/B **re-verified** on RV2 (8.5× x1 /
+6.8× x8). QE overlay FlexiBLAS A/B also done. See [`onnx/`](onnx), [`qe/`](qe).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -25,10 +24,9 @@ RISC-V apps come from the two repos above.)
 These already have a directory + runner; "ready" = lib/artifact confirmed on
 board. Unchanged from prior tracking.
 
-- [ ] **onnx** — int4 `MatMulNBits` on ONNX Runtime, X60 IME `smt.vmadot` core.
-  Reproduce ~9–10× `accuracy_level=4` CompInt8-vs-CompFp32 + correctness gate.
-  *Lib:* custom `ONNX-Runtime/1.29.0-foss-2025b-xsmtvdot`. **Highest priority —
-  extends the shipped IME work.**
+- [x] **onnx** — int4 `MatMulNBits` on ONNX Runtime, X60 IME `smt.vmadot` core.
+  RV2 re-verify 2026-08-20: CompFp32→CompInt8 **8.5×** (`-x1`), **6.8×** (`-x8`);
+  see [`onnx/`](onnx). *Lib:* custom `ONNX-Runtime/1.29.0-foss-2025b-xsmtvdot`.
 - [ ] **ime** — s8s8s32 int8 GEMM microkernel, bit-exact vs RVV. *(shipped:
   `ime/` + `llamacpp/`; remaining = the `i8i8-selftest` A/B row.)*
 - [ ] **BLIS** — dgemm/trsm BLAS-3 vs OpenBLAS (link A/B). *Lib:* `BLIS`.

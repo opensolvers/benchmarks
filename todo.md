@@ -2,8 +2,8 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** onnx IME `accuracy_level` A/B **re-verified** on RV2 (8.5× x1 /
-6.8× x8). QE overlay FlexiBLAS A/B also done. See [`onnx/`](onnx), [`qe/`](qe).
+**Active:** ScaFaCoS P3M FFT A/B **done** on RV2 (np=1: r5v ≈ scalar **0.99×**;
+energies match). OSU / ESPResSo / onnx / QE also done. See [`scafacos/`](scafacos).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -59,9 +59,8 @@ expected signal.
   [`kokkos/`](kokkos); RVV Pair prototype + `lj/cut/rvv` plugin:
   [`lammps/rvv-lj/`](lammps/rvv-lj) (microbench ~1.61× vs scalar; in-LAMMPS
   ~1.02× vs stock via indexed gather).
-- [ ] **ESPResSo** (`4.2.2` in **both** 2023b and 2025b) — soft-matter MD;
-  P3M long-range solver → FFT-backend A/B (FFTW r5v vs scalar), the MD
-  companion to `fftw/` and `gromacs/`. *No repo dir.*
+- [x] **ESPResSo** (`4.2.2-foss-2025b`) — P3M FFT A/B on RV2: r5v vs scalar
+  `libfftw3` **1.12×** (N=512, energies match). See [`espresso/`](espresso).
 - [ ] **MetalWalls** (`21.06.1-foss-2023b`) — constant-potential electrochem MD;
   heavy on Ewald/FFT + dense linear algebra → BLAS/FFT backend A/B. *2023b only.*
 - [x] **waLBerla** (`7.2-foss-2025b`, RV2) — campaign in [`walberla/`](walberla):
@@ -84,15 +83,15 @@ expected signal.
   larger 3D frontal A/B still open.
 - [x] **SuperLU_DIST** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
 - [x] **SuiteSparse / UMFPACK** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
-- [ ] **ScaFaCoS** (`foss-2025b`, dev repo) — scalable long-range Coulomb solver
-  (FMM/P3M); FFT + MPI probe, new in the 2025b port. *No repo dir.*
+- [x] **ScaFaCoS** (`1.0.4-foss-2025b`) — P3M FFT A/B on RV2: np=1 r5v ≈ scalar
+  **0.99×** (N=32³, energies match); np=4 diluted by stock `fftw3_mpi`. See
+  [`scafacos/`](scafacos).
 
 ### B3 — networking / baseline microbenchmarks (cheap, high-confidence)
 
-- [ ] **OSU-Micro-Benchmarks** (`7.5.1-gompi-2025b` / `7.2-2023b`) — MPI
-  latency/bandwidth baseline for the board's OpenMPI/UCX stack; needed context
-  for interpreting every MPI app above (scalapack/qe/petsc/superlu). **Do this
-  early — it's fast and calibrates the interconnect.** *No repo dir.*
+- [x] **OSU-Micro-Benchmarks** (`7.5.1-gompi-2025b`) — on-node shared-memory
+  baseline on RV2: latency **1.12 μs**, uni-BW peak **~2.1 GB/s**, bi-BW
+  **~2.5 GB/s**; collectives np=8 recorded. See [`osu/`](osu).
 - [ ] **Voro++** (`0.4.6`) — Voronoi tessellation; scalar compute-bound kernel,
   a simple RVV-autovec vs `-fno-tree-vectorize` A/B. *No repo dir.*
 
@@ -184,17 +183,15 @@ Access notes: see `riscv-learnings` `docs/riscv-u74.md` (`ubuntu@192.168.1.219`)
 1. **onnx int4** (Part A) — dramatic, reproducible, extends shipped IME work.
 2. **U74 — BWA** (Part D) — when VisionFive 2 is online; non-vector EasyBuild
    app with real scientific value (post–OpenBLAS/HPL).
-3. **OSU-Micro-Benchmarks** (B3) — fast interconnect baseline that every MPI app
-   result depends on; establish it before scalapack/qe/petsc.
+3. **OSU-Micro-Benchmarks** (B3) — **done** (on-node baseline; see [`osu/`](osu)).
 4. **FlexiBLAS RVV OpenBLAS A/B column** — one backend swap validates
    numpy → hpl → elpa → scalapack → scikit-learn → R → Armadillo at once
    (the `_fixed` lib carries the `gemv_n` NaN + TRSM VLEN corrections).
-5. **ESPResSo** (B1) — soft-matter MD / P3M FFT A/B (LAMMPS build+compute on RV2
-   done; remaining = repo benchmark dir / Force RVV A/B if pursued).
+5. **ESPResSo** (B1) — **done** (P3M FFT A/B **1.12×**; see [`espresso/`](espresso)).
+   LAMMPS build+compute on RV2 also done ([`lammps/`](lammps)).
 6. **PETSc/SLEPc + MUMPS + SuperLU_DIST** (B2) — the sparse-solver column,
    complementary to the dense eigen probes.
-7. **ScaFaCoS** (B2) — long-range Coulomb / FMM companion; waLBerla RVV/auto-vec
-   campaign is done ([`walberla/`](walberla): HeatEq/UG wins; hand simd lesson).
+7. **ScaFaCoS** (B2) — **done** (P3M FFT A/B ≈1.0×; see [`scafacos/`](scafacos)).
 8. **QuantumESPRESSO** (C2) — **done** (overlay + FlexiBLAS A/B; see [`qe/`](qe)).
 9. **CP2K + OpenFOAM + WRF** (C2) — flagship DFT / CFD / NWP whole-app probes;
    each a toolchain rebump, high impact, tackle after the QE build proves the

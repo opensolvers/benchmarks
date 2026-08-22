@@ -2,9 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** PLUMED SPRINT FlexiBLAS A/B **done** on RV2 (patched RVV **1.25×**
-vs scalar; checksums match). Voro++ / ScaFaCoS / OSU / ESPResSo / onnx / QE
-also done. See [`plumed/`](plumed).
+**Active:** MODFLOW PETSc-mode FlexiBLAS A/B **done** on RV2 (2023b): patched
+≈ **1.00×** vs scalar (`ex-gwf-lgrv-lgr`, heads match). MetalWalls / PLUMED /
+Voro++ / ScaFaCoS / OSU / ESPResSo / onnx / QE also done. See [`modflow/`](modflow).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -62,8 +62,10 @@ expected signal.
   ~1.02× vs stock via indexed gather).
 - [x] **ESPResSo** (`4.2.2-foss-2025b`) — P3M FFT A/B on RV2: r5v vs scalar
   `libfftw3` **1.12×** (N=512, energies match). See [`espresso/`](espresso).
-- [ ] **MetalWalls** (`21.06.1-foss-2023b`) — constant-potential electrochem MD;
-  heavy on Ewald/FFT + dense linear algebra → BLAS/FFT backend A/B. *2023b only.*
+- [x] **MetalWalls** (`21.06.1-foss-2023b`) — tip4p-water A/B on RV2: FFT r5v
+  ≈ **1.02×** (LR ~11% of wall); FlexiBLAS backends flat; temps match.
+  Electrode matrix/CG examples deferred (too heavy at stock sizes). See
+  [`metalwalls/`](metalwalls).
 - [x] **waLBerla** (`7.2-foss-2025b`, RV2) — campaign in [`walberla/`](walberla):
   BasicLBM ISA ~1–4%; HeatEquation gcv **1.64×** np1; UniformGrid `--not-fused`
   WALL **1.30×** / collide **1.54×**; hand RVV `simd` loses to FORCE_SCALAR;
@@ -72,8 +74,9 @@ expected signal.
 - [x] **PLUMED** (`2.9.4-foss-2025b`) — `driver` + CONTACT_MATRIX/SPRINT FlexiBLAS
   A/B on RV2: patched RVV OpenBLAS **1.25×** vs scalar (N=200, 20 frames;
   checksums match). See [`plumed/`](plumed).
-- [ ] **MODFLOW** (`6.4.4-foss-2023b`) — groundwater flow FE solver; sparse-solve
-  dominated → pairs with the PETSc/MUMPS column below. *2023b only, no repo dir.*
+- [x] **MODFLOW** (`6.4.4-foss-2023b`) — PETSc-mode (`mf6 -p`) FlexiBLAS A/B on
+  RV2 `ex-gwf-lgrv-lgr`: patched RVV ≈ **1.00×** vs scalar (~190 s; heads
+  match). See [`modflow/`](modflow).
 
 ### B2 — sparse / eigen solvers (one FlexiBLAS-or-link swap validates several)
 

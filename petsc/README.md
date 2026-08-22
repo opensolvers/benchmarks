@@ -141,13 +141,31 @@ Patched / scalar ≈ **3.5×** (tiny iteration count; still shows BLAS on the Ma
 
 1. **Dense PETSc paths** expose FlexiBLAS clearly: patched RVV wins; **stock RVV corrupts**.
 2. **SuperLU_DIST / UMFPACK** need the patched OpenBLAS for correctness (same `gemv_n` class of failure as HPL/ELPA).
-3. **MUMPS** stayed finite on stock at these sizes but showed **no** patched speedup (analysis / ordering / smaller dense fronts dominate wall time here). Larger 3D problems would be the next lever if chasing MUMPS GFLOPs.
+3. **MUMPS** stayed finite on stock at the original sizes but showed **no**
+   patched speedup at n=40 (64k dofs). A follow-up 3D scale sweep (below) shows
+   RVV wins only once frontal dense blocks grow large enough.
 4. **Jacobi-CG AIJ** remains a weak BLAS A/B (~1.06×) — use dense or direct for backend validation.
+
+### MUMPS 3D scale sweep (2026-08-22 re-verify)
+
+`petsc_direct_bench`, 3 reps, 8 threads, FlexiBLAS A/B on RV2. Log:
+`~/logs/mumps-3d-large-20260822-164426.log`; summary:
+[`results/mumps-3d-scale-ab-20260822.txt`](results/mumps-3d-scale-ab-20260822.txt).
+
+| 3D n | dofs | scalar BEST | stock RVV | patched RVV | patched / scalar |
+|---:|---:|---:|---:|---:|---:|
+| 40 | 64k | 0.652 s | 0.674 s | 0.669 s | ~1.0× (flat) |
+| 60 | 216k | 2.772 s | 2.874 s | **2.681 s** | ~1.03× |
+| 80 | 512k | 12.585 s | **7.987 s** | 8.470 s | **1.49×** |
+
+At n=80 both RVV backends beat scalar (~**1.5×**); stock RVV is slightly ahead
+of patched here (analysis/ordering still dominates at n=40–60). All runs
+`finite=1`, identical residuals.
 
 ---
 
 ## Next steps
 
 1. Optional: wire stencil/`MatProduct` specialization into a PETSc overlay patch.
-2. Optional: larger MUMPS 3D / SLEPc.
+2. Optional: SLEPc eigenproblem column.
 3. Commit SpMV harness + results when ready.

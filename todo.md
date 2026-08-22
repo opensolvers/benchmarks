@@ -2,9 +2,8 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** Part A FlexiBLAS / link / FFT A/B column **re-verified** on RV2
-(2026-08-22, foss-2025b). See per-benchmark READMEs; master log
-`~/logs/part-a-v2-20260822-091805.log`.
+**Active:** MUMPS 3D scale sweep **done** on RV2 (2026-08-22): RVV ~**1.5×** vs
+scalar at n=80 / 512k dofs; flat at n=40–60. See [`petsc/`](petsc).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -101,8 +100,9 @@ expected signal.
 - [x] **PETSc** (`3.24.0-foss-2025b` overlay) — Jacobi-CG ~1.06×; **dense MatMult
   ~1.70×** (stock RVV NaN); SuperLU/UMFPACK need patched OpenBLAS; MUMPS finite
   but no speedup at tested sizes ([`petsc/`](petsc)). SLEPc not built.
-- [ ] **MUMPS** standalone microbench — PETSc-wrapped MUMPS done in `petsc/`; optional
-  larger 3D frontal A/B still open.
+- [x] **MUMPS** standalone microbench — 3D scale sweep on RV2 (2026-08-22): flat at
+  n=40–60; stock/patched RVV **~1.5×** vs scalar at n=80 (512k dofs). See
+  [`petsc/`](petsc).
 - [x] **SuperLU_DIST** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
 - [x] **SuiteSparse / UMFPACK** — exercised via PETSc direct bench (stock RVV NaN; patched OK).
 - [x] **ScaFaCoS** (`1.0.4-foss-2025b`) — P3M FFT A/B on RV2: np=1 r5v ≈ scalar

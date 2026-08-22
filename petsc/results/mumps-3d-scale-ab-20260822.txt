@@ -1,0 +1,26 @@
+date_utc=20260822T164426Z
+host=orangepi (Orange Pi RV2)
+threads=8 reps=3 (built-in BEST line)
+petsc=PETSc/3.24.0-foss-2025b overlay
+patched_openblas=/home/orangepi/libopenblas_x60_eb_fixed.so
+log=/home/orangepi/logs/mumps-3d-large-20260822-164426.log
+
+==== mumps_3d n=40 dofs=64000 ====
+scalar BEST: 0.652158 s  finite=1
+stock  BEST: 0.674485 s  finite=1
+patched BEST: 0.668562 s  finite=1
+
+==== mumps_3d n=60 dofs=216000 ====
+scalar BEST: 2.771653 s  finite=1
+stock  BEST: 2.873643 s  finite=1
+patched BEST: 2.681028 s  finite=1
+
+==== mumps_3d n=80 dofs=512000 ====
+scalar BEST: 12.584505 s  finite=1
+stock  BEST: 7.986976 s  finite=1
+patched BEST: 8.469776 s  finite=1
+
+ratios (scalar / backend BEST):
+  n=40: stock 0.97x  patched 0.98x  (flat)
+  n=60: stock 0.96x  patched 1.03x  (flat)
+  n=80: stock 1.58x  patched 1.49x  (RVV wins once fronts grow)

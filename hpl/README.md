@@ -34,6 +34,23 @@ The runner copies the chosen config to `./HPL.dat` (what `xhpl` reads), runs the
 scalar baseline (`OPENBLAS_CORETYPE=RISCV64_GENERIC`), then - if `RVV_LIB` is set
 - the vector backend (`FLEXIBLAS=$RVV_LIB`), and greps the result/PASSED line.
 
+## RV2 re-verify (2026-08-22)
+
+8 ranks, `HPL.dat` (N=8000, 1×8), SciPy-bundle stack HPL/2.3-foss-2025b:
+
+| Tag | GFLOP/s | residual | result |
+|-----|--------:|----------|--------|
+| scalar (`RISCV64_GENERIC`) | 5.94 | 4.63e-03 | PASSED |
+| patched (`~/libopenblas_x60_eb_fixed.so`) | **7.33** | 4.04e-03 | PASSED |
+
+Patched vs scalar **1.23×**. Both residuals match prior RV2 runs; log:
+`~/logs/hpl-ab-rv2-20260822-081245.log`.
+
+```bash
+module load HPL/2.3-foss-2025b
+RVV_LIB=~/libopenblas_x60_eb_fixed.so ./run-hpl-ab.sh HPL.dat
+```
+
 ## Example results - RISC-V SpaceMiT X60 (Orange Pi RV2, K1, 8x X60 @ ~1.6 GHz)
 
 Same `xhpl`, BLAS backend swapped via FlexiBLAS:

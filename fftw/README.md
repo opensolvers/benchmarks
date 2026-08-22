@@ -77,6 +77,19 @@ Under the `FFTW_MEASURE` default the RVV backend beats scalar at **every** size,
 **1.06–1.60×** — largest on cache-resident transforms (1.6× @ 256), tapering to
 ~1.06× as transforms become memory-bandwidth-bound (≥64K). Textbook.
 
+## RV2 re-verify (2026-08-22)
+
+Same A/B pair (`~/fftwbuild/src-{scalar,r5v}/`), default (`FFTW_MEASURE`) planner,
+via [`run-part-a-v2.sh`](../run-part-a-v2.sh) → `~/fftw-proper.log`:
+
+| size | r5v MFLOPS | scalar MFLOPS | r5v speedup |
+|---:|--:|--:|--:|
+| 256 | 2522 | 1537 | **1.64×** |
+| 4096 | 1224 | 1019 | **1.20×** |
+| 65536 | 601 | 519 | **1.16×** |
+
+Matches the MEASURE column in the table above on the same artifacts.
+
 ## Cross-board confirmation — Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 Same `tests/bench` A/B (`-t 1.0`, estimate + MEASURE; no `patient`) on a

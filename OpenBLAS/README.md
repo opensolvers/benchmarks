@@ -80,6 +80,21 @@ i.e. ~2.3x faster and numerically identical. (Root cause: OpenBLAS 0.3.30
 `kernel/riscv64/gemv_n_vector.c` zeroes an *uninitialized* vector accumulator;
 fixed upstream after 0.3.30.)
 
+## RV2 re-verify (2026-08-22)
+
+FlexiBLAS A/B via [`run-openblas-ab.sh`](run-openblas-ab.sh) /
+[`run-part-a-v2.sh`](../run-part-a-v2.sh), EESSI `2025.06-001`, N=2048, 8 threads:
+
+| backend | DGEMM GFLOP/s | `C[0]` |
+|---|--:|--:|
+| scalar (`RISCV64_GENERIC`) | 4.54 | 245.24 |
+| stock CVMFS OpenBLAS 0.3.29, default RVV | 10.11 | 245.24 |
+| patched (`~/libopenblas_x60_eb_fixed.so`) | **12.04** | 245.24 |
+
+Patched vs scalar **2.65×**. Stock and patched `difftest` on this run: `dgemv`
+nan=0 (EESSI 0.3.29 stock no longer shows the 192-nan `gemv_n` fault on this
+board image). Log: `~/logs/part-a-v2-20260822-091805.log`.
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 The [Banana Pi BPI-F3](https://www.banana-pi.org/) uses the same SpaceMiT K1

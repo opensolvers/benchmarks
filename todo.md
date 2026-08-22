@@ -2,8 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** NumPy FlexiBLAS A/B **re-verified** on RV2 (2025b): patched DGEMM
-**3.13×** / EIGH **1.61×** vs scalar; stock RVV `eigvalsh` fails. See [`numpy/`](numpy).
+**Active:** Part A FlexiBLAS / link / FFT A/B column **re-verified** on RV2
+(2026-08-22, foss-2025b). See per-benchmark READMEs; master log
+`~/logs/part-a-v2-20260822-091805.log`.
 
 Two RISC-V software sources are mounted on the board:
 
@@ -27,19 +28,35 @@ board. Unchanged from prior tracking.
 - [x] **onnx** — int4 `MatMulNBits` on ONNX Runtime, X60 IME `smt.vmadot` core.
   RV2 re-verify 2026-08-20: CompFp32→CompInt8 **8.5×** (`-x1`), **6.8×** (`-x8`);
   see [`onnx/`](onnx). *Lib:* custom `ONNX-Runtime/1.29.0-foss-2025b-xsmtvdot`.
-- [ ] **ime** — s8s8s32 int8 GEMM microkernel, bit-exact vs RVV. *(shipped:
-  `ime/` + `llamacpp/`; remaining = the `i8i8-selftest` A/B row.)*
-- [ ] **BLIS** — dgemm/trsm BLAS-3 vs OpenBLAS (link A/B). *Lib:* `BLIS`.
-- [ ] **OpenBLAS / dgemm** — dgemm GFLOP/s + `gemv_n` NaN / TRSM correctness.
-  *Lib:* FlexiBLAS + custom `libopenblas_x60_eb_fixed.so`.
+- [x] **ime** — s8s8s32 int8 GEMM microkernel re-verified on RV2 (2026-08-22):
+  512³ IME **24.5** vs RVV **5.2** GOP/s, all paths `ok` (bit-exact). See
+  [`ime/`](ime). *Remaining: `i8i8-selftest` A/B row in [`llamacpp/`](llamacpp).*
+- [ ] **ime — theoretical vs measured GOP/s gap** — SpacemiT docs quote **~512
+  GOPS/core** for `vmadot` (silicon peak, one core); our published microbench
+  peaks at **~42 GOP/s** single-core @ 768³×512 on RV2/F3
+  ([site table](https://www.opensolvers.com/boards/RV2.html#ime-integer-matrix-extension),
+  [`ime/README.md`](ime/README.md)). **~12× gap** — explain or close: L2 working-set
+  vs 512 KB cluster cache, 4×4×8 tile shape / issue rate, malloc aliasing bimodality,
+  vs a cpufp-style sustained-peak harness. Do not cite the 512 GOPS marketing number
+  on the site until we either reproduce it or document why measured tops out at ~42.
+- [x] **BLIS** — link A/B re-verified on RV2 (2026-08-22): N=2048 BLIS/OpenBLAS
+  **1.18×** @1 thr, **0.88×** @8 thr vs patched OpenBLAS. See [`BLIS/`](BLIS).
+- [x] **OpenBLAS / dgemm** — dgemm + difftest re-verified on RV2 (2026-08-22):
+  patched **2.65×** vs scalar @ N=2048×8 thr; stock RVV `dgemv` nan=0 on
+  0.3.29. See [`OpenBLAS/`](OpenBLAS).
 - [x] **numpy** — `A@B` + `eigvalsh` FlexiBLAS A/B re-verified on RV2 (2025b):
   patched **3.13×** dgemm / **1.61×** eigh vs scalar; stock RVV dgemm OK but
   `eigvalsh` non-convergence. See [`numpy/`](numpy).
-- [ ] **hpl** — Linpack end-to-end, FlexiBLAS backend swap. *Lib:* `HPL/2.3`.
-- [ ] **elpa** — dense real-symmetric eigensolver finite-gate. *Lib:* `ELPA`.
-- [ ] **scalapack** — `pdsyev`, pure-MPI 8-rank grid. *Lib:* `ScaLAPACK`.
-- [ ] **fftw** — r5v (RVV) vs scalar FFT MFLOPS. *Artifact:* A/B pair built.
-- [ ] **gromacs** — MD FFT + RVV-Force backend A/B. *Lib:* `GROMACS/2026.2-foss-2025b`.
+- [x] **hpl** — Linpack end-to-end FlexiBLAS A/B re-verified on RV2 (2025b):
+  patched **1.23×** vs scalar (N=8000, 8 ranks, PASSED). See [`hpl/`](hpl).
+- [x] **elpa** — FlexiBLAS A/B re-verified on RV2 (2026-08-22): patched
+  **1.64×** vs scalar (na=3000); stock RVV `finite=0`. See [`elpa/`](elpa).
+- [x] **scalapack** — `pdsyev` A/B re-verified on RV2 (2026-08-22): patched
+  **1.22×** vs scalar (2×4 grid). See [`scalapack/`](scalapack).
+- [x] **fftw** — r5v vs scalar re-verified on RV2 (2026-08-22): MEASURE
+  **1.64×** @ N=256, **1.20×** @ N=4096. See [`fftw/`](fftw).
+- [x] **gromacs** — PME 3D-FFT A/B re-verified on RV2 (2026-08-22): r5v
+  **1.19×** on `PME 3D-FFT`; energies Δ 0.06 %. See [`gromacs/`](gromacs).
 - [x] **qe** — Quantum ESPRESSO `pw.x` SCF, FlexiBLAS swap. Overlay
   `QuantumESPRESSO/7.5-foss-2025b` on RV2; stock RVV aborts; patched
   **1.20×** vs scalar on `si-super-64.in`. See [`qe/`](qe).

@@ -108,6 +108,19 @@ worst_resid=2.55e-07** (single- and 8-thread). BLIS's triangular solve is
 numerically correct on the X60 - unlike the stock OpenBLAS `_rvv_v1` TRSM kernel
 this repo's [`../OpenBLAS`](../OpenBLAS) work localized.
 
+## RV2 re-verify (2026-08-22)
+
+Link A/B via [`run-part-a-v2.sh`](../run-part-a-v2.sh), BLIS `rv64iv` vs patched
+OpenBLAS static (`~/trsm-pr5830/libopenblas.a`), N=2048:
+
+| threads | BLIS | OpenBLAS | BLIS/OpenBLAS |
+|--:|--:|--:|--:|
+| 1 | 2.54 | 2.15 | **1.18×** |
+| 8 | 10.30 | 11.69 | 0.88× |
+
+Same story as the table above: BLIS wins single-thread at large N; OpenBLAS
+threads slightly better at 8 cores. Log: `~/logs/part-a-v2-20260822-091805.log`.
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 Same BLIS `061c2eb` (`rv64iv`, OpenMP) build path on a

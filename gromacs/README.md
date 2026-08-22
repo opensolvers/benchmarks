@@ -106,6 +106,19 @@ delivers a **~1.23x speedup on the 3D-FFT** step (21.1 s -> 17.2 s), and ~1.05x
 on the full PME mesh (the non-FFT spread/gather/solve sub-steps are scalar and do
 not move).
 
+## RV2 re-verify (2026-08-22)
+
+Same `md.tpr` + scalar/r5v `libfftw3f` pair, serial A/B via
+[`run-part-a-v2.sh`](../run-part-a-v2.sh) (`~/gmx-bench/gmx-fft-v2-{scalar,r5v}.log`):
+
+| metric | scalar | r5v (RVV) | speedup |
+|---|--:|--:|--:|
+| avg potential energy | -236755 kJ/mol | -236603 kJ/mol | Δ **0.06 %** |
+| **`PME 3D-FFT`** | 21.728 s | **18.247 s** | **1.19×** |
+
+Same isolated-FFT story as the table above; run-to-run noise vs the prior 1.23×
+measurement is within the ~2 % PME fraction.
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 Same `md.tpr` + same r5v/scalar `libfftw3f` binaries (copied from the RV2 build),

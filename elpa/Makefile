@@ -14,7 +14,7 @@ ELPA_OMP := $(wildcard $(EBROOTELPA)/include/elpa_openmp-*/)
 INCDIR   := $(firstword $(ELPA_OMP) $(wildcard $(EBROOTELPA)/include/elpa-*/))
 ELPALIB  := $(if $(ELPA_OMP),-lelpa_openmp,-lelpa)
 
-LDLIBS  := $(ELPALIB) -lscalapack -lflexiblas -lm
+LDLIBS  := $(ELPALIB) -lscalapack -lflexiblas -lmpi -lm
 LDFLAGS := -L$(EBROOTELPA)/lib -L$(EBROOTSCALAPACK)/lib -L$(EBROOTFLEXIBLAS)/lib \
            -Wl,-rpath,$(EBROOTELPA)/lib -Wl,-rpath,$(EBROOTSCALAPACK)/lib -Wl,-rpath,$(EBROOTFLEXIBLAS)/lib
 

@@ -63,6 +63,19 @@ plus the serial tridiagonal solve dominate wall time, so the RVV-accelerable
 BLAS-3 fraction is small. It is the conservative, communication-bound end of the
 BLAS-backend spectrum.
 
+## RV2 re-verify (2026-08-22)
+
+`na=3000`, `nb=64`, `2×4` grid, 8 ranks × 1 thread, FlexiBLAS via
+[`run-part-a-v2.sh`](../run-part-a-v2.sh):
+
+| backend | time | result |
+|---|---:|---|
+| scalar (`RISCV64_GENERIC`) | 236.22 s | finite=1 (`ev0=2695.86620 evN=4499.98584`) |
+| patched (`~/libopenblas_x60_eb_fixed.so`) | **192.91 s** | finite=1 (identical eigenvalues) |
+
+Patched vs scalar **1.22×**. Stock RVV not re-run (prior runs hang on unpatched
+`gemv_n`). Log: `~/logs/part-a-v2-20260822-091805.log`.
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 `na=3000`, `2x4` grid, 8 ranks × 1 thread on a

@@ -100,6 +100,21 @@ scalar reference. The clean peak crests at 768³ (~42) then settles to ~32–34 
 alone is 4 MB): the large sizes are turning memory-bound, the main tuning lead
 from here.
 
+## RV2 re-verify (2026-08-22)
+
+Quick sanity run via [`run-part-a-v2.sh`](../run-part-a-v2.sh) (`taskset -c 0`,
+512×512×512, single rep):
+
+| path | GOP/s | check |
+|---|--:|---|
+| scalar ref | 0.39 | — |
+| RVV int8 | 5.23 | ok |
+| IME (8×16 blocked) | **24.5** | ok (bit-exact) |
+
+IME/RVV **4.7×** at this size (below the clean-layout peak table above because
+this was a single launch, not max-over-reps). Log:
+`~/logs/part-a-v2-20260822-091805.log`.
+
 ## Cross-board confirmation — Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 Same `make board` binary path on a [Banana Pi BPI-F3](https://www.banana-pi.org/)

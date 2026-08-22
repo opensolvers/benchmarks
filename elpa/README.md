@@ -96,6 +96,20 @@ exactly because the eigensolver mixes BLAS-3 with latency-bound BLAS-2
 tridiagonalization - which is the point of using it as a more representative
 probe.
 
+## RV2 re-verify (2026-08-22)
+
+`na=3000`, 8 threads, FlexiBLAS via [`run-part-a-v2.sh`](../run-part-a-v2.sh),
+ELPA `2025.06.002-foss-2025b` (Makefile links `-lmpi` for `mpirun`):
+
+| backend | time | correctness |
+|---|---:|---|
+| scalar (`RISCV64_GENERIC`) | 52.99 s | finite=1 (`ev0=-31.44649`) |
+| stock CVMFS OpenBLAS, default RVV | 40.25 s | **`finite=0`, ev0=nan — FAIL** |
+| patched (`~/libopenblas_x60_eb_fixed.so`) | **32.36 s** | finite=1 (matches scalar) |
+
+Patched vs scalar **1.64×**; eigenvalues match scalar. Stock RVV is faster but
+wrong — same `gemv_n` NaN gate as the example above.
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 `na=3000`, 8 threads on a [Banana Pi BPI-F3](https://www.banana-pi.org/)

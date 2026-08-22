@@ -2,8 +2,8 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** R FlexiBLAS A/B **done** on RV2 (2023b): patched GEMM **1.80×** /
-EIGEN **1.45×** vs scalar. B4 sklearn + Armadillo also done. See [`r/`](r).
+**Active:** NumPy FlexiBLAS A/B **re-verified** on RV2 (2025b): patched DGEMM
+**3.13×** / EIGH **1.61×** vs scalar; stock RVV `eigvalsh` fails. See [`numpy/`](numpy).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -32,7 +32,9 @@ board. Unchanged from prior tracking.
 - [ ] **BLIS** — dgemm/trsm BLAS-3 vs OpenBLAS (link A/B). *Lib:* `BLIS`.
 - [ ] **OpenBLAS / dgemm** — dgemm GFLOP/s + `gemv_n` NaN / TRSM correctness.
   *Lib:* FlexiBLAS + custom `libopenblas_x60_eb_fixed.so`.
-- [ ] **numpy** — `A@B` (dgemm) + `eigvalsh` (dsyevd) finite-gate. *Lib:* SciPy-bundle.
+- [x] **numpy** — `A@B` + `eigvalsh` FlexiBLAS A/B re-verified on RV2 (2025b):
+  patched **3.13×** dgemm / **1.61×** eigh vs scalar; stock RVV dgemm OK but
+  `eigvalsh` non-convergence. See [`numpy/`](numpy).
 - [ ] **hpl** — Linpack end-to-end, FlexiBLAS backend swap. *Lib:* `HPL/2.3`.
 - [ ] **elpa** — dense real-symmetric eigensolver finite-gate. *Lib:* `ELPA`.
 - [ ] **scalapack** — `pdsyev`, pure-MPI 8-rank grid. *Lib:* `ScaLAPACK`.

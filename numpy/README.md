@@ -46,6 +46,25 @@ OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS=/path/to/libopenblas.so \
   python3 bench_blas.py
 ```
 
+## RV2 re-verify (2026-08-22)
+
+8 threads, SciPy-bundle 2025.07 (numpy 2.3.2), `N_dgemm=4096`, `N_eig=2048`:
+
+| Tag | DGEMM GFLOP/s | EIGH s | finite |
+|-----|-------------:|-------:|--------|
+| scalar (`RISCV64_GENERIC`) | 4.87 | 10.61 | yes |
+| stock (default FlexiBLAS OpenBLAS) | 10.06 | — | eig **fails** (`LinAlgError`) |
+| patched (`~/libopenblas_x60_eb_fixed.so`) | **15.24** | **6.57** | yes |
+
+Patched vs scalar: DGEMM **3.13×**, EIGH **1.61×**. Stock RVV dgemm is fast but
+`eigvalsh` aborts (same `gemv_n` NaN path documented below).
+
+Log: `~/logs/numpy-blas-ab-20260822-075940.log`
+
+```bash
+bash run-numpy-blas-ab.sh
+```
+
 ## Example result - RISC-V SpaceMiT X60 (Orange Pi RV2, K1, 8x X60 @ ~1.6 GHz)
 
 8 threads, scalar vs a vector (RVV `ZVL256B`) OpenBLAS with the `gemv_n` NaN fix,

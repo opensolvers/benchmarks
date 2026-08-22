@@ -2,9 +2,8 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** scikit-learn FlexiBLAS A/B **done** on RV2 (2023b): patched PCA
-**1.22×** / Ridge **1.90×** vs scalar. Armadillo DGEMM **1.82×** also done.
-See [`sklearn/`](sklearn), [`armadillo/`](armadillo).
+**Active:** R FlexiBLAS A/B **done** on RV2 (2023b): patched GEMM **1.80×** /
+EIGEN **1.45×** vs scalar. B4 sklearn + Armadillo also done. See [`r/`](r).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -105,8 +104,9 @@ expected signal.
 - [x] **scikit-learn** (`1.4.0-gfbf-2023b`) — PCA + Ridge FlexiBLAS A/B on RV2:
   patched RVV PCA **1.22×**, Ridge **1.90×** vs scalar (N=8k×512; checksums
   match). See [`sklearn/`](sklearn).
-- [ ] **R** (`4.3.3` / `4.4.1-gfbf`) — R's `%*%` / `La_*` LAPACK path through
-  FlexiBLAS; a second high-level consumer of the RVV BLAS column. *No repo dir.*
+- [x] **R** (`4.4.1-gfbf-2023b`) — `%*%` + `eigen()` FlexiBLAS A/B on RV2:
+  patched RVV GEMM **1.80×**, EIGEN **1.45×** vs scalar (N=2048/1024, 8 thr;
+  checksum match). See [`r/`](r).
 - [x] **Armadillo** (`12.8.0-foss-2023b`) — DGEMM/eig_sym FlexiBLAS A/B on RV2:
   patched RVV DGEMM **1.82×**, EIG **1.63×** vs scalar (N=2048/1024, 8 thr;
   finite). See [`armadillo/`](armadillo).

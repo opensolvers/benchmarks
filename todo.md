@@ -2,9 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** MODFLOW PETSc-mode FlexiBLAS A/B **done** on RV2 (2023b): patched
-≈ **1.00×** vs scalar (`ex-gwf-lgrv-lgr`, heads match). MetalWalls / PLUMED /
-Voro++ / ScaFaCoS / OSU / ESPResSo / onnx / QE also done. See [`modflow/`](modflow).
+**Active:** scikit-learn FlexiBLAS A/B **done** on RV2 (2023b): patched PCA
+**1.22×** / Ridge **1.90×** vs scalar. Armadillo DGEMM **1.82×** also done.
+See [`sklearn/`](sklearn), [`armadillo/`](armadillo).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -102,13 +102,14 @@ expected signal.
 
 ### B4 — data-science / numerical stacks (Python/R, FlexiBLAS-backed)
 
-- [ ] **scikit-learn** (`1.4.0-gfbf-2023b`) — its BLAS-backed estimators (PCA,
-  kmeans, linear models) ride FlexiBLAS → free RVV-OpenBLAS A/B on a real ML
-  workload, extending `numpy/`. *No repo dir.*
+- [x] **scikit-learn** (`1.4.0-gfbf-2023b`) — PCA + Ridge FlexiBLAS A/B on RV2:
+  patched RVV PCA **1.22×**, Ridge **1.90×** vs scalar (N=8k×512; checksums
+  match). See [`sklearn/`](sklearn).
 - [ ] **R** (`4.3.3` / `4.4.1-gfbf`) — R's `%*%` / `La_*` LAPACK path through
   FlexiBLAS; a second high-level consumer of the RVV BLAS column. *No repo dir.*
-- [ ] **Armadillo** (`12.8.0-foss-2023b`) — C++ linear-algebra template lib over
-  BLAS/LAPACK; thin-wrapper dgemm/eig A/B. *No repo dir.*
+- [x] **Armadillo** (`12.8.0-foss-2023b`) — DGEMM/eig_sym FlexiBLAS A/B on RV2:
+  patched RVV DGEMM **1.82×**, EIG **1.63×** vs scalar (N=2048/1024, 8 thr;
+  finite). See [`armadillo/`](armadillo).
 - [ ] **VTK / ParaView** (`foss-2023b`) — visualization/data pipelines; lower
   priority, mostly I/O + scalar. *No repo dir — likely defer.*
 

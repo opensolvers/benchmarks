@@ -1,0 +1,62 @@
+--- a/ggml/src/ggml-cpu/spacemit/ime1_kernels.cpp
++++ b/ggml/src/ggml-cpu/spacemit/ime1_kernels.cpp
+@@ -1040,6 +1040,43 @@
+ // One INNER iteration (16 k) consumes 8 tiles = 256B via a single marching
+ // pointer, so after INNER=BlkLen/16 iterations the pointer lands exactly on the
+ // next k-block's scale (32 + 256*INNER == 32 + 16*BlkLen == perblk).
+ 
++// Software-pipelined INNER (ime-bench lesson): overlap marching B/A loads with
++// vmadot. Full dual-bank needs ~20 operand regs; FP acc lives in v24..v31, so
++// interleave on one bank (sequential pointer — better ILP than multi-ptr ilv).
++#define IME1_I8I8_INNER_PIPED                   \
++    "vsetvli      t0, zero, e8, m1        \n\t" \
++    "vle8.v       v2, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "vle8.v       v3, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "vle8.v       v4, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "vle8.v       v5, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "vle8.v       v10, (a1)              \n\t" \
++    "addi         a1, a1, 32              \n\t" \
++    "smt.vmadot       v16, v10, v2            \n\t" \
++    "vle8.v       v6, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "smt.vmadot       v18, v10, v3            \n\t" \
++    "vle8.v       v7, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "smt.vmadot       v20, v10, v4            \n\t" \
++    "vle8.v       v8, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "smt.vmadot       v22, v10, v5            \n\t" \
++    "vle8.v       v9, (s1)               \n\t" \
++    "addi         s1, s1, 32              \n\t" \
++    "vle8.v       v11, (a1)              \n\t" \
++    "addi         a1, a1, 32              \n\t" \
++    "smt.vmadot       v16, v11, v6            \n\t" \
++    "smt.vmadot       v18, v11, v7            \n\t" \
++    "smt.vmadot       v20, v11, v8            \n\t" \
++    "smt.vmadot       v22, v11, v9            \n\t"
++
+ // v2..v9 <- 8 contiguous 32B B tiles (slice-lo groups 0..3, slice-hi groups 0..3)
+ #define LOAD_B_16x8x2_I8                        \
+     "vsetvli      t0, zero, e8, m1        \n\t" \
+@@ -1145,16 +1182,7 @@
+             "addi               a1, a1, 16                  \n\t"
+             "addi               t2, %[INNER], 0             \n\t"
+             "BLOCK_INNER_LOOP%=:                            \n\t"
+-
+-            LOAD_B_16x8x2_I8
+-
+-            "vsetvli            t0, zero, e8, m1            \n\t"
+-            "vle8.v             v10, (a1)                   \n\t"
+-            "addi               a1, a1, 32                  \n\t"
+-            "vle8.v             v11, (a1)                   \n\t"
+-            "addi               a1, a1, 32                  \n\t"
+-
+-            SQ4BIT_KERNEL_COMP_4x16x16
++            IME1_I8I8_INNER_PIPED
+ 
+             "addi               t2, t2, -1                  \n\t"
+             "bnez               t2, BLOCK_INNER_LOOP%=      \n\t"

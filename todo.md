@@ -2,8 +2,9 @@
 
 Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz).
 
-**Active:** MUMPS 3D scale sweep **done** on RV2 (2026-08-22): RVV ~**1.5×** vs
-scalar at n=80 / 512k dofs; flat at n=40–60. See [`petsc/`](petsc).
+**Active:** IME `i8i8` selftest + Q8_0 end-to-end A/B **done** on RV2 (2026-08-22):
+q8_0 build **62.7** pp64 @ t4 vs stock IME **25.5**; microbench chk `finite=1`.
+See [`ime/`](ime) + [`llamacpp/`](llamacpp).
 
 Two RISC-V software sources are mounted on the board:
 
@@ -29,15 +30,15 @@ board. Unchanged from prior tracking.
   see [`onnx/`](onnx). *Lib:* custom `ONNX-Runtime/1.29.0-foss-2025b-xsmtvdot`.
 - [x] **ime** — s8s8s32 int8 GEMM microkernel re-verified on RV2 (2026-08-22):
   512³ IME **24.5** vs RVV **5.2** GOP/s, all paths `ok` (bit-exact). See
-  [`ime/`](ime). *Remaining: `i8i8-selftest` A/B row in [`llamacpp/`](llamacpp).*
+  [`ime/`](ime). *i8i8 selftest + Q8_0 llama-bench A/B done; multi-core synthetic
+  (1c vs 4c OpenMP) ~80 GOP/s @ 768³ — see [`ime/README.md`](ime/README.md).*
 - [ ] **ime — theoretical vs measured GOP/s gap** — SpacemiT docs quote **~512
-  GOPS/core** for `vmadot` (silicon peak, one core); our published microbench
-  peaks at **~42 GOP/s** single-core @ 768³×512 on RV2/F3
-  ([site table](https://www.opensolvers.com/boards/RV2.html#ime-integer-matrix-extension),
-  [`ime/README.md`](ime/README.md)). **~12× gap** — explain or close: L2 working-set
-  vs 512 KB cluster cache, 4×4×8 tile shape / issue rate, malloc aliasing bimodality,
-  vs a cpufp-style sustained-peak harness. Do not cite the 512 GOPS marketing number
-  on the site until we either reproduce it or document why measured tops out at ~42.
+  GOPS/core** for `vmadot` (silicon peak, one core); full GEMM tops out at **~42**
+  (good layout) / **~35** (anti-alias default) on RV2. **cpufp-style kloop-only
+  microbench (2026-08-23) hits **~215 GOPS** piped kloop = **52 % of 409.6 @ 1.6 GHz**
+  (**1.9 cycles/vmadot**, down from 2.8 seq) — see [`ime/README.md`](ime/README.md).
+  **Anti-alias padding (`ldc=N+16`, `GEMM_BUF_PAD`) recovers ~2–2.5× on bad
+  malloc layouts** — now in `bench.c` / `gemm_ime` (`ldc` param).
 - [x] **BLIS** — link A/B re-verified on RV2 (2026-08-22): N=2048 BLIS/OpenBLAS
   **1.18×** @1 thr, **0.88×** @8 thr vs patched OpenBLAS. See [`BLIS/`](BLIS).
 - [x] **OpenBLAS / dgemm** — dgemm + difftest re-verified on RV2 (2026-08-22):

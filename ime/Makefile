@@ -20,7 +20,15 @@ board: bench.c gemm_ref.c gemm_rvv.c gemm_ime.c
 board-rvv: bench.c gemm_ref.c gemm_rvv.c
 	$(CC) $(CFLAGS) -march=$(BOARD_MARCH) -DGEMM_NO_IME bench.c gemm_ref.c gemm_rvv.c -o ime-bench
 
-clean:
-	rm -f ime-bench ime-bench-host
+# Isolated vmadot peak (cpufp-style).
+board-peak: bench_peak.c gemm_ref.c gemm_ime.c
+	$(CC) $(CFLAGS) -march=$(BOARD_MARCH) bench_peak.c gemm_ref.c gemm_ime.c -o ime-bench-peak
 
-.PHONY: host board board-rvv clean
+# Multi-core synthetic IME throughput (OpenMP M-split).
+board-mc: bench_mc.c gemm_ref.c gemm_ime.c
+	$(CC) $(CFLAGS) -fopenmp -march=$(BOARD_MARCH) bench_mc.c gemm_ref.c gemm_ime.c -o ime-bench-mc
+
+clean:
+	rm -f ime-bench ime-bench-host ime-bench-mc ime-bench-peak
+
+.PHONY: host board board-rvv board-peak board-mc clean

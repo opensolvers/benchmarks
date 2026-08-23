@@ -1,0 +1,19 @@
+#!/bin/bash
+# Rebuild llama.cpp X60 IME with the q8_0 i8i8 patch layered on the binutils patch.
+# Installs under versionsuffix -x60-ime-q8_0 (alongside the stock -x60-ime module).
+set -o pipefail
+export EESSI_VERSION_OVERRIDE=2025.06-001
+source /cvmfs/software.eessi.io/versions/2025.06/init/lmod/bash
+module load EasyBuild/5.3.0
+mkdir -p "$HOME/eessi-x60" "$HOME/x60-work"
+export EESSI_USER_INSTALL="$HOME/eessi-x60"
+export WORKING_DIR="$HOME/x60-work"
+module load EESSI-extend/2025.06-easybuild
+export EASYBUILD_OPTARCH='-march=rv64imafdcv_zvl256b'
+export SMT_XSMTVDOT_BIN="$EESSI_USER_INSTALL/versions/2025.06-001/software/linux/riscv64/generic/software/binutils/2.46.1-xsmtvdot/bin"
+EC="$HOME/x60-ec/llama.cpp-ad8d821-foss-2025b-x60-ime-q8_0.eb"
+echo "=== LLAMA IME SCALEOPT BUILD $(date) ; as=$SMT_XSMTVDOT_BIN/as ; ec=$EC ==="
+"$SMT_XSMTVDOT_BIN/as" --version | head -1
+eb "$EC" --robot --rebuild
+rc=$?
+echo "LLAMA_SCALEOPT_BUILD_DONE rc=$rc $(date)"

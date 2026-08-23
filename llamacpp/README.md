@@ -17,6 +17,36 @@ A/B): where `ime/` isolates the `smt.vmadot` kernel, this directory answers
 > so `m1gemv` is a **net regression** vs plain RVV (RVV wins tg by 2.9–6.5× on
 > every model). The IME-wins-prefill result below is **Q4_0-specific**.
 
+> **Q8_0 + i8i8 kernel (2026-08-22):** the `-x60-ime-q8_0` build adds
+> `gemm_kernel_i8i8` for Q8_0/Q6_K activations. On `qwen2.5-0.5b-q8_0.gguf`,
+> **pp64 @ t4 = 62.7 t/s** (i8i8 build) vs **25.5** (stock `-x60-ime` RVV fallback)
+> and **56.8 pp64 @ t8** (plain RVV build). tg32 stays RVV-favoured (0.83 vs 4.9 vs 8.9).
+>
+> **Port of ime-bench pipelining (2026-08-23):** load/`smt.vmadot` interleave in
+> the i8i8 M4 INNER loop ([`../ime/run-llama-pipe-build.sh`](../ime/run-llama-pipe-build.sh)).
+> Kernel: **~4–5 %** (`bench_i8i8` 512³ 24.8→25.8, 768²×512 28.6→29.9 GOP/s median,
+> bit-identical). End-to-end `pp512 @ t4` interleaved A/B: stock **77.3** vs pipe
+> **78.4** t/s mean — **within noise** (±4–5). Full dual-bank pipelining does not
+> fit (FP acc holds `v24..v31`); llama INNER is only `BlkLen/16 = 2` steps, so the
+> synthetic 1.45× kloop win does not transfer. Amortized packing N/A (B pre-repacked).
+>
+> **Hybrid prefill/decode split (2026-08-23):** one binary, two paths inside
+> `libggml-cpu` ([`../ime/apply-hybrid.py`](../ime/apply-hybrid.py),
+> [`../ime/run-llama-hybrid.sh`](../ime/run-llama-hybrid.sh)). Weights are stored
+> **twice** in the spacemit buffer (native GGUF layout + IME tiles). `M >= 4` → IME
+> M4; `M < 4` (token-gen) → stock `ggml_compute_forward_mul_mat` on native weights.
+> Env: `SPACEMIT_HYBRID=1`, optional `SPACEMIT_IME_MIN_M=4`. Use **`LD_PRELOAD`**
+> on the rebuilt `libggml-cpu.so` (q8_0 binary RPATH ignores `LD_LIBRARY_PATH`).
+>
+> | build | Q8_0 pp512 @ t4 | Q8_0 tg32 @ t4 |
+> |---|--:|--:|
+> | IME-only (q8_0) | 83.7 | **0.83** |
+> | **Hybrid** | **90.1** | **6.68** |
+> | RVV-only | 27.0 | 5.11 |
+>
+> Q4_0 on stock `~/x60-ime` already has decent tg (~7.3); hybrid mainly lifts Q8_0
+> decode (~8×) while slightly improving pp. Cost: **~2× weight RAM** in spacemit buffers.
+
 ## Contents
 
 | File | Purpose |
@@ -25,6 +55,8 @@ A/B): where `ime/` isolates the `smt.vmadot` kernel, this directory answers
 | `model_validation.tsv` | raw results (10 rows: pp128/tg32 for IME and RVV) |
 | `validate_model.sh` | per-model harness: download → coherence (IME) → bench IME + RVV → append TSV row → reclaim RAM |
 | `run_all.sh` | driver: runs all 10 models (verified HF Q4_0 sources baked in) |
+| [`../ime/bench_i8i8.cpp`](../ime/bench_i8i8.cpp) | links `gemm_kernel_i8i8` from `-x60-ime-q8_0` for layout selftest + GOP/s |
+| [`../ime/run-i8i8-selftest-ab.sh`](../ime/run-i8i8-selftest-ab.sh) | RV2 runner: chk gate + kernel GOP/s vs ime-bench RVV |
 | [`results_17model_m1gemv_vs_rvv.md`](results_17model_m1gemv_vs_rvv.md) | **second study**: 17 models, Q4_K_M, `m1gemv` IME build vs RVV control (full write-up + finding) |
 | `results_17model_m1gemv.tsv` | raw results for the second study (17 rows: pp512/tg64 for IME and RVV) |
 | `bench_suite.sh` | second-study IME arm: fd-3 manifest read, force-killed timeouts, writes `results.md` |

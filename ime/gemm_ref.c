@@ -25,26 +25,38 @@ void gemm_ref(const int8_t *A, const int8_t *B, int32_t *C, int M, int N, int K)
  * Tile (mb,kb) at Ap + (mb*(K/TK) + kb)*TILE_BYTES; element (r,c) at +(r*TK+c). */
 void pack_a(const int8_t *A, int8_t *Ap, int M, int K)
 {
-    const int KB = K / TK;
-    for (int mb = 0; mb < M / TM; mb++)
-        for (int kb = 0; kb < KB; kb++) {
-            int8_t *t = Ap + ((size_t)mb * KB + kb) * TILE_BYTES;
-            for (int r = 0; r < TM; r++)
-                for (int c = 0; c < TK; c++)
-                    t[r * TK + c] = A[(size_t)(mb * TM + r) * K + (kb * TK + c)];
-        }
+    pack_a_panel(A, Ap, 0, M / TM, K);
 }
 
 /* B[N][K] -> Bp laid out as [nb][kb][4][8]; same tile shape as A. */
 void pack_b(const int8_t *B, int8_t *Bp, int N, int K)
 {
+    pack_b_panel(B, Bp, 0, N / TN, K);
+}
+
+void pack_a_panel(const int8_t *A, int8_t *Ap, int mb0, int mb_cnt, int K)
+{
     const int KB = K / TK;
-    for (int nb = 0; nb < N / TN; nb++)
+    for (int mb = 0; mb < mb_cnt; mb++)
         for (int kb = 0; kb < KB; kb++) {
-            int8_t *t = Bp + ((size_t)nb * KB + kb) * TILE_BYTES;
+            int8_t *t = Ap + ((size_t)(mb0 + mb) * KB + kb) * TILE_BYTES;
+            for (int r = 0; r < TM; r++)
+                for (int c = 0; c < TK; c++)
+                    t[r * TK + c] =
+                        A[(size_t)((mb0 + mb) * TM + r) * K + (kb * TK + c)];
+        }
+}
+
+void pack_b_panel(const int8_t *B, int8_t *Bp, int nb0, int nb_cnt, int K)
+{
+    const int KB = K / TK;
+    for (int nb = 0; nb < nb_cnt; nb++)
+        for (int kb = 0; kb < KB; kb++) {
+            int8_t *t = Bp + ((size_t)(nb0 + nb) * KB + kb) * TILE_BYTES;
             for (int r = 0; r < TN; r++)
                 for (int c = 0; c < TK; c++)
-                    t[r * TK + c] = B[(size_t)(nb * TN + r) * K + (kb * TK + c)];
+                    t[r * TK + c] =
+                        B[(size_t)((nb0 + nb) * TN + r) * K + (kb * TK + c)];
         }
 }
 

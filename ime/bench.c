@@ -20,6 +20,22 @@
 #include <time.h>
 #include "gemm_s8s8s32.h"
 
+static void *ime_buf(size_t nbytes, int anti_alias)
+{
+    size_t slack = anti_alias ? GEMM_BUF_PAD * 2 : 64;
+    void *raw = NULL;
+    if (posix_memalign(&raw, 64, nbytes + slack) != 0)
+        return NULL;
+    return anti_alias ? (char *)raw + GEMM_BUF_PAD : raw;
+}
+
+static void ime_buf_free(void *p, int anti_alias)
+{
+    if (!p)
+        return;
+    free(anti_alias ? (char *)p - GEMM_BUF_PAD : p);
+}
+
 static double secs(void)
 {
     struct timespec t;
@@ -45,6 +61,15 @@ static int check(const char *name, const int32_t *got, const int32_t *ref, size_
     return 0;
 }
 
+static int check_mat(const char *name, const int32_t *got, const int32_t *ref, int M, int N,
+                     int ldc)
+{
+    int bad = 0;
+    for (int i = 0; i < M; i++)
+        bad |= check(name, got + (size_t)i * ldc, ref + (size_t)i * N, (size_t)N);
+    return bad;
+}
+
 static int cmp_double(const void *a, const void *b)
 {
     double x = *(const double *)a, y = *(const double *)b;
@@ -56,14 +81,20 @@ int main(int argc, char **argv)
     int M = argc > 1 ? atoi(argv[1]) : 512;
     int N = argc > 2 ? atoi(argv[2]) : 512;
     int K = argc > 3 ? atoi(argv[3]) : 512;
+    int peak = argc > 4 ? atoi(argv[4]) : 0;
+    int anti_alias = argc > 5 ? atoi(argv[5]) : 0;
     if (M % TM || N % TN || K % TK) {
         printf("need M%%%d==0 N%%%d==0 K%%%d==0\n", TM, TN, TK);
         return 1;
     }
+    const int ldc = N + (anti_alias ? GEMM_C_PAD : 0);
     /* int32 accumulator overflows only if K*127*127 > 2^31 (K > ~133000). */
-    int8_t *A = malloc((size_t)M * K), *B = malloc((size_t)N * K);
-    int8_t *Ap = malloc((size_t)M * K), *Bp = malloc((size_t)N * K);
-    int32_t *Cref = malloc((size_t)M * N * 4), *Ctest = malloc((size_t)M * N * 4);
+    int8_t *A = ime_buf((size_t)M * K, anti_alias);
+    int8_t *B = ime_buf((size_t)N * K, anti_alias);
+    int8_t *Ap = ime_buf((size_t)M * K, anti_alias);
+    int8_t *Bp = ime_buf((size_t)N * K, anti_alias);
+    int32_t *Cref = malloc((size_t)M * N * 4);
+    int32_t *Ctest = ime_buf((size_t)M * (size_t)ldc * 4, anti_alias);
     if (!A || !B || !Ap || !Bp || !Cref || !Ctest) {
         printf("alloc fail\n");
         return 1;
@@ -71,7 +102,8 @@ int main(int argc, char **argv)
     fill(A, (size_t)M * K, 1u);
     fill(B, (size_t)N * K, 2u);
 
-    printf("M=%d N=%d K=%d  (%.1f MMAC)\n", M, N, K, (double)M * N * K / 1e6);
+    printf("M=%d N=%d K=%d ldc=%d anti_alias=%d  (%.1f MMAC)\n", M, N, K, ldc, anti_alias,
+           (double)M * N * K / 1e6);
     const double ops = 2.0 * (double)M * N * K;
 
     double t = secs();
@@ -84,15 +116,14 @@ int main(int argc, char **argv)
      * min/median/max GOP/s. The max (fastest rep) is the contention-free
      * single-core capability - robust to a neighbor core polluting the shared
      * cluster L2 during a timed window, unlike inter-process best-of-N. */
-    int peak = argc > 4 ? atoi(argv[4]) : 0;
     if (peak > 0) {
 #if defined(__riscv) && !defined(GEMM_NO_IME)
-        gemm_ime(A, B, Ctest, M, N, K, Ap, Bp);
-        int bad = check("ime", Ctest, Cref, (size_t)M * N);
+        gemm_ime(A, B, Ctest, M, N, K, Ap, Bp, ldc);
+        int bad = check_mat("ime", Ctest, Cref, M, N, ldc);
         double *g = malloc((size_t)peak * sizeof(double));
         for (int r = 0; r < peak; r++) {
             double t0 = secs();
-            gemm_ime(A, B, Ctest, M, N, K, Ap, Bp);
+            gemm_ime(A, B, Ctest, M, N, K, Ap, Bp, ldc);
             g[r] = ops / (secs() - t0) / 1e9;
         }
         qsort(g, peak, sizeof(double), cmp_double);
@@ -103,7 +134,12 @@ int main(int argc, char **argv)
 #else
         printf("ime-peak: requires the X60 IME build (make board)\n");
 #endif
-        free(A); free(B); free(Ap); free(Bp); free(Cref); free(Ctest);
+        ime_buf_free(A, anti_alias);
+        ime_buf_free(B, anti_alias);
+        ime_buf_free(Ap, anti_alias);
+        ime_buf_free(Bp, anti_alias);
+        ime_buf_free(Ctest, anti_alias);
+        free(Cref);
         return 0;
     }
 
@@ -119,13 +155,32 @@ int main(int argc, char **argv)
                ops / _t / 1e9, _t);                                              \
     } while (0)
 
-    RUN("packed-ref", 1, gemm_packed_ref(A, B, Ctest, M, N, K, Ap, Bp));
+#define RUN_IME(REPS)                                                            \
+    do {                                                                         \
+        gemm_ime(A, B, Ctest, M, N, K, Ap, Bp, ldc);                           \
+        double _t = secs();                                                      \
+        for (int _r = 0; _r < (REPS); _r++)                                      \
+            gemm_ime(A, B, Ctest, M, N, K, Ap, Bp, ldc);                       \
+        _t = (secs() - _t) / (REPS);                                             \
+        int _b = check_mat("ime", Ctest, Cref, M, N, ldc);                       \
+        printf("%-12s %s %8.3f GOP/s  (%.4f s/rep)\n", "ime", _b ? "FAIL" : "ok  ",\
+               ops / _t / 1e9, _t);                                              \
+    } while (0)
+
+    if (!anti_alias) {
+        RUN("packed-ref", 1, gemm_packed_ref(A, B, Ctest, M, N, K, Ap, Bp));
 #if defined(__riscv)
-    RUN("rvv", 5, gemm_rvv(A, B, Ctest, M, N, K));
-#if !defined(GEMM_NO_IME)
-    RUN("ime", 5, gemm_ime(A, B, Ctest, M, N, K, Ap, Bp));
+        RUN("rvv", 5, gemm_rvv(A, B, Ctest, M, N, K));
 #endif
+    }
+#if defined(__riscv) && !defined(GEMM_NO_IME)
+    RUN_IME(5);
 #endif
-    free(A); free(B); free(Ap); free(Bp); free(Cref); free(Ctest);
+    ime_buf_free(A, anti_alias);
+    ime_buf_free(B, anti_alias);
+    ime_buf_free(Ap, anti_alias);
+    ime_buf_free(Bp, anti_alias);
+    ime_buf_free(Ctest, anti_alias);
+    free(Cref);
     return 0;
 }

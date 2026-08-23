@@ -35,6 +35,11 @@ independent accumulators hide the unit's latency. The 8 result tiles are written
 **straight to `C`** (vectorized, no scalar scratch copy). The plain 4×4
 `ime_tile` remains for the M/N block edges. An L2 panel loop keeps the reused
 B-panel (~128 KB) resident in the 512 KB cluster L2 across the M sweep.
+**Amortized packing** matches that loop: `pack_b_panel` runs once per N-panel
+(before the M sweep); `pack_a_panel` runs once per M-tile pair on the first
+N-panel only (`n0==0`). Same total pack work as a monolithic `pack_a`/`pack_b`,
+but B bytes are gathered just before the panel that reuses them (modest gain,
+~parity on RV2 at 768³).
 
 | File | Role | Portable? |
 |---|---|---|
@@ -65,9 +70,25 @@ make board && taskset -c 0 ./ime-bench 512 512 512
 # bit-exact check, then N back-to-back IME reps report min/median/max GOP/s.
 taskset -c 0 ./ime-bench 768 768 512 50
 
+# Isolated vmadot peak (cpufp-style, L1-resident micro-tile):
+make board-peak && taskset -c 0 ./ime-bench-peak 64 500000 0
+
+# GEMM with anti-alias padding (ldc=N+16, buffer offset GEMM_BUF_PAD):
+taskset -c 0 ./ime-bench 768 768 512 25 1
+
+# Full peak + aliasing A/B sweep:
+bash run-ime-peak-alias.sh
+
+# Multi-core synthetic IME (OpenMP M-split):
+make board-mc && bash run-ime-mc.sh
+
 # X60, RVV baseline only (skips the IME kernel entirely):
 make board-rvv && taskset -c 0 ./ime-bench
 ```
+
+Multi-core harness: [`bench_mc.c`](bench_mc.c) + [`run-ime-mc.sh`](run-ime-mc.sh)
+(`make board-mc` → `ime-bench-mc`). Splits `M` across OpenMP threads on cluster 0;
+each thread needs its own pack buffers (`Ap`/`Bp`).
 
 Dims must satisfy `M%4=0, N%4=0, K%8=0`. On the K1/M1 the IME lives on one 4-core
 cluster — pin to a core in it (`taskset -c 0`; cluster 0 = cores 0-3).
@@ -114,6 +135,148 @@ Quick sanity run via [`run-part-a-v2.sh`](../run-part-a-v2.sh) (`taskset -c 0`,
 IME/RVV **4.7×** at this size (below the clean-layout peak table above because
 this was a single launch, not max-over-reps). Log:
 `~/logs/part-a-v2-20260822-091805.log`.
+
+## i8i8 kernel selftest + A/B (2026-08-22, RV2)
+
+[`bench_i8i8.cpp`](bench_i8i8.cpp) links `gemm_kernel_i8i8` from the
+`-x60-ime-q8_0` llama.cpp build. Runner: [`run-i8i8-selftest-ab.sh`](run-i8i8-selftest-ab.sh);
+log: `~/logs/i8i8-selftest-20260822-205847.log`.
+
+**Correctness gate** (`chk=1`, varied finite inputs): `finite=1` at 512³.
+
+**Kernel throughput** (varied fill, cluster 0, median of 25 reps):
+
+| M×N×K | i8i8 GOP/s | ime s8s8s32 | i8i4 (ref) |
+|---|--:|--:|--:|
+| 512×512×512 | **23.4** | 33.3 | ~22 |
+| 768×768×512 | **28.1** | 24.7 | — |
+| 1024×1024×512 | **22.0** | 30.3 | ~32 |
+
+End-to-end Q8_0 `llama-bench` (repacked B): see [`../llamacpp/README.md`](../llamacpp/README.md).
+
+## Multi-core synthetic IME (2026-08-23, RV2)
+
+Raw `s8s8s32` throughput on cluster 0 (cores 0–3, shared 512 KB L2 + IME unit).
+Runner: [`run-ime-mc.sh`](run-ime-mc.sh); log: `~/logs/ime-mc-20260823-035745.log`.
+All paths `check=ok` (bit-exact vs scalar ref).
+
+**OpenMP M-split** (one GEMM, `B` shared, per-thread `Ap`/`Bp`):
+
+| M×N×K | 1c wall GOP/s | 4c wall GOP/s | 4c/1c | 4c sum-panel |
+|---|--:|--:|--:|--:|
+| 512×512×512 | 24.6 | 67.6 | **2.7×** | 76.0 |
+| 768×768×512 | 25.3 | 79.9 | **3.2×** | 85.2 |
+| 1024×1024×512 | 30.2 | 74.6 | **2.5×** | 78.4 |
+
+Per-panel rates on 4c sit at ~19–22 GOP/s (vs ~25–30 on 1c full-`M`), so scaling
+is **~2.5–3.2×**, not 4× — the four cores share one IME matrix unit and one L2.
+OpenMP M-split still beats launching four independent full GEMMs: **4× independent
+768³** (same size, 25 reps each, wall aggregate) ≈ **27 GOP/s** total with each
+core ~25 GOP/s median — heavy contention when every process packs its own full `B`.
+
+**Takeaway:** for raw int8 GEMM on this part, one 4-thread OpenMP job on cluster 0
+is the right shape (~80 GOP/s at 768³); four separate 1c jobs fight over the same
+IME/L2 and sum to ~27 GOP/s aggregate.
+
+## Isolated vmadot peak + aliasing fix (2026-08-23, RV2)
+
+Runner: [`run-ime-peak-alias.sh`](run-ime-peak-alias.sh); log:
+`~/logs/ime-peak-alias-20260823-042346.log`.
+
+### (a) cpufp-style silicon ceiling
+
+[`bench_peak.c`](bench_peak.c) times only the `ime_kloop_8x16` inner loop (loads +
+8× `vmadot` per K-tile) on one L1-resident 8×16×K micro-tile — no full-GEMM
+pack, no panel loops:
+
+| K | variant | insn-equiv GOP/s | cycles/vmadot | vs 409.6 @1.6GHz |
+|---:|---|--:|--:|--:|
+| 256 | seq (old) | 148 | 2.77 | 36.1 % |
+| 256 | **piped (prod)** | **215** | **1.91** | **52.5 %** |
+| 256 | block+store | 167 | 2.46 | 40.7 % |
+
+Software-pipelined dual-buffer K-loop (`v8–v13` compute while prefetching
+`v0–v5`) is the production path. Naive load/vmadot interleave without prefetch
+**regresses** — only the cross-K pipeline wins.
+
+Full GEMM with anti-alias after piped kernel: **~38 GOP/s** @768³ (was ~36).
+
+### Port into llama.cpp i8i8 (2026-08-23)
+
+Tried carrying the synthetic wins into `gemm_kernel_i8i8` (`-x60-ime-q8_0`):
+
+| Change | Status | Result |
+|---|---|---|
+| Load/`smt.vmadot` INNER interleave | Ported ([`run-llama-pipe-build.sh`](run-llama-pipe-build.sh)) | Kernel **+4–5 %**; e2e pp512 **~0 %** (noise) |
+| Dual-bank pipe (ime-bench style) | **Blocked** — FP acc uses `v24..v31`; only 6 free regs | — |
+| Amortized packing | N/A — B is offline `repack` | — |
+| Anti-alias `ldc` pad | Not ported — ggml owns C layout; short-K tax already low | — |
+
+Why the synthetic **1.45×** kloop win vanishes: llama’s INNER is `BlkLen/16 = 2`
+(Q8_0/Q4_0), not dozens of K-tiles; most time is scale epilogue + framework.
+Bit-exact vs stock (`bench_i8i8` sum/sumsq/max). Quiet interleaved `llama-bench`
+pp512 @ t4 on `qwen2.5-0.5b-q8_0`: stock 75.7 / 76.1 / 80.2 vs pipe 77.1 / 80.8 / 77.4.
+
+### Hybrid prefill (IME) + decode (RVV) in one binary (2026-08-23)
+
+[`apply-hybrid.py`](apply-hybrid.py) + [`run-llama-hybrid.sh`](run-llama-hybrid.sh):
+spacemit buffers hold **native GGUF weights + IME tiles**. At runtime
+(`SPACEMIT_HYBRID=1`, `SPACEMIT_IME_MIN_M=4`):
+
+- `gemm_m >= 4` → IME M4 (prefill)
+- `gemm_m < 4` → stock `ggml_compute_forward_mul_mat` on native weights (RVV decode)
+
+Use **`LD_PRELOAD`** on rebuilt `libggml-cpu.so` (q8_0 RPATH ignores `LD_LIBRARY_PATH`).
+
+| build | Q8_0 pp512 @ t4 | Q8_0 tg32 @ t4 |
+|---|--:|--:|
+| IME-only | 83.7 | 0.83 |
+| **Hybrid** | **90.1** | **6.68** |
+| RVV-only | 27.0 | 5.11 |
+
+Q4_0 on `~/x60-ime` already has decent tg (~7.3); hybrid is mainly for **Q8_0 decode**.
+Cost: **~2× weight RAM** in spacemit buffers.
+
+### Wider micro-tiles (SpacemiT docs + RV2 trial, 2026-08-23)
+
+Per [SpacemiT IME docs](https://github.com/spacemit-com/docs-ai/blob/main/en/architecture/ime_extension.md):
+
+| Platform | int8 sub-extension tile (`M×K×N`) | Notes |
+|---|---|---|
+| **A60 / X60** | **4×8×4** | atomic insn remains 4×4×8 |
+| **A100** | **8×16×8** | wider int8 data tile |
+| **A100** | 8×32×8 | **int4 only**, not int8 |
+
+Our **8×16** micro-block is already 2× the A60 sub-extension width in N. A true
+**8×32 int8** block needs **16 acc register pairs** (v16–v47) — impossible on the
+32-vreg file while also holding operand tiles (`vd` must not overlap `vs1`/`vs2`).
+
+Trials on RV2 @ K=256 (single core, L1):
+
+| Micro-block | insn-equiv / GEMM | c/vmadot | vs 8×16 piped |
+|---|---:|---:|---|
+| **8×16 piped** (production) | **214 GOPS** | **1.91** | — |
+| 8×32 fused (2× 8×16) | 165 GOPS | 2.47 | −23 % |
+| 4×32 kloop (1 A, 8 B) | 64 GOPS | 6.39 | −70 % |
+
+**Conclusion:** on X60, **8×16 piped is the correct ceiling shape**; wider N tiles
+add loads without fitting more accumulators. The path to ~1 c/vmadot remains
+hardware-limited, not tile-width limited.
+
+### (b) L2 set-aliasing fix (anti-alias allocation)
+
+`bench.c` 6th arg `anti_alias=1`: `ldc = N + GEMM_C_PAD` (16 int32 cols) and
+`GEMM_BUF_PAD` (2048 B) offset on `A`/`B`/`Ap`/`Bp`/`C` bases. Same kernel,
+bit-exact check `ok`:
+
+| M×N×K | unpadded median | anti-alias median | gain |
+|---|--:|--:|--:|
+| 512×512×512 | 16.9 | **34.2** | **2.0×** |
+| 768×768×512 | 14.4 | **35.7** | **2.5×** |
+
+This run landed on the **bad** side of the malloc lottery without padding; padding
+recovers the **good** peak tier (~35 GOP/s) reliably. Production backends should
+pad `ldc` and operand buffer bases the same way.
 
 ## Cross-board confirmation — Banana Pi BPI-F3 (same K1 / X60 SoC)
 

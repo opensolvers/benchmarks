@@ -28,6 +28,13 @@
 #define TK 8
 #define TILE_BYTES 32 /* 4 rows x 8 cols int8 = one packed vmadot operand tile */
 
+/* Extra int32 columns on C row stride — breaks 32 KB L2 set aliasing on the C
+ * write stream (see README "Cache-set aliasing"). Must stay 0 mod 4. */
+#define GEMM_C_PAD 16
+
+/* Byte slack before packed operand buffers — decouples Ap/Bp base from A/B/C. */
+#define GEMM_BUF_PAD 2048
+
 /* Portable reference: naive triple loop. Ground truth. */
 void gemm_ref(const int8_t *A, const int8_t *B, int32_t *C, int M, int N, int K);
 
@@ -36,6 +43,11 @@ void gemm_ref(const int8_t *A, const int8_t *B, int32_t *C, int M, int N, int K)
  * Bp needs N*K bytes. M%4==N%4==0, K%8==0. */
 void pack_a(const int8_t *A, int8_t *Ap, int M, int K);
 void pack_b(const int8_t *B, int8_t *Bp, int N, int K);
+
+/* Pack a row-tile panel: mb0 = starting M-block index, mb_cnt blocks (each TM rows). */
+void pack_a_panel(const int8_t *A, int8_t *Ap, int mb0, int mb_cnt, int K);
+/* Pack a column-tile panel: nb0 = starting N-block index, nb_cnt blocks (each TN cols). */
+void pack_b_panel(const int8_t *B, int8_t *Bp, int nb0, int nb_cnt, int K);
 
 /* Scalar model of one smt.vmadot: acc[i*4+j] += sum_c a[i*8+c]*b[j*8+c]. */
 void tile_mul_ref(int32_t acc[TM * TN], const int8_t *a, const int8_t *b);
@@ -55,7 +67,36 @@ void gemm_rvv(const int8_t *A, const int8_t *B, int32_t *C, int M, int N, int K)
  * board whose native binutils < 2.46). */
 #if defined(__riscv) && !defined(GEMM_NO_IME)
 void gemm_ime(const int8_t *A, const int8_t *B, int32_t *C,
-              int M, int N, int K, int8_t *Ap, int8_t *Bp);
+              int M, int N, int K, int8_t *Ap, int8_t *Bp, int ldc);
+
+/* Inner K-loop variants (8× vmadot per K-tile). Production uses piped. */
+void ime_kloop_8x16(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                    const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
+void ime_kloop_8x16_seq(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                        const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
+void ime_kloop_8x16_ilv(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                        const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
+void ime_kloop_8x16_piped(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                          const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
+
+void ime_kloop_4x32_ilv(const int8_t *a0, const int8_t *b0, const int8_t *b1,
+                        const int8_t *b2, const int8_t *b3, const int8_t *b4,
+                        const int8_t *b5, const int8_t *b6, const int8_t *b7, long kb);
+
+void ime_block_8x32(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                    const int8_t *b1, const int8_t *b2, const int8_t *b3,
+                    const int8_t *b4, const int8_t *b5, const int8_t *b6,
+                    const int8_t *b7, long kb, int32_t *c, long ldc);
+
+void ime_block_4x32(const int8_t *a0, const int8_t *b0, const int8_t *b1,
+                    const int8_t *b2, const int8_t *b3, const int8_t *b4,
+                    const int8_t *b5, const int8_t *b6, const int8_t *b7, long kb,
+                    int32_t *c, long ldc);
+
+/* Full 8×16 micro-tile: zero acc, kloop, store to C (row stride ldc). */
+void ime_block_8x16(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                    const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb,
+                    int32_t *c, long ldc);
 #endif
 
 #endif /* GEMM_S8S8S32_H */

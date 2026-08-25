@@ -4,10 +4,10 @@ Benchmark and root-cause writeup for int4 (`MatMulNBits`, 4-bit weights,
 `BlkLen=32`) LLM-FFN inference on the SpaceMiT X60 (RISC-V, RVV + IME
 `smt.vmadot`) through ONNX Runtime's MLAS `SQNBit` path.
 
-**Headline:** a single missing ONNX node attribute (`accuracy_level=4`) kept ORT
-on a generic fp32 dequant+SGEMM fallback instead of the X60 IME int8 kernel
-(the same `smt.vmadot` core benchmarked in [`../ime`](../ime)). Setting it cut
-latency **~9–10×** with no kernel code change.
+**Headline:** `accuracy_level=4` selects CompInt8 IME; the shipped m1pack
+backend then reaches **~10 GOP/s** on BlkLen=32 FFN microbench and **~17×**
+faster Qwen2.5-0.5B decode (BlkLen=128) vs CompFp32 fallback. Full log:
+[`MLAS_IME_IMPROVE.md`](MLAS_IME_IMPROVE.md).
 
 ## The workload
 
@@ -17,7 +17,10 @@ symmetric weights, `block_size=32`. This is where real LLM decode spends its
 time — the big 4-bit weight GEMMs. Measured with `onnxruntime_perf_test`
 (`-m times`, `-r 8`) at decode shape **M=1**.
 
-## Results
+Also: **AMD Qwen2.5-0.5B-Instruct int4** ONNX (`block_size=128`, fp16 acts) —
+real greedy decode via `run_real_llm_ort.cpp`.
+
+## Results (synthetic FFN, stock CompInt8 before m1pack)
 
 | Configuration        | Before (CompFp32 fallback) | After (IME CompInt8) | Speedup    |
 |----------------------|---------------------------:|---------------------:|:----------:|
@@ -132,14 +135,33 @@ the perftest table above, not here):
 These are deliberately *single-core* numbers isolating kernel efficiency; the
 production path fans this across 8 cores (~6× — see the perftest table).
 
+### m1pack IME (ship)
+
+See [`MLAS_IME_IMPROVE.md`](MLAS_IME_IMPROVE.md). Dual-path CompInt8:
+
+| BlkLen | Pack / kernel | M=1 microbench |
+|-------:|---------------|---------------:|
+| **32** | Q4_0×16 panels + llama M1 asm | **~10.4 GOP/s** |
+| **128** | column-major + RVV gather + IME | Qwen path |
+
+Synthetic FFN e2e (`accuracy_level=4`, BlkLen=32): x1 **3522 → 139 ms**.
+
+**Qwen2.5-0.5B int4** (AMD export, BlkLen=128, `model_acc4.onnx`):
+
+| Step | CompFp32 (acc0) | m1pack CompInt8 |
+|------|----------------:|----------------:|
+| Prefill 15 tok | ~18.4 s | **3.9 s** |
+| Decode | ~16.0 s/tok | **~0.93 s/tok (~17×)** |
+
+Deploy on board: `bash apply-ime-m1pack.sh` then rebuild `onnxruntime_mlas`
++ `onnxruntime`. Patches live under [`vendor/`](vendor/).
+
 ### One backend gotcha worth recording
 
-This RISC-V IME build registers **only** the plain `SQ4BitGemmPackQuantBData`
-(a `memcpy`), not the x64-style `...AndBlkSum` variant — scales stay *external*
-and are handed to the kernel at compute time via `QuantBScale`. Porting the x64
-two-call pack recipe verbatim (a second "finalize" call with `QuantBData=nullptr`
-to fold block-sums) therefore `memcpy`s from `NULL` and segfaults. The harness
-does the single data-only pack and passes scales through `MLAS_QNBIT_GEMM_DATA_PARAMS`.
+The BlkLen=32 m1pack path uses `SQ4BitGemmPackQuantBDataAndBlkSum` (Q4×16
+panels). BlkLen=128 uses a `memcpy` pack with external scales. The isolated
+microbench (`bench_qnbit_mlas.cpp`) two-phase packs weights then scales for
+BlkLen=32.
 
 ```sh
 # build + run on the X60 (see Makefile header for the GCC 14 toolchain note)
@@ -152,10 +174,17 @@ LD_LIBRARY_PATH=$GCC14/lib64:$LD_LIBRARY_PATH ./qnbit-mlas-bench 1 4096 11008 50
 ```sh
 # 1) generate (or patch) the model so MatMulNBits carries accuracy_level=4
 python3 patch_accuracy_level.py int4_ffn.onnx int4_ffn_acc4.onnx
+# also rewrites accuracy_level=0 → 4 (AMD Qwen export)
 
-# 2) benchmark M=1 decode on the X60 (RVV+IME toolchain)
-onnxruntime_perf_test -e cpu -I -m times -r 8 -x 1 int4_ffn_acc4.onnx   # 1 thread
-onnxruntime_perf_test -e cpu -I -m times -r 8 -x 8 int4_ffn_acc4.onnx   # 8 threads
+# 2) apply m1pack IME to ORT tree on the X60, rebuild, e2e
+bash apply-ime-m1pack.sh
+# then: make -C $ORT_BUILD onnxruntime_mlas onnxruntime
+
+# 3) synthetic FFN
+onnxruntime_perf_test -e cpu -I -m times -r 8 -x 1 int4_ffn_acc4.onnx
+
+# 4) real Qwen (after model_acc4.onnx exists)
+bash run-real-llm-ort.sh   # or MODEL_DIR=... pointing at model_acc4.onnx
 ```
 
 Environment: ONNX Runtime 1.29.0, `foss/2025b`, X60 `smt.vmadot` (XsmtVdot v1.0)
@@ -168,4 +197,7 @@ MLAS backend, `-march=rv64gcv_zvl256b_zfh_zvfh`.
 2. **Roofline early.** STREAM + traffic math killed the bandwidth hypothesis in
    minutes and pointed at "wrong path."
 3. **Comments aren't evidence** — `grep` the artifact, not the intent.
-4. **Config beats kernels.** One attribute → 9–10×; the hand kernel → −28 %.
+4. **Config beats kernels first** (`accuracy_level=4`); then BlkLen must match
+   the IME pack path (32 Q4×16 / 128 column-major).
+5. **Profile the real model.** Qwen decode was 99.7% MatMulNBits; fp16 attention
+   RVV was a red herring until acc4 + BlkLen=128 IME landed.

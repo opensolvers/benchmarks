@@ -43,7 +43,7 @@ RV2 numbers.
 | [`walberla/`](walberla) | waLBerla 7.2: BasicLBM ISA A/B, HeatEquation / UniformGrid auto-vec, hand RVV simd + SoA microbenches (RV2) | ISA / auto-vec / simd | HeatEq **1.64×**; UG collide **1.54×**; hand simd loses |
 | [`ime/`](ime) | int8 (`s8s8s32`) GEMM on X60 **IME** (`smt.vmadot`) vs RVV (RV2 + F3) | int8 kernel | microkernel + verification |
 | [`llamacpp/`](llamacpp) | llama.cpp Q4_0 / Q4_K_M end-to-end: IME vs RVV (model validation + m1gemv study) | IME / RVV | application A/B |
-| [`onnx/`](onnx) | int4 `MatMulNBits` LLM-FFN inference via ONNX Runtime MLAS | int4 kernel | application + root-cause writeup |
+| [`onnx/`](onnx) | int4 `MatMulNBits` via ORT MLAS IME: FFN microbench + **Qwen2.5-0.5B** (~17× decode) | int4 / IME | application + MLAS patches |
 | [`gpu/`](gpu) | PowerVR BXE-2-32 GPU compute: vendor stack closed + deferred open Mesa `pvr` route | GPU | characterization / negative result |
 | [`papers/`](papers) | Longer-form writeups (e.g. X60 IME block-scale optimization) | — | prose / PDF |
 | [`todo.md`](todo.md) | Tracking list for remaining RISC-V bring-up work | — | planning |

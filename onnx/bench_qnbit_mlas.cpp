@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < A.size(); i++)
         A[i] = ((int32_t)(nextr() >> 8) - 8388608) / 8388608.0f;
 
-    /* --- Pack B exactly like MatMulNBits::PrePack (CompInt8, two calls). --- */
+    /* --- Pack B: Q4_0×16 panels (weights then fp16 scales). --- */
     size_t packed_size =
         MlasQNBitGemmPackQuantBDataSize(N, K, BLKBITS, BLKLEN, has_zp, ct, &cfg);
     if (packed_size == 0) {
@@ -100,15 +100,15 @@ int main(int argc, char **argv)
     }
     std::vector<std::byte> packed(packed_size);
     std::memset(packed.data(), 0, packed_size);
-    /* 1) pack the quantized data (thread_pool = nullptr -> serial) */
+    /* 1) pack weight tiles into Q4_0×16 panels */
     MlasQNBitGemmPackQuantBData(N, K, BLKBITS, BLKLEN, ct, qb.data(), packed.data(),
                                 /*QuantBScale*/ nullptr, has_zp,
                                 /*QuantBZeroPoint*/ nullptr, nullptr, &cfg);
-    /* NOTE: RISC-V IME CompInt8 keeps scales EXTERNAL (no BlkSum fold).
-       The dispatch registers plain SQ4BitGemmPackQuantBData (a memcpy);
-       there is no ...AndBlkSum variant, so a second finalize call with
-       QuantBData=nullptr would memcpy from NULL and segfault. Scales are
-       passed to the kernel at compute time via data.QuantBScale below. */
+    /* 2) fold fp32 scales into panel fp16 headers (AndBlkSum second PrePack) */
+    MlasQNBitGemmPackQuantBData(N, K, BLKBITS, BLKLEN, ct, /*QuantBData*/ nullptr,
+                                packed.data(), scales.data(), has_zp,
+                                nullptr, nullptr, &cfg);
+    /* Scales also stay available via data.QuantBScale for the M≥4 gather path. */
 
     const size_t workspace_size =
         MlasQNBitGemmBatchWorkspaceSize(M, N, K, /*batch*/ 1, BLKBITS, BLKLEN, has_zp, ct, &cfg);

@@ -95,6 +95,37 @@ Patched vs scalar **2.65×**. Stock and patched `difftest` on this run: `dgemv`
 nan=0 (EESSI 0.3.29 stock no longer shows the 192-nan `gemv_n` fault on this
 board image). Log: `~/logs/part-a-v2-20260822-091805.log`.
 
+## OpenBLAS 0.3.34 end-to-end verify (2026-08-25, RV2)
+
+Built from tag `v0.3.34` with EESSI **GCC 14.3.0** (`TARGET=RISCV64_ZVL256B`,
+`USE_OPENMP=1`; system GCC 13 cannot compile ZVL256 SGEMM tuple intrinsics).
+Harness: [`run-034-tests.sh`](run-034-tests.sh). Log:
+`~/logs/openblas-034-results-*.log`. Lib:
+`~/ob-0.3.34/libopenblas_riscv64_zvl256bp-r0.3.34.so`.
+
+**Correctness** (1 thread, `difftest`):
+
+| backend | `dgemv` nan | `dgemm` nan | `dtrsm` nan | `dgemv` sum |
+|---|--:|--:|--:|---|
+| **0.3.34 ZVL256B** | **0** | 0 | 0 | 42.06549 |
+| stock EESSI 0.3.30 | **768** | 0 | 0 | 0 (broken) |
+| stock EESSI 0.3.29 | 0 | 0 | 0 | 42.06549 |
+| patched 0.3.30 | 0 | 0 | 0 | 42.06549 |
+
+**SYRK PSD** (#5811 repro, N=K=50): `max_err=0`, `min_diag=+12.56`, **PASS**.
+**CTRSM sweep**: **2400 cases, 0 fails** (new ZVL TRSM RVV kernels in 0.3.34).
+
+**DGEMM** @ N=2048, 8 threads:
+
+| backend | GFLOP/s | `C[0]` |
+|---|--:|--:|
+| **0.3.34** | **15.54** | 245.24 |
+| stock 0.3.30 | 9.81 | 245.24 |
+
+Verdict: **0.3.34 has a working RVV path on X60** — fixes the 0.3.30 `dgemv`
+NaN bug and passes SYRK/TRSM correctness that broke on 0.3.33 ZVL256. EESSI
+still ships 0.3.29/0.3.30 only; needs GCC ≥14.3 to build 0.3.34 locally.
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 The [Banana Pi BPI-F3](https://www.banana-pi.org/) uses the same SpaceMiT K1

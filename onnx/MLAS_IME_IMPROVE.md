@@ -160,18 +160,51 @@ higher than the synthetic FFN microbench (graph has attention + KV + vocab
 proj; this AMD export is int4/**fp16**). Scripts: `run_real_llm_ort.cpp`,
 `run-real-llm-ort.sh`.
 
+### SQ8Bit CompInt8 + Q8×16 panels (2026-08-25)
+
+ORT int8 `MatMulNBits` (`bits=8`, `BlkLen=32`) had no IME CompInt8 path — it
+fell through to a slow generic path. Added:
+
+1. **SQ8Bit CompInt8** — pack `B' = B−128`, flat scales, width-16
+   `QuantBBlkSum = −scale·(zp−128)` (0 when GenAI zp=128 / no-ZP); kernel via
+   `smt.vmadot`.
+2. **Q8×16 M1 panels** — Llama i8i8 layout (16-col × k-block: 16×fp16 scales +
+   tiles; col stride 34); M1 asm `gemm_m1_panel_q8x16` + M≥4 gather from panels.
+   Packed layout uses `MlasSQ8ResolvePackedQuantB` (BlkSum/scales **after** the
+   panel slab).
+
+Qwen2.5-0.5B decode (BlkLen=32, after Q8×16):
+
+| | int4 Blk32 | int8 (pre-panel IME) | **int8 Q8×16** |
+| -- | ---------: | -------------------: | -------------: |
+| Decode 1t | ~108 ms | ~1216 ms | **~241 ms** |
+| Decode 4t | ~80 ms | ~378 ms | **~159 ms** |
+
+Cross-model (same ORT build):
+
+| Model | Path | Decode @4t |
+| ----- | ---- | ---------: |
+| SmolLM2-360M | int4 | ~80 ms |
+| TinyLlama-1.1B | int4 | ~156 ms |
+| SmolLM2-360M | **int8 Q8×16** | **~140 ms** |
+
+GenAI int8 exports mis-wire embed (`weight_Q4` / `bits=4` / half-width reshape);
+fix to `weight_Q8` / `bits=8` / full hidden before load. Harnesses:
+`run-smollm2-ort.sh`, `run-tinyllama-ort.sh`, `run-phi3-ort.sh`.
+
 ## Files
 
 | Path | Role |
 | ---- | ---- |
-| `vendor/sqnbitgemm_kernel_ime.m1pack.cpp` | **ship** — pack-time Q4_0×16 + M1 + M≥4 gather |
+| `vendor/sqnbitgemm_kernel_ime.m1pack.cpp` | **ship** — Q4_0×16 + **SQ8/Q8×16** pack + M1 + M≥4 gather |
 | `vendor/sqnbitgemm_kernel_ime.rvvgather.cpp` | hoist + RVV B gather (pre-m1pack) |
 | `vendor/sqnbitgemm_kernel_ime.m1.cpp` | runtime-repack M1 (superseded by m1pack) |
 | `vendor/sqnbitgemm_ime_quantize.inc` | llama RVV A-row quantize (BlkLen=32) |
-| `vendor/sqnbitgemm_ime_m1_panel.inc` | llama M1 asm macros |
-| `vendor/qnbitgemm.h`, `qnbitgemm.cpp` | `ldb` hook + M1 CompInt8 dispatch |
+| `vendor/sqnbitgemm_ime_m1_panel.inc` | llama M1 asm macros (**+ Q8×16**) |
+| `vendor/qnbitgemm.h`, `qnbitgemm.cpp` | `ldb` hook + M1 CompInt8 + SQ8 resolve |
 | `vendor/llama_ime1_kernels.cpp` | upstream reference |
 | `bench_qnbit_mlas.cpp` | isolated CompInt8 rate (two-phase pack) |
 | `rebuild-ime-ab.sh` / `apply-ime-unpacked.sh` | board helpers |
 | `apply-ime-m1pack.sh` / `run-e2e-m1pack.sh` | deploy m1pack + full e2e validation |
-| `run_real_llm_ort.cpp` / `run-real-llm-ort.sh` | real Qwen2.5-0.5B int4 greedy decode |
+| `run_real_llm_ort.cpp` / `run-real-llm-ort.sh` | real greedy decode (Qwen / env-driven) |
+| `run-smollm2-ort.sh` / `run-tinyllama-ort.sh` / `run-phi3-ort.sh` | model-specific harnesses |

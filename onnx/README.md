@@ -5,9 +5,10 @@ Benchmark and root-cause writeup for int4 (`MatMulNBits`, 4-bit weights,
 `smt.vmadot`) through ONNX Runtime's MLAS `SQNBit` path.
 
 **Headline:** `accuracy_level=4` selects CompInt8 IME; the shipped m1pack
-backend then reaches **~10 GOP/s** on BlkLen=32 FFN microbench and **~17×**
-faster Qwen2.5-0.5B decode (BlkLen=128) vs CompFp32 fallback. Full log:
-[`MLAS_IME_IMPROVE.md`](MLAS_IME_IMPROVE.md).
+backend reaches **~10 GOP/s** on BlkLen=32 FFN microbench, **~17×** faster
+Qwen2.5-0.5B int4 decode (BlkLen=128) vs CompFp32, and **SQ8Bit + Q8×16**
+panels for int8 (`bits=8`, BlkLen=32) — Qwen int8 ~241/159 ms decode (1t/4t).
+Full log: [`MLAS_IME_IMPROVE.md`](MLAS_IME_IMPROVE.md).
 
 ## The workload
 
@@ -152,6 +153,10 @@ Synthetic FFN e2e (`accuracy_level=4`, BlkLen=32): x1 **3522 → 139 ms**.
 |------|----------------:|----------------:|
 | Prefill 15 tok | ~18.4 s | **3.9 s** |
 | Decode | ~16.0 s/tok | **~0.93 s/tok (~17×)** |
+
+**Int8 (BlkLen=32, SQ8 + Q8×16 panels)** — Qwen decode ~241 ms (1t) / ~159 ms
+(4t); SmolLM2-360M int8 ~140 ms @4t. SQ4 regression held (SmolLM2 int4 ~80 ms,
+TinyLlama int4 ~156 ms @4t).
 
 Deploy on board: `bash apply-ime-m1pack.sh` then rebuild `onnxruntime_mlas`
 + `onnxruntime`. Patches live under [`vendor/`](vendor/).

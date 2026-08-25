@@ -114,6 +114,73 @@ struct PackedQuantBDataStruct {
     size_t N_, BlockCountK_, BlkLen_;
 };
 
+// IME SQ8 BlkLen=32 pack-time Q8×16 panel layout (llama i8i8):
+//   per 16-col group per k-block: [16×fp16 scale = 32B][BlkLen×16 int8 tiles].
+// Per-column stride = (32 + BlkLen*16) / 16. BlkSum + flat fp32 scales follow
+// the panel slab (see MlasSQ8ResolvePackedQuantB).
+constexpr MLAS_FORCEINLINE size_t
+MlasSQ8x16KbBytes(size_t BlkLen)
+{
+    return 32 + BlkLen * 16;
+}
+
+constexpr MLAS_FORCEINLINE size_t
+MlasSQ8x16ColBytes(size_t BlkLen)
+{
+    return MlasSQ8x16KbBytes(BlkLen) / 16;
+}
+
+inline size_t
+MlasSQ8PackedBDataBytes(size_t N, size_t BlockCountK, size_t BlkLen)
+{
+    if (BlkLen == 32) {
+        const size_t Npad = MlasDivRoundup(N, size_t{16}) * 16;
+        return Npad / 16 * BlockCountK * MlasSQ8x16KbBytes(BlkLen);
+    }
+    return N * BlockCountK * BlkLen;
+}
+
+// Resolve PackedQuantBData / QuantBBlkSum / PackedQuantBScale for SQ8 workspace.
+// BlkLen=32 uses IME Q8×16 panels; other BlkLens use PackedQuantBDataStruct.
+inline void
+MlasSQ8ResolvePackedQuantB(
+    void* Workspace,
+    size_t N,
+    size_t BlockCountK,
+    size_t BlkLen,
+    bool QuantAUnsigned,
+    std::byte*& PackedQuantBData,
+    float*& QuantBBlkSum,
+    float*& PackedQuantBScale,
+    float*& BlkUnsignedQuantAZeroPointCorrection
+)
+{
+    if (BlkLen != 32) {
+        PackedQuantBDataStruct<float, 8> packed(Workspace, N, BlockCountK, BlkLen, QuantAUnsigned);
+        PackedQuantBData = packed.PackedQuantBData;
+        QuantBBlkSum = packed.QuantBBlkSum;
+        PackedQuantBScale = packed.PackedQuantBScale;
+        BlkUnsignedQuantAZeroPointCorrection = packed.BlkUnsignedQuantAZeroPointCorrection;
+        return;
+    }
+
+    constexpr size_t DataAlign = 32;
+    PackedQuantBData = static_cast<std::byte*>(MlasAlignAddress(Workspace, DataAlign));
+    const size_t panel_bytes = MlasSQ8PackedBDataBytes(N, BlockCountK, BlkLen);
+    const size_t BlkSumFloats = MlasDivRoundup(N, size_t{16}) * BlockCountK * 16;
+    QuantBBlkSum = reinterpret_cast<float*>(MlasAlignAddress(
+        PackedQuantBData + panel_bytes, MlasQNBitQuantBBlkSumAlignment()));
+    if (QuantAUnsigned) {
+        BlkUnsignedQuantAZeroPointCorrection = reinterpret_cast<float*>(MlasAlignAddress(
+            reinterpret_cast<std::byte*>(QuantBBlkSum) + BlkSumFloats * sizeof(float),
+            MlasQNBitQuantBBlkSumAlignment()));
+        PackedQuantBScale = BlkUnsignedQuantAZeroPointCorrection + BlkSumFloats;
+    } else {
+        BlkUnsignedQuantAZeroPointCorrection = nullptr;
+        PackedQuantBScale = QuantBBlkSum + BlkSumFloats;
+    }
+}
+
 template <size_t BlkBitWidth>
 constexpr MLAS_FORCEINLINE size_t
 MlasQNBitZeroPointsForBlksSizeInBytes(size_t BlkCount)

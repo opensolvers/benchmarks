@@ -7,10 +7,11 @@ Abstract:
     SQNBit (block-quantized n-bit) GEMM kernel for the SpaceMiT X60 RISC-V
     "IME" integer matrix extension, for MLAS.
 
-    Computes  C (fp32) = A (int8, block-scaled) x B (4-bit, block-scaled)  for
-    ComputeType == SQNBIT_CompInt8, BlkBitWidth == 4. This is the same operation
-    as llama.cpp's spacemit `gemm_kernel_i8i4`; the microkernel is ported from the
-    verified opensolvers/benchmarks `ime/` s8s8s32 core.
+    Computes  C (fp32) = A (int8, block-scaled) x B (4-bit or 8-bit, block-scaled)
+    for ComputeType == SQNBIT_CompInt8. BlkBitWidth==4 matches llama.cpp spacemit
+    `gemm_kernel_i8i4`; BlkBitWidth==8 is SQ8Bit CompInt8 (signed A × signed
+    B'=B_u−128, zp folded via QuantBBlkSum). Microkernel from opensolvers
+    `ime/` s8s8s32 / smt.vmadot.
 
     The extension instruction is `smt.vmadot vd, vs1, vs2`, which performs a
     4x4 int32 tile update  acc += (4x8 int8) . (4x8 int8)^T  at vl=32, e8,
@@ -25,7 +26,7 @@ Abstract:
     both the symmetric (Q4_0, zp=8) and asymmetric (per-block zp) paths.
 
     Perf notes (2026-08-24 / 08-25):
-    - BlkLen=32: pack-time Q4_0×16 panels; M=1 llama ScaleFp16; M≥4 gather from x16.
+    - BlkLen=32: pack-time Q4_0×16 / Q8×16 panels; M=1 llama ScaleFp16; M≥4 gather from x16.
     - BlkLen=128 (Qwen AMD): standard column-major pack + RVV nibble gather + IME
       (same as pre-m1pack rvvgather). M1 driver only calls M1Kernel for BlkLen=32.
 
@@ -253,8 +254,10 @@ QuantizeARow_CompInt8_FromFp16(size_t BlkLen, const MLAS_FP16* A, size_t CountK,
             k -= 32;
         }
         if (k > 0) {
+            // Zero-pad so RVV BlkLen=32 quantize never reads uninitialized tail.
+            std::memset(fbuf, 0, sizeof(fbuf));
             MlasConvertHalfToFloatBuffer(A, fbuf, k);
-            QuantizeARow_CompInt8(32, fbuf, k, dst);
+            QuantizeARow_CompInt8(32, fbuf, 32, dst);
         }
         return;
     }
@@ -432,13 +435,19 @@ SQ4BitGemmPackQuantBData(
 size_t
 QNBitGemmPerGemmWorkspaceSize(
     size_t M, size_t /*N*/, size_t K, size_t BlkLen, bool /*HasZeroPoint*/,
-    MLAS_QNBIT_GEMM_COMPUTE_TYPE ComputeType, size_t /*BlkBitWidth*/,
+    MLAS_QNBIT_GEMM_COMPUTE_TYPE ComputeType, size_t BlkBitWidth,
     const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG* /*cfg*/)
 {
     if (ComputeType != SQNBIT_CompInt8) {
         return 0;
     }
     const size_t BlockCountK = MlasDivRoundup(K, BlkLen);
+    if (BlkBitWidth == 8) {
+        // W8: flat QuantData (M×BC×BlkLen) + QuantScale + BlockSum
+        // (= Q8BlkSize + sizeof(float) per block — same as NEON).
+        return M * BlockCountK * (Q8BlkSize(BlkLen) + sizeof(float));
+    }
+    // W4: interleaved Q8 blocks [scale|int8×BlkLen]
     return M * BlockCountK * Q8BlkSize(BlkLen);
 }
 
@@ -686,6 +695,552 @@ SQ4BitGemmKernel_CompInt8(
     return CountM;
 }
 
+// ===========================================================================
+// SQ8Bit CompInt8: signed A × signed B'=(B_u−128).
+// BlkLen=32: pack-time Q8×16 panels (llama i8i8 layout) + M1 ScaleFp16 asm;
+//   M≥4 gathers from panels. BlkSum/scales follow the panel slab.
+// Other BlkLen: column-major signed int8 + flat scales (gather path).
+// ===========================================================================
+constexpr size_t kQ8x16NbCols = 16;
+
+size_t
+Q8BitGemmPackQuantBDataSize(
+    size_t N, size_t K, size_t BlkLen, bool /*HasZeroPoint*/,
+    MLAS_QNBIT_GEMM_COMPUTE_TYPE ComputeType,
+    const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG* /*cfg*/)
+{
+    if (ComputeType != SQNBIT_CompInt8 || (BlkLen % TK) != 0) {
+        return 0;
+    }
+    const size_t BlockCountK = MlasDivRoundup(K, BlkLen);
+    size_t PackedQuantBDataSize = MlasSQ8PackedBDataBytes(N, BlockCountK, BlkLen);
+    const size_t ScaleSize = N * BlockCountK * sizeof(float);
+    size_t BlkSumSize = MlasDivRoundup(N, size_t{16}) * BlockCountK * 16 * sizeof(float);
+    constexpr size_t PackedQuantBDataAlignment = 32;
+    PackedQuantBDataSize += PackedQuantBDataAlignment - 1;
+    constexpr size_t BlkSumAlignment = MlasQNBitQuantBBlkSumAlignment();
+    BlkSumSize += BlkSumAlignment - 1;
+    return PackedQuantBDataSize + ScaleSize + BlkSumSize;
+}
+
+static void
+q8_resolve_packed(
+    PackedQuantBDataStruct<float, 8>& PackedQuantB,
+    size_t N, size_t BlockCountK, size_t BlkLen,
+    std::byte*& data, float*& blksum, float*& scale)
+{
+    float* unused_corr = nullptr;
+    MlasSQ8ResolvePackedQuantB(
+        PackedQuantB.QuantBWorkspace_, N, BlockCountK, BlkLen,
+        /*QuantAUnsigned=*/false, data, blksum, scale, unused_corr);
+}
+
+static void
+q8_pack_weights_signed_column_major(
+    size_t N, size_t BlockCountK, size_t BlkLen,
+    const uint8_t* src, int8_t* dst)
+{
+    const size_t col_bytes = BlockCountK * BlkLen;
+    for (size_t n = 0; n < N; ++n) {
+        const uint8_t* scol = src + n * col_bytes;
+        int8_t* dcol = dst + n * col_bytes;
+        for (size_t i = 0; i < col_bytes; ++i) {
+            dcol[i] = static_cast<int8_t>(static_cast<int>(scol[i]) - 128);
+        }
+    }
+}
+
+// Column-major uint8 [N][BC][BlkLen] → Q8×16 panels (signed = u−128).
+// Per kb: [16×fp16 scale][SLICES×4 tiles of 4cols×8k as [col][k]].
+static void
+pack_q8x16_weights(
+    size_t N, size_t BlockCountK, size_t BlkLen,
+    const uint8_t* src, uint8_t* dst)
+{
+    const size_t Npad = MlasDivRoundup(N, kQ8x16NbCols) * kQ8x16NbCols;
+    const size_t kb_bytes = MlasSQ8x16KbBytes(BlkLen);
+    const size_t nsub = BlkLen / TK;
+    std::memset(dst, 0, Npad / kQ8x16NbCols * BlockCountK * kb_bytes);
+
+    for (size_t n0 = 0; n0 < N; n0 += kQ8x16NbCols) {
+        const size_t ncols = std::min(kQ8x16NbCols, N - n0);
+        uint8_t* panel = dst + (n0 / kQ8x16NbCols) * BlockCountK * kb_bytes;
+        for (size_t kb = 0; kb < BlockCountK; ++kb) {
+            int8_t* weights = reinterpret_cast<int8_t*>(panel + kb * kb_bytes + 32);
+            for (size_t g = 0; g < 4; ++g) {
+                for (size_t s = 0; s < nsub; ++s) {
+                    int8_t* tile = weights + (s * 4 + g) * 32;
+                    for (size_t c = 0; c < 4; ++c) {
+                        const size_t col = g * 4 + c;
+                        if (col >= ncols) {
+                            continue;
+                        }
+                        const uint8_t* scol =
+                            src + ((n0 + col) * BlockCountK + kb) * BlkLen + s * TK;
+                        for (size_t k = 0; k < TK; ++k) {
+                            tile[c * TK + k] = static_cast<int8_t>(
+                                static_cast<int>(scol[k]) - 128);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void
+pack_q8x16_scales(
+    size_t N, size_t BlockCountK, size_t BlkLen,
+    const float* scales, uint8_t* dst)
+{
+    const size_t kb_bytes = MlasSQ8x16KbBytes(BlkLen);
+    for (size_t n0 = 0; n0 < N; n0 += kQ8x16NbCols) {
+        const size_t ncols = std::min(kQ8x16NbCols, N - n0);
+        uint8_t* panel = dst + (n0 / kQ8x16NbCols) * BlockCountK * kb_bytes;
+        for (size_t kb = 0; kb < BlockCountK; ++kb) {
+            auto* fp16 = reinterpret_cast<_Float16*>(panel + kb * kb_bytes);
+            for (size_t c = 0; c < ncols; ++c) {
+                fp16[c] = static_cast<_Float16>(scales[(n0 + c) * BlockCountK + kb]);
+            }
+        }
+    }
+}
+
+static void
+q8_compute_pack_blksum_signed(
+    size_t N, size_t K, size_t BlkLen,
+    float* QuantBScaleBegin,
+    const std::byte* QuantBZPBegin,
+    float* BlockSumBegin)
+{
+    const size_t BlockCountK = MlasDivRoundup(K, BlkLen);
+    const size_t BlkSumFloats = MlasDivRoundup(N, size_t{16}) * BlockCountK * 16;
+    std::memset(BlockSumBegin, 0, BlkSumFloats * sizeof(float));
+
+    for (size_t n = 0; n < N; ++n) {
+        for (size_t kb = 0; kb < BlockCountK; ++kb) {
+            const size_t src_off = n * BlockCountK + kb;
+            const float scale = QuantBScaleBegin[src_off];
+            int zp = 128;
+            if (QuantBZPBegin) {
+                zp = static_cast<int>(
+                    std::to_integer<uint8_t>(QuantBZPBegin[src_off]));
+            }
+            const size_t dst =
+                ((n / 16) * BlockCountK + kb) * 16 + (n % 16);
+            BlockSumBegin[dst] = -scale * static_cast<float>(zp - 128);
+        }
+    }
+}
+
+void
+SQ8BitGemmPackQuantBDataAndBlkSum(
+    size_t N, size_t K, size_t BlkLen,
+    MLAS_QNBIT_GEMM_COMPUTE_TYPE /*ComputeType*/,
+    const std::byte* QuantBDataBegin,
+    const float* QuantBScaleBegin,
+    bool HasZeroPoint,
+    const std::byte* QuantBZPBegin,
+    PackedQuantBDataStruct<float, 8>& PackedQuantB,
+    MLAS_THREADPOOL* /*ThreadPool*/,
+    const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG* /*cfg*/)
+{
+    assert((BlkLen % TK) == 0);
+    const size_t BlockCountK = MlasDivRoundup(K, BlkLen);
+    std::byte* data = nullptr;
+    float* blksum = nullptr;
+    float* scale = nullptr;
+    q8_resolve_packed(PackedQuantB, N, BlockCountK, BlkLen, data, blksum, scale);
+
+    if (QuantBDataBegin != nullptr) {
+        if (BlkLen == 32) {
+            pack_q8x16_weights(
+                N, BlockCountK, BlkLen,
+                reinterpret_cast<const uint8_t*>(QuantBDataBegin),
+                reinterpret_cast<uint8_t*>(data));
+        } else {
+            q8_pack_weights_signed_column_major(
+                N, BlockCountK, BlkLen,
+                reinterpret_cast<const uint8_t*>(QuantBDataBegin),
+                reinterpret_cast<int8_t*>(data));
+        }
+        return;
+    }
+
+    if (QuantBScaleBegin != nullptr) {
+        std::memcpy(scale, QuantBScaleBegin, N * BlockCountK * sizeof(float));
+        if (BlkLen == 32) {
+            pack_q8x16_scales(
+                N, BlockCountK, BlkLen, QuantBScaleBegin,
+                reinterpret_cast<uint8_t*>(data));
+        }
+    }
+    if ((QuantBScaleBegin != nullptr && !HasZeroPoint) || QuantBZPBegin != nullptr) {
+        q8_compute_pack_blksum_signed(
+            N, K, BlkLen, scale, QuantBZPBegin, blksum);
+    }
+}
+
+void
+QuantizeARowComputeBlkSum_CompInt8(
+    size_t BlkLen,
+    const float* A,
+    size_t CountK,
+    std::byte* QuantA,
+    float* QuantAScale,
+    float* AScaledGroupSum)
+{
+    int8_t* blob = reinterpret_cast<int8_t*>(QuantA);
+    for (size_t k = 0; k < CountK; k += BlkLen) {
+        const size_t klen = std::min(BlkLen, CountK - k);
+        float amax = 0.0f;
+        for (size_t i = 0; i < klen; ++i) {
+            const float v = std::fabs(A[k + i]);
+            if (v > amax) amax = v;
+        }
+        const float scale = amax / 127.0f;
+        const float inv = scale > 0.0f ? 1.0f / scale : 0.0f;
+        *QuantAScale++ = scale;
+
+        int32_t qsum = 0;
+        for (size_t i = 0; i < BlkLen; ++i) {
+            if (i < klen) {
+                int q = static_cast<int>(std::lrintf(A[k + i] * inv));
+                q = q < -127 ? -127 : (q > 127 ? 127 : q);
+                blob[k + i] = static_cast<int8_t>(q);
+                qsum += q;
+            } else {
+                blob[k + i] = 0;
+            }
+        }
+        *AScaledGroupSum++ = scale * static_cast<float>(qsum);
+    }
+}
+
+static inline void
+gather_b8_panel_from_q8x16(
+    const int8_t* Bp,
+    size_t n,
+    size_t ncols,
+    size_t kb,
+    size_t BlockCountK,
+    size_t BlkLen,
+    size_t nsub,
+    int8_t* Btile)
+{
+    const size_t kb_bytes = MlasSQ8x16KbBytes(BlkLen);
+    for (size_t c = 0; c < TN; ++c) {
+        if (c >= ncols) {
+            for (size_t s = 0; s < nsub; ++s) {
+                std::memset(&Btile[s * TILE_BYTES + c * TK], 0, TK);
+            }
+            continue;
+        }
+        const size_t col = n + c;
+        const size_t panel_col0 = col & ~(kQ8x16NbCols - 1);
+        const size_t col_in_panel = col - panel_col0;
+        const int8_t* panel = reinterpret_cast<const int8_t*>(
+            reinterpret_cast<const uint8_t*>(Bp) +
+            panel_col0 * (BlockCountK * MlasSQ8x16ColBytes(BlkLen)));
+        const int8_t* weights =
+            reinterpret_cast<const int8_t*>(
+                reinterpret_cast<const uint8_t*>(panel) + kb * kb_bytes + 32);
+        const size_t g = col_in_panel / 4;
+        const size_t cc = col_in_panel % 4;
+        for (size_t s = 0; s < nsub; ++s) {
+            const int8_t* tile = weights + (s * 4 + g) * 32;
+            std::memcpy(&Btile[s * TILE_BYTES + c * TK], tile + cc * TK, TK);
+        }
+    }
+}
+
+static inline void
+gather_b8_panel_column_major(
+    const int8_t* Bp,
+    size_t n,
+    size_t ncols,
+    size_t kb,
+    size_t BlkLen,
+    size_t nsub,
+    size_t b_col_bytes,
+    int8_t* Btile)
+{
+    for (size_t c = 0; c < TN; ++c) {
+        if (c >= ncols) {
+            for (size_t s = 0; s < nsub; ++s) {
+                std::memset(&Btile[s * TILE_BYTES + c * TK], 0, TK);
+            }
+            continue;
+        }
+        const int8_t* src = Bp + (n + c) * b_col_bytes + kb * BlkLen;
+        for (size_t s = 0; s < nsub; ++s) {
+            std::memcpy(&Btile[s * TILE_BYTES + c * TK], src + s * TK, TK);
+        }
+    }
+}
+
+// M1 Q8×16 panel microkernel (BlkLen=32). A is interleaved Q8Blk [fp32|int8×32].
+static void
+gemm_m1_panel_q8x16(
+    const std::byte* QuantA,
+    const std::byte* QuantBDataPtr,
+    float* CPtr,
+    size_t BlockCountK,
+    size_t nblks)
+{
+    const size_t INNER = 2;  // BlkLen/16
+    size_t cnt = BlockCountK;
+    __asm__ volatile(
+        ".option push\n\t"
+        ".option arch, +xsmtvdot\n\t"
+        "vsetvli      t0, zero, e32, m4       \n\t"
+        "vxor.vv      v28, v28, v28           \n\t"
+        "addi         s1, %[B], 0             \n\t"
+        "addi         s5, %[A], 0             \n\t"
+        "addi         s6, %[A], 12            \n\t"
+        "LOOP_K%=:                            \n\t"
+        "vsetvli      t0, zero, e16, mf4      \n\t"
+        "addi         s2, s1, 8               \n\t"
+        "addi         s3, s1, 16              \n\t"
+        "addi         s4, s1, 24              \n\t"
+        "vle16.v      v4, (s1)                \n\t"
+        "vle16.v      v5, (s2)                \n\t"
+        "vle16.v      v6, (s3)                \n\t"
+        "vle16.v      v7, (s4)                \n\t"
+        "addi         s1, s1, 32              \n\t"
+        "flw          f1, (s5)                \n\t"
+        "addi         s5, s5, 4               \n\t"
+        "vfwcvt.f.f.v v8, v4                  \n\t"
+        "vfwcvt.f.f.v v9, v5                  \n\t"
+        "vfwcvt.f.f.v v10, v6                 \n\t"
+        "vfwcvt.f.f.v v11, v7                 \n\t"
+        "vsetvli      t0, zero, e32, mf2      \n\t"
+        "addi         t5, %[INNER], 0         \n\t"
+        "vxor.vv      v16, v16, v16           \n\t"
+        "vxor.vv      v18, v18, v18           \n\t"
+        "vxor.vv      v20, v20, v20           \n\t"
+        "vxor.vv      v22, v22, v22           \n\t"
+        "vfmul.vf     v24, v8, f1             \n\t"
+        "vfmul.vf     v25, v9, f1             \n\t"
+        "vfmul.vf     v26, v10, f1            \n\t"
+        "vfmul.vf     v27, v11, f1            \n\t"
+        "addi         %[CNT], %[CNT], -1      \n\t"
+        "LOOP_INNER%=:                        \n\t"
+        SQ8BIT_KERNEL_LOAD_B_16x8x2_I8
+        SQ8BIT_KERNEL_LOAD_A_1x8x2
+        SQ8BIT_KERNEL_COMP_1x8x2_4X8X4
+        "bnez         t5, LOOP_INNER%=        \n\t"
+        "vsetvli      t0, zero, e32, mf2      \n\t"
+        "vfcvt.f.x.v  v16, v16                \n\t"
+        "vfcvt.f.x.v  v18, v18                \n\t"
+        "vfcvt.f.x.v  v20, v20                \n\t"
+        "vfcvt.f.x.v  v22, v22                \n\t"
+        "vfmacc.vv    v28, v16, v24           \n\t"
+        "vfmacc.vv    v29, v18, v25           \n\t"
+        "vfmacc.vv    v30, v20, v26           \n\t"
+        "vfmacc.vv    v31, v22, v27           \n\t"
+        "addi         s6, s5, 12              \n\t"
+        "bnez         %[CNT], LOOP_K%=        \n\t"
+        "addi         t3, zero, 16            \n\t"
+        "addi         s1, %[C], 16            \n\t"
+        "addi         s2, %[C], 32            \n\t"
+        "addi         s3, %[C], 48            \n\t"
+        "blt          %[NBLKS], t3, ST_TAIL%= \n\t"
+        "vse32.v      v28, (%[C])             \n\t"
+        "vse32.v      v29, (s1)               \n\t"
+        "vse32.v      v30, (s2)               \n\t"
+        "vse32.v      v31, (s3)               \n\t"
+        "jal          x0, END%=               \n\t"
+        "ST_TAIL%=:                           \n\t"
+        "vsetvli      t0, %[NBLKS], e32, mf2  \n\t"
+        "sub          %[NBLKS], %[NBLKS], t0  \n\t"
+        "vse32.v      v28, (%[C])             \n\t"
+        "vsetvli      t0, %[NBLKS], e32, mf2  \n\t"
+        "sub          %[NBLKS], %[NBLKS], t0  \n\t"
+        "vse32.v      v29, (s1)               \n\t"
+        "vsetvli      t0, %[NBLKS], e32, mf2  \n\t"
+        "sub          %[NBLKS], %[NBLKS], t0  \n\t"
+        "vse32.v      v30, (s2)               \n\t"
+        "vsetvli      t0, %[NBLKS], e32, mf2  \n\t"
+        "sub          %[NBLKS], %[NBLKS], t0  \n\t"
+        "vse32.v      v31, (s3)               \n\t"
+        "END%=:                               \n\t"
+        ".option pop\n\t"
+        : [CNT] "+r"(cnt), [NBLKS] "+r"(nblks)
+        : [INNER] "r"(INNER), [A] "r"(QuantA), [B] "r"(QuantBDataPtr), [C] "r"(CPtr)
+        : "cc", "t0", "t5", "t3", "f1", "s1", "s2", "s3", "s4", "s5", "s6",
+          "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7",
+          "v8", "v9", "v10", "v11", "v14", "v15",
+          "v16", "v18", "v20", "v22", "v24", "v25", "v26", "v27",
+          "v28", "v29", "v30", "v31", "memory");
+}
+
+static void
+sq8_m1_add_blksum(
+    float* C, size_t CountN, size_t BlockCountK,
+    const float* ABlockSum, const float* QuantBBlkSum)
+{
+    for (size_t nn = 0; nn < CountN; ++nn) {
+        float acc = 0.0f;
+        for (size_t kb = 0; kb < BlockCountK; ++kb) {
+            const size_t boff = ((nn / 16) * BlockCountK + kb) * 16 + (nn % 16);
+            acc += ABlockSum[kb] * QuantBBlkSum[boff];
+        }
+        C[nn] += acc;
+    }
+}
+
+static void
+sq8_m1_kernel_q8x16(
+    const std::byte* QuantAFlat,
+    const float* QuantAScale,
+    const std::byte* QuantBData,
+    float* C,
+    size_t CountN,
+    size_t BlockCountK,
+    const float* Bias,
+    const float* ABlockSum,
+    const float* QuantBBlkSum)
+{
+    // Interleave flat A → Q8Blk for the ScaleFp16 microkernel.
+    alignas(32) std::byte a_int[256 * Q8BlkSize(32)];  // BC≤256
+    assert(BlockCountK <= 256);
+    for (size_t kb = 0; kb < BlockCountK; ++kb) {
+        std::byte* blk = a_int + kb * Q8BlkSize(32);
+        Q8BlkScale(blk) = QuantAScale[kb];
+        std::memcpy(Q8BlkData(blk), QuantAFlat + kb * 32, 32);
+    }
+
+    const size_t col_stride = BlockCountK * MlasSQ8x16ColBytes(32);
+    for (size_t n = 0; n < CountN; n += kQ8x16NbCols) {
+        const size_t ncols = std::min(kQ8x16NbCols, CountN - n);
+        const std::byte* panel = QuantBData + n * col_stride;
+        float* cptr = C + n;
+        if (Bias) {
+            alignas(16) float tmp[16] = {};
+            gemm_m1_panel_q8x16(a_int, panel, tmp, BlockCountK, ncols);
+            for (size_t c = 0; c < ncols; ++c) {
+                cptr[c] = Bias[n + c] + tmp[c];
+            }
+        } else {
+            gemm_m1_panel_q8x16(a_int, panel, cptr, BlockCountK, ncols);
+        }
+    }
+    if (ABlockSum && QuantBBlkSum) {
+        sq8_m1_add_blksum(C, CountN, BlockCountK, ABlockSum, QuantBBlkSum);
+    }
+}
+
+size_t
+SQ8BitGemmKernel_BlkSum_CompInt8(
+    size_t BlkLen,
+    const std::byte* QuantA,
+    const float* QuantAScale,
+    const std::byte* QuantBData,
+    const float* QuantBScale,
+    const std::byte* /*QuantBZeroPoint*/,
+    float* C,
+    size_t CountM,
+    size_t CountN,
+    size_t /*CountK*/,
+    size_t BlockCountK,
+    const float* Bias,
+    size_t ldc,
+    const float* ABlockSum,
+    const float* QuantBBlkSum,
+    const float* /*BlkUnsignedQuantAZeroPointCorrection*/)
+{
+    assert((BlkLen % TK) == 0);
+    assert((BlkLen / TK) <= MAX_NSUB);
+
+    if (CountM == 1 && BlkLen == 32) {
+        sq8_m1_kernel_q8x16(
+            QuantA, QuantAScale, QuantBData, C, CountN, BlockCountK,
+            Bias, ABlockSum, QuantBBlkSum);
+        return 1;
+    }
+
+    const size_t nsub = BlkLen / TK;
+    const size_t qa_row = BlockCountK * BlkLen;
+    const int8_t* Ap = reinterpret_cast<const int8_t*>(QuantA);
+    const int8_t* Bp = reinterpret_cast<const int8_t*>(QuantBData);
+    const size_t b_col_bytes =
+        (BlkLen == 32) ? (BlockCountK * MlasSQ8x16ColBytes(BlkLen))
+                       : (BlockCountK * BlkLen);
+    const bool use_q8x16 = (BlkLen == 32);
+
+    alignas(32) int8_t Atile[MAX_TILE_BYTES];
+    alignas(32) int8_t Btile[MAX_TILE_BYTES];
+    int32_t tacc[TM * TN];
+
+    for (size_t m = 0; m < CountM; m += TM) {
+        const size_t mrows = std::min(TM, CountM - m);
+
+        for (size_t r = 0; r < mrows; ++r) {
+            float* crow = C + (m + r) * ldc;
+            if (Bias) {
+                std::memcpy(crow, Bias, CountN * sizeof(float));
+            } else {
+                std::memset(crow, 0, CountN * sizeof(float));
+            }
+        }
+
+        for (size_t kb = 0; kb < BlockCountK; ++kb) {
+            float as[TM] = {0, 0, 0, 0};
+            for (size_t r = 0; r < TM; ++r) {
+                if (r >= mrows) {
+                    for (size_t s = 0; s < nsub; ++s) {
+                        std::memset(&Atile[s * TILE_BYTES + r * TK], 0, TK);
+                    }
+                    continue;
+                }
+                as[r] = QuantAScale[(m + r) * BlockCountK + kb];
+                const int8_t* ad = Ap + (m + r) * qa_row + kb * BlkLen;
+                for (size_t s = 0; s < nsub; ++s) {
+                    std::memcpy(&Atile[s * TILE_BYTES + r * TK], ad + s * TK, TK);
+                }
+            }
+
+            for (size_t n = 0; n < CountN; n += TN) {
+                const size_t ncols = std::min(TN, CountN - n);
+                if (use_q8x16) {
+                    gather_b8_panel_from_q8x16(
+                        Bp, n, ncols, kb, BlockCountK, BlkLen, nsub, Btile);
+                } else {
+                    gather_b8_panel_column_major(
+                        Bp, n, ncols, kb, BlkLen, nsub, b_col_bytes, Btile);
+                }
+                ime_tile_4x4(Atile, Btile, static_cast<long>(nsub), tacc);
+
+                for (size_t c = 0; c < ncols; ++c) {
+                    const size_t nn = n + c;
+                    const float bscale = QuantBScale[nn * BlockCountK + kb];
+                    for (size_t r = 0; r < mrows; ++r) {
+                        C[(m + r) * ldc + nn] +=
+                            as[r] * bscale *
+                            static_cast<float>(tacc[r * TN + c]);
+                    }
+                }
+            }
+        }
+
+        for (size_t r = 0; r < mrows; ++r) {
+            const float* a_sum = ABlockSum + (m + r) * BlockCountK;
+            float* crow = C + (m + r) * ldc;
+            for (size_t nn = 0; nn < CountN; ++nn) {
+                float acc = 0.0f;
+                for (size_t kb = 0; kb < BlockCountK; ++kb) {
+                    const size_t boff =
+                        ((nn / 16) * BlockCountK + kb) * 16 + (nn % 16);
+                    acc += a_sum[kb] * QuantBBlkSum[boff];
+                }
+                crow[nn] += acc;
+            }
+        }
+    }
+    return CountM;
+}
+
 }  // namespace sqnbitgemm_ime
 
 // ===========================================================================
@@ -700,12 +1255,16 @@ GetMlasQNBitGemmDispatchIme()
         d.Q4BitGemmPackedBColumnStrideBytes = sqnbitgemm_ime::Q4BitGemmPackedBColumnStrideBytes;
         d.SQ4BitGemmPackQuantBData = sqnbitgemm_ime::SQ4BitGemmPackQuantBData;
         d.SQ4BitGemmPackQuantBDataAndBlkSum = sqnbitgemm_ime::SQ4BitGemmPackQuantBDataAndBlkSum;
+        d.Q8BitGemmPackQuantBDataSize = sqnbitgemm_ime::Q8BitGemmPackQuantBDataSize;
+        d.SQ8BitGemmPackQuantBDataAndBlkSum = sqnbitgemm_ime::SQ8BitGemmPackQuantBDataAndBlkSum;
         d.QNBitGemmPerGemmWorkspaceSize = sqnbitgemm_ime::QNBitGemmPerGemmWorkspaceSize;
         d.QNBitGemmPerGemmWorkspaceAlignment = sqnbitgemm_ime::QNBitGemmPerGemmWorkspaceAlignment;
         d.SQ4BitGemmKernel_CompInt8 = sqnbitgemm_ime::SQ4BitGemmKernel_CompInt8;
         d.SQ4BitGemmM1Kernel_CompInt8 = sqnbitgemm_ime::SQ4BitGemmM1Kernel_CompInt8;
+        d.SQ8BitGemmKernel_BlkSum_CompInt8 = sqnbitgemm_ime::SQ8BitGemmKernel_BlkSum_CompInt8;
         d.QuantizeARow_CompInt8 = sqnbitgemm_ime::QuantizeARow_CompInt8;
         d.QuantizeARow_CompInt8_FromFp16 = sqnbitgemm_ime::QuantizeARow_CompInt8_FromFp16;
+        d.QuantizeARowComputeBlkSum_CompInt8 = sqnbitgemm_ime::QuantizeARowComputeBlkSum_CompInt8;
         return d;
     }();
     return dispatch;

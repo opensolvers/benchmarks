@@ -34,6 +34,27 @@ The runner copies the chosen config to `./HPL.dat` (what `xhpl` reads), runs the
 scalar baseline (`OPENBLAS_CORETYPE=RISCV64_GENERIC`), then - if `RVV_LIB` is set
 - the vector backend (`FLEXIBLAS=$RVV_LIB`), and greps the result/PASSED line.
 
+## OpenBLAS 0.3.34 HPL (2026-08-26, RV2)
+
+Same `xhpl` (HPL/2.3-foss-2025b), FlexiBLAS swap to local
+`~/ob-0.3.34/libopenblas_riscv64_zvl256bp-r0.3.34.so` vs patched 0.3.30.
+Harness: [`run-hpl-034.sh`](run-hpl-034.sh). Log: `~/logs/hpl-034-20260826-122549.log`.
+
+| Config | OpenBLAS **0.3.34** | Patched 0.3.30 | 0.3.34 vs patched |
+|--------|--------------------:|---------------:|------------------:|
+| `HPL.dat` (N=8000, 1×8) | **11.04** GFLOP/s, PASSED | 7.72 GFLOP/s, PASSED | **1.43×** |
+| `HPL-sweep.dat` (N=20000, 2×4) | **10.97** GFLOP/s, PASSED | 10.27 GFLOP/s, PASSED | **1.07×** |
+
+Residuals ~3–4e-03 (well under threshold). **0.3.34 drives a correct Linpack
+solve** on X60 — matching the microbench `dgemv`/SYRK/CTRSM verify — and is
+at least as fast as the patched 0.3.30 EasyBuild backend (ahead on the tall
+`1×8` grid).
+
+```bash
+# on board, after EESSI HPL module is loadable:
+cd ~/hpl-bench && ./run-hpl-034.sh HPL.dat HPL-sweep.dat
+```
+
 ## RV2 re-verify (2026-08-22)
 
 8 ranks, `HPL.dat` (N=8000, 1×8), SciPy-bundle stack HPL/2.3-foss-2025b:

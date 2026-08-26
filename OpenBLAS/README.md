@@ -126,6 +126,11 @@ Verdict: **0.3.34 has a working RVV path on X60** — fixes the 0.3.30 `dgemv`
 NaN bug and passes SYRK/TRSM correctness that broke on 0.3.33 ZVL256. EESSI
 still ships 0.3.29/0.3.30 only; needs GCC ≥14.3 to build 0.3.34 locally.
 
+**HPL end-to-end** (same `xhpl`, FlexiBLAS → 0.3.34; 2026-08-26): `HPL.dat`
+**11.04 GFLOP/s PASSED**; `HPL-sweep.dat` (N=20000, 2×4) **10.97 GFLOP/s PASSED**
+— both ahead of patched 0.3.30 on the same day (7.72 / 10.27). See
+[`../hpl/`](../hpl/) [`run-hpl-034.sh`](../hpl/run-hpl-034.sh).
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 The [Banana Pi BPI-F3](https://www.banana-pi.org/) uses the same SpaceMiT K1

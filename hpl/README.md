@@ -14,6 +14,7 @@ and the expected results.
 | `HPL_big.dat` | 1x8 | 28672 | large run (needs ~6.6 GB RAM) |
 | `HPL-sweep.dat` | 2x4 | 20000 | near-peak, squarer grid |
 | `run-hpl-ab.sh` | - | - | scalar-vs-RVV A/B driver (FlexiBLAS backend swap) |
+| `run-hpl-034.sh` | - | - | HPL with OpenBLAS 0.3.34 vs patched 0.3.30 |
 | `Make.rv64_blis` | - | - | HPL make config linking `xhpl` against static BLIS |
 | `build-hpl-blis.sh` | - | - | build a BLIS-linked `xhpl` (no FlexiBLAS) |
 | `run-hpl-blis.sh` | - | - | run the BLIS-linked `xhpl` end-to-end |

@@ -13,6 +13,19 @@ faster than scalar — and what actually moves the needle on this hardware.
 |---|---|
 | `build-fftw-r5v.sh` | Builds both libs (`src-r5v` + `src-scalar`) from one tarball, identical flags; counts RVV mnemonics in each `.so` as an inline sanity check. |
 | `bench-fftw-ab.sh` | Runs FFTW's own `tests/bench` across sizes × planners (`estimate` / `measure` / `patient`) on both libs, reports median MFLOPS. |
+| `bench-fftw-wisdom.sh` | Offline `fftw-wisdom -m` + C probe: ESTIMATE / MEASURE-cold / MEASURE+wisdom / WISDOM_ONLY on 1-D sizes. |
+| `fftw-est2meas-interposer.c` | `LD_PRELOAD`: remap QE's `FFTW_ESTIMATE`→`MEASURE` for `fftw_plan_dft_3d` / `fftw_plan_many_dft`; import/export wisdom files. |
+| `fftw-wisdom-preload.c` | Constructor-only wisdom import (no flag remap). |
+| `bench-codelet-hot.sh` | Microbench 1D + QE-like `many_dft` (MEASURE) for hot codelet shapes. |
+| `patch-simd-r5v-noshuffle.py` | Failed: store-shuffle vs `vrgather` (**regressed**). |
+| `patch-simd-r5v-xorconj.py` | XOR `VCONJ` + fused `VBYI` (**+1–7%** on hot sizes; kept). |
+| `patch-simd-r5v-vfmai-neon.py` | NEON-style `VFMAI`/`VZMUL` (within noise; reverted). |
+| `t2bv_8_r5v256_split.c` | Gather-free split `t2bv_8` (correct, **~0.5×**; reverted). |
+| `flip-microbench.c` | Isolated `FLIP_RI`: gather beats slide/store on X60. |
+| `run-t2bv8-unit.sh` | Stock vs split `t2bv_8` correctness + ns/call. |
+| `rebuild-r5v256.sh` | Rebuild only `r5v256` codelets and relink `libfftw3`. |
+| `merge-fftw-wisdom.c` | Merge per-rank MPI wisdom files into one. |
+| `run-qe-fft-wisdom-ab.sh` | QE A/B: estimate → measure-collect → estimate+wisdom → measure+wisdom (`NP=1` serial or `NP=4` MPI). |
 | `FFTW-3.3.10-GCC-14.3.0-r5v.eb` | EasyBuild easyconfig that reproduces the `r5v` lib as a module (see below). |
 
 Both are single shell scripts; the only inputs are the FFTW `r5v` source
@@ -199,9 +212,192 @@ Why the 1.6× micro-win evaporates:
   are odd composite sizes and memory-bandwidth-bound, the ~1.06× tail.
 
 Takeaway: on the X60, **neither the BLAS axis nor the FFT axis moves a real QE
-SCF** with these drop-in vectorized libraries — the win requires honest FFT
-planning (unavailable to QE) and BLAS kernels the generic RVV OpenBLAS does not
-yet provide. A microbenchmark speedup is not an application speedup.
+SCF** with these drop-in vectorized libraries alone — honest FFT planning helps
+a little (next section) but not enough, and BLAS still needs kernels the generic
+RVV OpenBLAS does not yet provide. A microbenchmark speedup is not an
+application speedup.
+
+## (4) Wisdom / MEASURE — big in microbench, ~6% in QE
+
+Hypothesis from §(2)–(3): force `FFTW_MEASURE` (or cached wisdom) and the RVV
+codelets should show up in QE. Scripts above implement that without patching QE.
+
+### 1-D microbench (r5v lib, Orange Pi RV2)
+
+Cold ESTIMATE vs MEASURE on power-of-two complex DFTs is a **3–5×** throughput
+gap (e.g. N=4096: ~294 → ~1285 MFLOPS). After importing MEASURE wisdom,
+`FFTW_ESTIMATE` matches MEASURE throughput with ~ms plan cost — this build
+applies imported wisdom even under ESTIMATE.
+
+| N | ESTIMATE (no wis) | MEASURE-cold | ESTIMATE+wisdom |
+|---|---:|---:|---:|
+| 1024 | 719 | 1563 | 1621 |
+| 4096 | 294 | 1285 | 1299 |
+| 16384 | 378 | 879 | 820 |
+| 65536 | 157 | 757 | 765 |
+
+(MFLOPS; wisdom gen ~64 s for those sizes.)
+
+### QE 64-atom SCF (`si-super-64.in`, r5v FFTW, scalar OpenBLAS)
+
+Energy bit-identical (`-506.67980304 Ry`) across all four steps. WALL seconds:
+
+| step | `fftw` | `init_run` | `PWSCF` |
+|---|---:|---:|---:|
+| 1 ESTIMATE (stock QE) | 85.03 | 28.45 | 188.91 |
+| 2 MEASURE collect (+export) | 83.38 | 28.20 | 187.76 |
+| 3 ESTIMATE + MEASURE wisdom | 81.76 | 20.20 | 180.49 |
+| 4 MEASURE + wisdom | 80.08 | 19.91 | 178.63 |
+| 2 PATIENT collect | 84.04 | 28.83 | 187.96 |
+| 3 ESTIMATE + PATIENT wisdom | 80.65 | 20.06 | 179.28 |
+| 4 PATIENT + wisdom | 84.84 | 20.12 | 186.55 |
+
+Best vs stock: **`fftw` / `PWSCF` ≈ 1.06×** (~10 s wall), whether MEASURE or
+PATIENT wisdom. PATIENT step 3 is within noise of MEASURE (~1 s); step 4 is
+noisier and not better. Collect cost stayed ~same as MEASURE (`init_run` ~29 s)
+— the r5v solver space for these 64³ many-DFTs does not explode under PATIENT.
+
+So the planner trap is real in isolation, but QE's 2362 transforms barely move
+past MEASURE. Wisdom is still worth caching for repeated runs; richer planning
+is not the path to a large QE speedup on this board.
+
+```bash
+# on the board (after build-fftw-r5v.sh)
+bash ~/fftw-wisdom-src/bench-fftw-wisdom.sh
+bash ~/fftw-wisdom-src/run-qe-fft-wisdom-ab.sh si-super-64.in wisdom64b
+FFTW_EST2MEAS_FLAGS=patient SKIP_ESTIMATE=1 \
+  bash ~/fftw-wisdom-src/run-qe-fft-wisdom-ab.sh si-super-64.in patient64
+```
+
+`FFTW_EST2MEAS_FLAGS` selects `measure` (default), `patient`, or `exhaustive`
+for the ESTIMATE→planner remap in `fftw-est2meas-interposer.c`.
+
+### MPI (`NP=4`, overlay `QuantumESPRESSO/7.5-foss-2025b`)
+
+Same input, r5v via `LD_PRELOAD` (binary RPATH pins stock FFTW.MPI; interposer
+`dlopen`s r5v with `RTLD_DEEPBIND` so wisdom hashes stay consistent). Per-rank
+wisdom merged with `merge-fftw-wisdom`. Energy identical across steps
+(`-506.67985507 Ry`; tiny delta vs serial is normal for MPI).
+
+| step | `fftw` | `init_run` | `PWSCF` |
+|---|---:|---:|---:|
+| 1 ESTIMATE | 23.46 | 7.22 | 59.28 |
+| 2 MEASURE collect | 23.72 | 7.22 | 65.01 |
+| 3 ESTIMATE + wisdom | 22.77 | 6.37 | 58.99 |
+| 4 MEASURE + wisdom | 23.00 | 6.23 | 58.05 |
+
+Same story as serial: **~3% on `fftw`**, a bit of `init_run` from warm wisdom.
+MPI already cuts wall ~3× vs serial; planner quality is not the remaining lever.
+
+```bash
+NP=4 bash ~/fftw-wisdom-src/run-qe-fft-wisdom-ab.sh si-super-64.in mpi4meas
+NP=8 bash ~/fftw-wisdom-src/run-qe-fft-wisdom-ab.sh si-super-64.in mpi8meas
+```
+
+**NP=8** (same setup; energy `-506.67980423 Ry`):
+
+| step | `fftw` | `init_run` | `PWSCF` |
+|---|---:|---:|---:|
+| 1 ESTIMATE | 16.06 | 5.13 | 44.93 |
+| 2 MEASURE collect | 15.77 | 5.08 | 43.83 |
+| 3 ESTIMATE + wisdom | 15.53 | 4.33 | 42.33 |
+| 4 MEASURE + wisdom | 15.96 | 4.35 | 42.21 |
+
+Again ~3% on `fftw` / ~6% on `PWSCF` at best; wisdom merge of 8 ranks OK (6125 bytes).
+
+## (5) Hot codelets — what QE actually uses, and a failed gather rewrite
+
+QE MPI wisdom is mostly **solvers** (`vrank` / `buffered` / `indirect`); only ~11
+entries are `*_r5v256` codelets. Dominants: `t2bv_8`, `t2fv_4/8`, `n2fv_16`,
+`n2bv_8`, plus scalar `n1_8`.
+
+Disasm of `t2bv_8` @ r5v256 (GCC 14, `-O3 -march=rv64imafdcv_zvl256b`):
+
+| metric | count |
+|---|---:|
+| `vrgather.vv` | 10 |
+| stack `sd`/`ld` (frame) | ~12 |
+| FMA/ALU vector | ~42 |
+
+Index setup is already CSE’d (all gathers use the same `v8`); cost is **gather
+latency on K1**, as Dolbeau warned in [FFTW#371](https://github.com/FFTW/fftw3/issues/371).
+Helpers `VDUPL` / `VDUPH` / `FLIP_RI` / `VBYI` in `simd-r5v.h` are the source.
+
+**Experiment:** for `R5V_SIZE==256` double (4×f64 lanes), replace those helpers
+with aligned store → scalar shuffle → load (`patch-simd-r5v-noshuffle.py`),
+rebuild `r5v256`, re-bench (`bench-codelet-hot.sh`).
+
+| probe | gather (baseline) | store-shuffle | ratio |
+|---|---:|---:|---:|
+| 1D N=256 MFLOPS | 2507 | 1940 | **0.77×** |
+| 1D N=1024 | 1581 | 1322 | 0.84× |
+| 1D N=4096 | 1272 | 1016 | 0.80× |
+| many N=64×4096 | 670 | 596 | 0.89× |
+| `t2bv_8` gathers | 10 | 7 | (partial) |
+
+**Verdict: regression.** On X60, short `vrgather` beats stack shuffle for these
+helpers. That patch was reverted.
+
+### Follow-up that helped: XOR `VCONJ` / fused `VBYI` (kept)
+
+SSE2-style sign-bit XOR for `VCONJ`, and `VBYI` = `FLIP_RI` + XOR-negate-even
+(one gather, no masked `vfsgnjn`). `patch-simd-r5v-xorconj.py` + `rebuild-r5v256.sh`.
+
+| probe | gather baseline | XOR-conj | ratio |
+|---|---:|---:|---:|
+| 1D N=256 MFLOPS | 2507 | 2471 | 0.99× |
+| 1D N=1024 | 1581 | **1686** | **1.07×** |
+| 1D N=4096 | 1272 | 1291 | 1.01× |
+| 1D N=65536 | 705 | **752** | **1.07×** |
+| many N=64×4096 | 670 | **698** | **1.04×** |
+| many N=64×64 | 1714 | 1747 | 1.02× |
+
+**QE NP=8 ESTIMATE** (same `si-super-64`, xorconj lib vs prior gather ESTIMATE):
+
+| timer | gather ESTIMATE | XOR-conj | ratio |
+|---|---:|---:|---:|
+| `fftw` | 16.06 | **15.75** | **1.02×** |
+| `PWSCF` | 44.93 | **43.30** | **1.04×** |
+
+Energy unchanged (`-506.67980423 Ry`). Keep the XOR-conj patch on the board lib.
+
+### Follow-up that did not help: NEON-style `VFMAI` / `VZMUL`
+
+`patch-simd-r5v-vfmai-neon.py`: `VFMAI(b,c) = VFMA(FLIP(b), (-1,+1), c)` (and same for
+`VZMUL`’s `VBYI`), matching `simd-neon.h`. Same gather count; aims to hoist the
+sign vector off the gather path. Smoke sumsq identical to xorconj.
+
+| probe | XOR-conj (recheck) | NEON-VFMAI | ratio |
+|---|---:|---:|---:|
+| 1D N=256 MFLOPS | 2467 | 2550 | 1.03× |
+| 1D N=1024 | 1631 | 1591 | 0.98× |
+| 1D N=4096 | 1316 | 1290 | 0.98× |
+| 1D N=65536 | 794 | 802 | 1.01× |
+| many N=64×4096 | 721 | 712 | 0.99× |
+| many N=64×64 | 1740 | 1734 | 1.00× |
+
+**Verdict: noise / slight loss on QE-like `many`.** Reverted to xorconj
+(`libfftw3-r5v-xorconj.so`; neon `.so` kept only as reference).
+
+### Follow-up: cheaper `FLIP_RI` / hand-split `t2bv_8` (both lost)
+
+Isolated `FLIP_RI` on X60 (4×f64, odd-rep sink): **gather ~6.9 ns** beats
+slide+merge (~11.3 ns) and store-shuffle (~12.5 ns). So replacing gather in
+`BYTW2` is the wrong direction on this SoC.
+
+Hand-specialized `t2bv_8` (`t2bv_8_r5v256_split.c`): `vlseg2`/`vsseg2` split
+re/im, gather-free `BYTW2` via strided cos/sin loads. Unit test vs FMA stock
+with real VTW2 twiddles: **max err ~1e-16**. Kernel microbench: stock
+**~120 ns/call** vs split **~249 ns** (**0.48×**). Reverted; live codelet is
+stock again under xorconj.
+
+`t2bv_8` gathers are already CSE’d to one index vector; remaining cost is
+gather latency itself, and the alternatives tried here are worse.
+
+```bash
+bash ~/fftw-wisdom-src/bench-codelet-hot.sh
+bash ~/fftw-wisdom-src/run-t2bv8-unit.sh   # stock vs split, needs rebuilt objs
+```
 
 ## EasyBuild easyconfig
 

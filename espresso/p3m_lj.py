@@ -9,6 +9,14 @@ from espressomd import electrostatics
 N = int(os.environ.get("ESP_N", "512"))
 STEPS = int(os.environ.get("ESP_STEPS", "200"))
 BOX = float(os.environ.get("ESP_BOX", "20.0"))
+ACCURACY = float(os.environ.get("ESP_ACCURACY", "1e-3"))
+# Optional pinned P3M knobs (fair A/B). When set, those params are fixed;
+# tune still fills alpha (and any unset knobs). Prefer pinning mesh+cao+r_cut.
+MESH = os.environ.get("ESP_MESH")
+CAO = os.environ.get("ESP_CAO")
+RCUT = os.environ.get("ESP_RCUT")
+ALPHA = os.environ.get("ESP_ALPHA")  # only with tune=0
+TUNE = os.environ.get("ESP_TUNE", "1") != "0"
 SEED = 42
 
 # Simple cubic lattice so particles do not start overlapped.
@@ -34,7 +42,7 @@ pos %= BOX
 
 system = espressomd.System(box_l=[BOX, BOX, BOX])
 system.time_step = 0.005
-system.cell_system.skin = 0.4
+system.cell_system.skin = float(os.environ.get("ESP_SKIN", "0.4"))
 
 system.part.add(
     pos=pos,
@@ -47,21 +55,52 @@ system.non_bonded_inter[0, 0].lennard_jones.set_params(
 system.integrator.set_vv()
 system.thermostat.set_langevin(kT=1.0, gamma=1.0, seed=SEED)
 
-p3m = electrostatics.P3M(prefactor=1.0, accuracy=1e-3)
+p3m_kw = dict(prefactor=1.0, accuracy=ACCURACY, tune=TUNE)
+if MESH is not None:
+    m = int(MESH)
+    p3m_kw["mesh"] = [m, m, m]
+if CAO is not None:
+    p3m_kw["cao"] = int(CAO)
+if RCUT is not None:
+    p3m_kw["r_cut"] = float(RCUT)
+if ALPHA is not None:
+    p3m_kw["alpha"] = float(ALPHA)
+p3m = electrostatics.P3M(**p3m_kw)
 system.actors.add(p3m)
-print(f"P3M params: cao={p3m.cao} r_cut={p3m.r_cut:.4f} mesh={p3m.mesh}", flush=True)
+
+try:
+    from mpi4py import MPI
+
+    rank = MPI.COMM_WORLD.rank
+    n_nodes = MPI.COMM_WORLD.size
+except Exception:
+    rank, n_nodes = 0, 1
+
+if rank == 0:
+    print(
+        f"P3M params: cao={p3m.cao} r_cut={p3m.r_cut:.4f} mesh={p3m.mesh} "
+        f"alpha={p3m.alpha:.6g} accuracy={ACCURACY} tune={TUNE} mpi={n_nodes}",
+        flush=True,
+    )
 
 # gentle warmup
 system.integrator.run(50)
+try:
+    from mpi4py import MPI
+
+    MPI.COMM_WORLD.Barrier()
+except Exception:
+    pass
 t0 = time.perf_counter()
 system.integrator.run(STEPS)
 wall = time.perf_counter() - t0
 e = system.analysis.energy()
 etot = float(e["total"])
 ecoul = float(e.get("coulomb", float("nan")))
-print(
-    f"N={N} steps={STEPS} box={BOX} wall={wall:.3f}s "
-    f"ns_per_day={STEPS * 1e-6 / wall * 86400:.2f} "
-    f"E_tot={etot:.6f} E_coul={ecoul:.6f}",
-    flush=True,
-)
+if rank == 0:
+    print(
+        f"N={N} steps={STEPS} box={BOX} np={n_nodes} wall={wall:.3f}s "
+        f"ns_per_day={STEPS * 1e-6 / wall * 86400:.2f} "
+        f"E_tot={etot:.6f} E_coul={ecoul:.6f}",
+        flush=True,
+    )

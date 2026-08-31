@@ -78,8 +78,9 @@ expected signal.
   [`kokkos/`](kokkos); RVV Pair prototype + `lj/cut/rvv` plugin:
   [`lammps/rvv-lj/`](lammps/rvv-lj) (microbench ~1.61× vs scalar; in-LAMMPS
   ~1.02× vs stock via indexed gather).
-- [x] **ESPResSo** (`4.2.2-foss-2025b`) — P3M FFT A/B on RV2: r5v vs scalar
-  `libfftw3` **1.12×** (N=512, energies match). See [`espresso/`](espresso).
+- [x] **ESPResSo** (`4.2.2-foss-2025b`) — P3M on RV2: fair FFT A/B **~0%** RVV;
+  **local opt build ~1.74×** vs EESSI on `dense_large` (pair-loop patches); MPI
+  **~2.8×** @ 8 ranks. See [`espresso/`](espresso).
 - [x] **MetalWalls** (`21.06.1-foss-2023b`) — tip4p-water A/B on RV2: FFT r5v
   ≈ **1.02×** (LR ~11% of wall); FlexiBLAS backends flat; temps match.
   Electrode matrix/CG examples deferred (too heavy at stock sizes). See

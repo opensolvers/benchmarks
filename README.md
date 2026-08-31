@@ -45,6 +45,7 @@ RV2 numbers.
 | [`llamacpp/`](llamacpp) | llama.cpp Q4_0 / Q4_K_M end-to-end: IME vs RVV (model validation + m1gemv study) | IME / RVV | application A/B |
 | [`onnx/`](onnx) | int4 `MatMulNBits` via ORT MLAS IME: FFN microbench + **Qwen2.5-0.5B** (~17× decode) | int4 / IME | application + MLAS patches |
 | [`gpu/`](gpu) | PowerVR BXE-2-32 GPU compute: vendor stack closed + deferred open Mesa `pvr` route | GPU | characterization / negative result |
+| [`espresso/`](espresso) | ESPResSo P3M soft-matter MD: FFTW A/B (~0%), **local opt vs EESSI ~1.74×** on dense Coulomb | pair loop / P3M | FFT A/B + source patches |
 | [`papers/`](papers) | Longer-form writeups (e.g. X60 IME block-scale optimization) | — | prose / PDF |
 | [`todo.md`](todo.md) | Tracking list for remaining RISC-V bring-up work | — | planning |
 
@@ -114,6 +115,9 @@ Common ground for reproducing any of these:
   inside a real QE SCF (`FFTW_ESTIMATE`, many small transforms).
 - **GROMACS:** FFT swap **~1.14–1.23×** on `PME 3D-FFT`; hand RVV `Force`
   backend **~3.31×** whole-app on RV2.
+- **ESPResSo:** RVV FFTW **~0%** end-to-end on P3M; **local opt build ~1.74×**
+  vs EESSI on dense Coulomb (`dense_large`, pair-loop + SR Ewald patches) —
+  see [`espresso`](espresso).
 - **LAMMPS:** RVV-Kokkos whole-app scales to **~6–7×** across 8 cores (parallel
   scaling, not RVV-vs-scalar); hand RVV Pair: LJ micro **~1.6×**, EAM in-app
   **1.27×** (still behind `eam/opt`).

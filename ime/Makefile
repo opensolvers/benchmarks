@@ -24,11 +24,24 @@ board-rvv: bench.c gemm_ref.c gemm_rvv.c
 board-peak: bench_peak.c gemm_ref.c gemm_ime.c
 	$(CC) $(CFLAGS) -march=$(BOARD_MARCH) bench_peak.c gemm_ref.c gemm_ime.c -o ime-bench-peak
 
+# Theoretical vs measured GOP/s waterfall.
+board-gap: bench_gap.c gemm_ref.c gemm_ime.c
+	$(CC) $(CFLAGS) -march=$(BOARD_MARCH) bench_gap.c gemm_ref.c gemm_ime.c -o ime-bench-gap
+
+# Panel / memory tuning (nc sweep, megakernel, offline B, TCM B-panel).
+board-panel: bench_panel.c gemm_ref.c gemm_ime.c tcm.c
+	$(CC) $(CFLAGS) -march=$(BOARD_MARCH) bench_panel.c gemm_ref.c gemm_ime.c tcm.c -o ime-bench-panel
+
+# Safe /dev/tcm probe (128 KiB blocks, no libspine_tcm).
+board-tcm-probe: tcm_probe.c tcm.c
+	$(CC) $(CFLAGS) tcm_probe.c tcm.c -o ime-tcm-probe
+
 # Multi-core synthetic IME throughput (OpenMP M-split).
 board-mc: bench_mc.c gemm_ref.c gemm_ime.c
 	$(CC) $(CFLAGS) -fopenmp -march=$(BOARD_MARCH) bench_mc.c gemm_ref.c gemm_ime.c -o ime-bench-mc
 
 clean:
-	rm -f ime-bench ime-bench-host ime-bench-mc ime-bench-peak
+	rm -f ime-bench ime-bench-host ime-bench-mc ime-bench-peak ime-bench-gap \
+	      ime-bench-panel ime-tcm-probe
 
-.PHONY: host board board-rvv board-peak board-mc clean
+.PHONY: host board board-rvv board-peak board-gap board-panel board-tcm-probe board-mc clean

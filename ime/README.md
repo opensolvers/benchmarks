@@ -47,6 +47,7 @@ but B bytes are gathered just before the panel that reuses them (modest gain,
 | `gemm_ime.c` | `smt.vmadot` kernels: register-blocked 8×16 + 4×4 edge | X60 only |
 | `gemm_rvv.c` | RVV int8 baseline (`vwmul`+widening reduce) | X60 only |
 | `bench.c` | fill / cross-check / GOP-s timing (+ peak mode) | yes |
+| `bench_gap.c` | insn peak → kloop → pack → full GEMM waterfall | X60 only |
 
 Because the packing and tile-index math live in the **portable** `gemm_ref.c`
 (`gemm_packed_ref` uses the exact same layout as `gemm_ime`), everything except
@@ -78,6 +79,10 @@ taskset -c 0 ./ime-bench 768 768 512 25 1
 
 # Full peak + aliasing A/B sweep:
 bash run-ime-peak-alias.sh
+
+# Theoretical vs measured GOP/s waterfall (pack / compute / full GEMM):
+make board-gap && taskset -c 0 ./ime-bench-gap 768 768 512 25 1
+bash run-ime-gap.sh
 
 # Multi-core synthetic IME (OpenMP M-split):
 make board-mc && bash run-ime-mc.sh
@@ -277,6 +282,128 @@ bit-exact check `ok`:
 This run landed on the **bad** side of the malloc lottery without padding; padding
 recovers the **good** peak tier (~35 GOP/s) reliably. Production backends should
 pad `ldc` and operand buffer bases the same way.
+
+## Theoretical vs measured GOP/s gap (2026-09-01, RV2)
+
+Open investigation — not a correctness blocker, but explains why **~42 GOP/s full
+GEMM** sits far below SpacemiT’s **~511 GOPS/core** `vmadot` cpufp figure and our
+own **~228 GOPS** isolated kloop microbench.
+
+Runner: [`run-ime-gap.sh`](run-ime-gap.sh) → `ime-bench-gap`; log:
+`~/logs/ime-gap-20260901-212728.log`.
+
+### Ceilings
+
+| Baseline | Value | Source |
+|---|---:|---|
+| **409.6 GOP/s** | 1.6 GHz × 256 ops/`vmadot` × 1 issue/cycle | Our RV2 runs (`performance` gov, pinned 1.6 GHz) |
+| **511.5 GOP/s** | cpufp `vmadot(s32,s8,s8)` on K1 single core | [SpacemiT docs](https://github.com/spacemit-com/docs-ai/blob/main/en/architecture/concept.md), [pigirons/cpufp K1](https://github.com/pigirons/cpufp/blob/master/benchmark_result/riscv64/SpacemiT_K1.md) |
+| **2.046 TOPS** | 4 cores cluster 0 | Same sources — **~511/core** when all four issue; not 4× independent units |
+
+The **511** number is an **instruction-issue peak** (cpufp-style, likely near **2 GHz**
+turbo: 2.0 × 256 ≈ 512). Our board tables use **1.6 GHz** → **409.6** is the fair
+silicon comparison for measured runs here.
+
+### Waterfall @ 768³×512, anti-alias, core 0 (good malloc tier)
+
+| Layer | GOP/s | % of 409.6 | % of 511 cpufp | Notes |
+|---|---:|---:|---:|---|
+| kloop-only (L1 8×16 tile) | **228** | 55.7 % | 44.5 % | 1.80 c/`vmadot`; piped inner loop |
+| 8×16 block + store | **193** | 47.0 % | 37.6 % | +vectorized C scatter |
+| pack (amortized) | — | — | — | ~0.33 GB/s gather (not MAC work) |
+| compute (pre-packed) | **42** | 10.3 % | 8.2 % | 9.7 c/`vmadot` effective |
+| **full GEMM** | **38** | 9.2 % | 7.4 % | pack + compute each rep |
+
+**Unpadded malloc** on the same size hits **~24 GOP/s** full GEMM (L2 set aliasing;
+compute drops to ~33 GOP/s, 12.5 c/`vmadot`) — layout can swing GEMM **~1.5×**
+without changing the insn peak.
+
+### Where the gap lives
+
+1. **Silicon/scheduling (228 → 409.6):** even L1-resident kloop reaches only **~56 %**
+   of the 1.6 GHz insn ceiling (~**2×** below cpufp’s 511 @ ~2 GHz). Production
+   piped kloop is already the right shape (wider 8×32 tiles regress).
+2. **Memory + panel structure (228 → 42):** full-problem compute is **~5.4× slower**
+   than one L1 tile — panel loops, 512 KB shared L2, streaming `A`/`B`/`C`, and
+   block dispatch outside the inner kloop. Implied **~9.7 c/`vmadot`** vs **1.8** in
+   isolation.
+3. **Pack (42 → 38):** amortized gather adds **~12–15 %** on good layouts (**~34 %**
+   on bad malloc) — smaller than compute/memory but not free.
+4. **Framework taxes (38 → llama ~22–28):** block-scale FP in `i8i4`/`i8i8`, short-K
+   panels, and cluster-0 IME sharing cap end-to-end (documented above).
+
+**Bottom line:** **~511 GOPS** is cpufp **insn peak** per core; **~42 GOP/s** is
+**full-GEMM application throughput** at 1.6 GHz with a tuned kernel — roughly
+**9 % of 409.6** and **7 % of 511**. Closing the kloop→compute gap needs memory/L2
+blocking (already panelized), anti-alias layout, and possibly TCM — not wider tiles.
+Closing kloop→409.6 is largely **hardware issue width / clock** on this part.
+
+## Panel / memory tuning (step 2, 2026-09-02, RV2)
+
+Runner: [`run-ime-panel.sh`](run-ime-panel.sh) → `ime-bench-panel`; log:
+`~/logs/ime-panel-20260902-050915.log`.
+
+| Lever | Result @768³×512 anti-alias | Action |
+|---|---|---|
+| **nc sweep** | nc=8 (16 KB B-panel) **36.2** GOP/s vs nc=64 **33.2** vs old auto **31.4** | Default **`nc = 4096/K`** TN-tiles |
+| **Megakernel cache-touch** | compute **−5 %** (45.5 vs 48.0 GOP/s) | Off by default (`gemm_ime_set_megakernel`) |
+| **Offline B** (static weights) | **+9.8 %** (43.1 vs 39.2 GOP/s) | `pack_b` once; repack A per GEMM |
+| **TCM** `/dev/tcm` | present but **root-only** on RV2 | [`tcm.c`](tcm.c) + `ime-tcm-probe` (128 KiB blocks) |
+
+Pack path now does **monolithic `pack_a` once** + `pack_b_panel` per N-slab (same bytes,
+better cache behaviour than scattered `pack_a_panel`).
+
+### TCM userspace allocator (no libspine_tcm)
+
+[`tcm.c`](tcm.c) / [`tcm.h`](tcm.h) talk directly to `drivers/misc/tcm.c`:
+
+- Block-aligned allocations only (**128 KiB** on K1/X60; `TCM_BLOCK_KB`)
+- `TCM_REQUEST_MEM` + `poll` with timeout (`TCM_POLL_MS`, default 5 s) — never hangs forever
+- Pin to cluster 0: `sudo taskset -c 0 ./ime-tcm-probe`
+
+```bash
+make board-tcm-probe
+sudo taskset -c 0 ./ime-tcm-probe          # 1 block self-test
+sudo taskset -c 0 ./ime-tcm-probe 2        # 256 KiB (2 blocks)
+TCM_PROBE_FULL=1 sudo taskset -c 0 ./ime-tcm-probe  # all 512 KiB (opt-in)
+```
+
+Remote: [`run-tcm-probe.sh`](run-tcm-probe.sh).
+
+**Non-root access:** `/dev/tcm` defaults to `root:root 0600`. One-time on the board:
+
+```bash
+sudo ./setup-tcm-perms.sh orangepi   # creates group tcm + udev rule
+newgrp tcm                           # or log out/in
+./ime-tcm-probe 1                    # no sudo
+```
+
+Or install vendor rules: `sudo apt install spacemit-tcm` (Bianbu/K3 images).
+
+**B-panel in TCM** — three paths benchmarked @768³ nc=8:
+
+| Path | GOP/s | vs full GEMM |
+|------|------:|-------------:|
+| full pack+compute | 44.0 | — |
+| offline-B DRAM | 48.2 | +9.4% |
+| **TCM offline-B** (pack B once → TCM) | **47.9** | **+8.8%** |
+| **TCM offline-B + fused pack_a** | **68.0** | **+55%** |
+| TCM repack each panel | 41.1 | −6.7% |
+| TCM staged memcpy | 41.6 | −5.5% |
+
+**Recommended production path** (static weights, ~68 GOP/s @768³):
+
+```c
+tcm_init(0);
+int8_t *Bp_tcm = tcm_malloc((size_t)N * K);
+pack_b(B, Bp_tcm, N, K);   /* once at load */
+for (...) {
+    gemm_ime_compute_tcm_offline_b(A, Ap, Bp_tcm, C, M, N, K, ldc);
+}
+```
+
+Uses **RVV pack** (automatic on board) + **M-outer fused pack_a** + **TCM-resident B**.
+Verified bit-exact vs `gemm_ref`. Do **not** use fused pack_a with DRAM `Bp` (−13%).
 
 ## Cross-board confirmation — Banana Pi BPI-F3 (same K1 / X60 SoC)
 

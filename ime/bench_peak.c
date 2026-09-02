@@ -85,6 +85,32 @@ static void bench_variant(const char *tag, kfn kloop, int K, long reps, const in
            reps, gops_insn, cyc, apanel, bpanel);
 }
 
+typedef void (*blkfn)(const int8_t *, const int8_t *, const int8_t *, const int8_t *,
+                      const int8_t *, const int8_t *, long, int32_t *, long);
+
+static void bench_block(const char *tag, blkfn block, int K, long reps, const int8_t *a0,
+                        const int8_t *a1, const int8_t *b0, const int8_t *b1,
+                        const int8_t *b2, const int8_t *b3, long KB, int32_t *C,
+                        size_t apanel, size_t bpanel)
+{
+    const double vmadot_per = 8.0 * (double)KB;
+    const long ldc = PEAK_N + GEMM_C_PAD;
+
+    for (int w = 0; w < 32; w++)
+        block(a0, a1, b0, b1, b2, b3, KB, C, ldc);
+
+    double t0 = secs();
+    for (long r = 0; r < reps; r++)
+        block(a0, a1, b0, b1, b2, b3, KB, C, ldc);
+    double dt = secs() - t0;
+
+    const double gops_insn = vmadot_per * (double)reps / dt * 256.0 / 1e9;
+    const double cyc = 1.6e9 / (vmadot_per * (double)reps / dt);
+
+    printf("%s K=%d reps=%ld  insn=%.2f GOP/s  %.3f c/vmadot  (Ap=%zu Bp=%zu)\n", tag, K,
+           reps, gops_insn, cyc, apanel, bpanel);
+}
+
 int main(int argc, char **argv)
 {
     const int K = argc > 1 ? atoi(argv[1]) : 256;
@@ -129,8 +155,15 @@ int main(int argc, char **argv)
         printf("=== kloop/block variants (single core, L1) K=%d ===\n", K);
         bench_variant("8x16-piped", ime_kloop_8x16_piped, K, reps, a0, a1, b0, b1, b2,
                       b3, KB, C, apanel, bpanel, 0);
-        bench_variant("8x16-block", ime_kloop_8x16_piped, K, reps / 4 > 0 ? reps / 4 : 1,
-                      a0, a1, b0, b1, b2, b3, KB, C, apanel, bpanel, 1);
+        bench_variant("8x16-opt", ime_kloop_8x16_opt, K, reps, a0, a1, b0, b1, b2, b3,
+                      KB, C, apanel, bpanel, 0);
+        bench_variant("8x16-burst", ime_kloop_8x16_burst, K, reps, a0, a1, b0, b1, b2,
+                      b3, KB, C, apanel, bpanel, 0);
+        bench_block("8x16-block-legacy", ime_block_8x16_legacy, K,
+                    reps / 4 > 0 ? reps / 4 : 1, a0, a1, b0, b1, b2, b3, KB, C, apanel,
+                    bpanel);
+        bench_block("8x16-block-megablock", ime_block_8x16, K, reps / 4 > 0 ? reps / 4 : 1,
+                    a0, a1, b0, b1, b2, b3, KB, C, apanel, bpanel);
         if (K == 256) {
             const int8_t *b4 = Bp + (size_t)4 * KB * TILE_BYTES;
             const int8_t *b5 = Bp + (size_t)5 * KB * TILE_BYTES;

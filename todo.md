@@ -32,13 +32,14 @@ board. Unchanged from prior tracking.
   512³ IME **24.5** vs RVV **5.2** GOP/s, all paths `ok` (bit-exact). See
   [`ime/`](ime). *i8i8 selftest + Q8_0 llama-bench A/B done; multi-core synthetic
   (1c vs 4c OpenMP) ~80 GOP/s @ 768³ — see [`ime/README.md`](ime/README.md).*
-- [ ] **ime — theoretical vs measured GOP/s gap** — SpacemiT docs quote **~512
-  GOPS/core** for `vmadot` (silicon peak, one core); full GEMM tops out at **~42**
-  (good layout) / **~35** (anti-alias default) on RV2. **cpufp-style kloop-only
-  microbench (2026-08-23) hits **~215 GOPS** piped kloop = **52 % of 409.6 @ 1.6 GHz**
-  (**1.9 cycles/vmadot**, down from 2.8 seq) — see [`ime/README.md`](ime/README.md).
-  **Anti-alias padding (`ldc=N+16`, `GEMM_BUF_PAD`) recovers ~2–2.5× on bad
-  malloc layouts** — now in `bench.c` / `gemm_ime` (`ldc` param).
+- [ ] **ime — theoretical vs measured GOP/s gap** — documented waterfall in
+  [`ime/README.md`](ime/README.md) (2026-09-01). SpacemiT/cpufp quotes **511.5
+  GOPS/core** `vmadot` (insn peak, ~2 GHz); our **1.6 GHz** ceiling is **409.6**.
+  **kloop microbench ~228 GOPS** (55 % of 409.6); **full GEMM ~38–42 GOP/s** good
+  layout (~9 % of 409.6). Harness: `make board-gap`, `run-ime-gap.sh`. Step-2 panel
+  (2026-09-02): **nc=4096/K** default (~16 KB B-panel); offline-B +9.8%; megakernel
+  regresses. TCM offline-B + fused M-pack **~68 GOP/s** @768³ (+55% vs full);
+  RVV pack automatic. See `gemm_ime_compute_tcm_offline_b`. `setup-tcm-perms.sh`.
 - [x] **BLIS** — link A/B re-verified on RV2 (2026-08-22): N=2048 BLIS/OpenBLAS
   **1.18×** @1 thr, **0.88×** @8 thr vs patched OpenBLAS. See [`BLIS/`](BLIS).
 - [x] **OpenBLAS / dgemm** — dgemm + difftest re-verified on RV2 (2026-08-22):

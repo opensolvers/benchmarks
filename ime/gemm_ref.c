@@ -7,6 +7,10 @@
  */
 #include "gemm_s8s8s32.h"
 
+#if defined(__riscv)
+#include <riscv_vector.h>
+#endif
+
 void gemm_ref(const int8_t *A, const int8_t *B, int32_t *C, int M, int N, int K)
 {
     for (int i = 0; i < M; i++) {
@@ -37,6 +41,21 @@ void pack_b(const int8_t *B, int8_t *Bp, int N, int K)
 void pack_a_panel(const int8_t *A, int8_t *Ap, int mb0, int mb_cnt, int K)
 {
     const int KB = K / TK;
+#if defined(__riscv)
+    for (int mb = 0; mb < mb_cnt; mb++) {
+        const int row0 = (mb0 + mb) * TM;
+        for (int kb = 0; kb < KB; kb++) {
+            int8_t *t = Ap + ((size_t)(mb0 + mb) * KB + kb) * TILE_BYTES;
+            const int col = kb * TK;
+            for (int r = 0; r < TM; r++) {
+                const int8_t *src = A + (size_t)(row0 + r) * (size_t)K + (size_t)col;
+                const size_t vl = __riscv_vsetvl_e8m1(TK);
+                const vint8m1_t v = __riscv_vle8_v_i8m1(src, vl);
+                __riscv_vse8_v_i8m1(t + r * TK, v, vl);
+            }
+        }
+    }
+#else
     for (int mb = 0; mb < mb_cnt; mb++)
         for (int kb = 0; kb < KB; kb++) {
             int8_t *t = Ap + ((size_t)(mb0 + mb) * KB + kb) * TILE_BYTES;
@@ -45,14 +64,44 @@ void pack_a_panel(const int8_t *A, int8_t *Ap, int mb0, int mb_cnt, int K)
                     t[r * TK + c] =
                         A[(size_t)((mb0 + mb) * TM + r) * K + (kb * TK + c)];
         }
+#endif
 }
 
 void pack_b_panel(const int8_t *B, int8_t *Bp, int nb0, int nb_cnt, int K)
 {
     const int KB = K / TK;
+#if defined(__riscv)
+    for (int nb = 0; nb < nb_cnt; nb++) {
+        const int row0 = (nb0 + nb) * TN;
+        for (int kb = 0; kb < KB; kb++) {
+            int8_t *t = Bp + ((size_t)(nb0 + nb) * KB + kb) * TILE_BYTES;
+            const int col = kb * TK;
+            for (int r = 0; r < TN; r++) {
+                const int8_t *src = B + (size_t)(row0 + r) * (size_t)K + (size_t)col;
+                const size_t vl = __riscv_vsetvl_e8m1(TK);
+                const vint8m1_t v = __riscv_vle8_v_i8m1(src, vl);
+                __riscv_vse8_v_i8m1(t + r * TK, v, vl);
+            }
+        }
+    }
+#else
     for (int nb = 0; nb < nb_cnt; nb++)
         for (int kb = 0; kb < KB; kb++) {
             int8_t *t = Bp + ((size_t)(nb0 + nb) * KB + kb) * TILE_BYTES;
+            for (int r = 0; r < TN; r++)
+                for (int c = 0; c < TK; c++)
+                    t[r * TK + c] =
+                        B[(size_t)((nb0 + nb) * TN + r) * K + (kb * TK + c)];
+        }
+#endif
+}
+
+void pack_b_panel_rel(const int8_t *B, int8_t *Bp, int nb0, int nb_cnt, int K)
+{
+    const int KB = K / TK;
+    for (int nb = 0; nb < nb_cnt; nb++)
+        for (int kb = 0; kb < KB; kb++) {
+            int8_t *t = Bp + ((size_t)nb * KB + kb) * TILE_BYTES;
             for (int r = 0; r < TN; r++)
                 for (int c = 0; c < TK; c++)
                     t[r * TK + c] =

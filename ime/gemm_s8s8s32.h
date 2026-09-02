@@ -48,6 +48,8 @@ void pack_b(const int8_t *B, int8_t *Bp, int N, int K);
 void pack_a_panel(const int8_t *A, int8_t *Ap, int mb0, int mb_cnt, int K);
 /* Pack a column-tile panel: nb0 = starting N-block index, nb_cnt blocks (each TN cols). */
 void pack_b_panel(const int8_t *B, int8_t *Bp, int nb0, int nb_cnt, int K);
+/* Same as pack_b_panel but writes at Bp+0 (for TCM staging buffers). */
+void pack_b_panel_rel(const int8_t *B, int8_t *Bp, int nb0, int nb_cnt, int K);
 
 /* Scalar model of one smt.vmadot: acc[i*4+j] += sum_c a[i*8+c]*b[j*8+c]. */
 void tile_mul_ref(int32_t acc[TM * TN], const int8_t *a, const int8_t *b);
@@ -69,6 +71,40 @@ void gemm_rvv(const int8_t *A, const int8_t *B, int32_t *C, int M, int N, int K)
 void gemm_ime(const int8_t *A, const int8_t *B, int32_t *C,
               int M, int N, int K, int8_t *Ap, int8_t *Bp, int ldc);
 
+/* Panel pack only (amortized layout matching gemm_ime). */
+void gemm_ime_pack(const int8_t *A, const int8_t *B, int8_t *Ap, int8_t *Bp,
+                   int M, int N, int K);
+
+/* Compute only: Ap/Bp must already hold the panel-packed layout from gemm_ime_pack. */
+void gemm_ime_compute(const int8_t *Ap, const int8_t *Bp, int32_t *C,
+                      int M, int N, int K, int ldc);
+
+void gemm_ime_set_nc(int nc_tiles);
+int gemm_ime_get_nc(int K);
+void gemm_ime_set_megakernel(int on);
+void gemm_ime_set_fused_pack_a(int on);
+void gemm_ime_compute_ex(const int8_t *A, const int8_t *B, int8_t *Ap, int8_t *Bp,
+                         int32_t *C, int M, int N, int K, int ldc, int do_pack_a,
+                         int do_pack_b);
+
+/* Bytes for one N-panel (nc TN-tiles × K). Fits in 128 KiB TCM block when nc≤8 @ K=512. */
+size_t gemm_ime_b_panel_bytes(int K);
+
+size_t gemm_ime_packed_b_bytes(int N, int K);
+
+void gemm_ime_compute_tcm_b(const int8_t *A, const int8_t *B, int8_t *Ap, int8_t *Bp_tcm,
+                            int32_t *C, int M, int N, int K, int ldc, int do_pack_a);
+
+void gemm_ime_compute_tcm_staged(const int8_t *A, const int8_t *Bp_packed, int8_t *Ap,
+                                 int8_t *Bp_tcm, int32_t *C, int M, int N, int K, int ldc,
+                                 int do_pack_a);
+
+void gemm_ime_tcm_b(const int8_t *A, const int8_t *B, int32_t *C, int M, int N, int K,
+                    int8_t *Ap, int8_t *Bp_tcm, int ldc);
+
+void gemm_ime_compute_tcm_offline_b(const int8_t *A, int8_t *Ap, const int8_t *Bp_tcm,
+                                    int32_t *C, int M, int N, int K, int ldc);
+
 /* Inner K-loop variants (8× vmadot per K-tile). Production uses piped. */
 void ime_kloop_8x16(const int8_t *a0, const int8_t *a1, const int8_t *b0,
                     const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
@@ -78,6 +114,10 @@ void ime_kloop_8x16_ilv(const int8_t *a0, const int8_t *a1, const int8_t *b0,
                         const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
 void ime_kloop_8x16_piped(const int8_t *a0, const int8_t *a1, const int8_t *b0,
                           const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
+void ime_kloop_8x16_burst(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                          const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
+void ime_kloop_8x16_opt(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                        const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb);
 
 void ime_kloop_4x32_ilv(const int8_t *a0, const int8_t *b0, const int8_t *b1,
                         const int8_t *b2, const int8_t *b3, const int8_t *b4,
@@ -93,7 +133,10 @@ void ime_block_4x32(const int8_t *a0, const int8_t *b0, const int8_t *b1,
                     const int8_t *b5, const int8_t *b6, const int8_t *b7, long kb,
                     int32_t *c, long ldc);
 
-/* Full 8×16 micro-tile: zero acc, kloop, store to C (row stride ldc). */
+void ime_block_8x16_legacy(const int8_t *a0, const int8_t *a1, const int8_t *b0,
+                           const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb,
+                           int32_t *c, long ldc);
+/* Full 8×16 micro-tile: fused megablock (zero + kloop + store). */
 void ime_block_8x16(const int8_t *a0, const int8_t *a1, const int8_t *b0,
                     const int8_t *b1, const int8_t *b2, const int8_t *b3, long kb,
                     int32_t *c, long ldc);

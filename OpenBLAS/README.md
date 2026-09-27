@@ -228,6 +228,57 @@ original `_rvv_v1`, MFlops:
 > 16`) the tile width is unchanged, so the rewrite is a structural no-op for
 > throughput there.
 
+## BeagleV-Ahead — C910 `xtheadvector` (2026-09-27)
+
+TH1520, 4× Xuantie C910, factory Yocto (glibc 2.31). EESSI `2025.06-001` is
+mounted and selects `riscv64/generic` (RVV 1.0 compatibility layer). Stock
+`HPL/2.3-foss-2025b` runs on that generic OpenBLAS: N=2000, 2×2, **3.77 GFLOP/s**,
+residual PASSED. That problem fits in cache.
+
+OpenBLAS **0.3.34** `TARGET=C910V` does not build as shipped on EESSI GCC 14.3.
+The makefile asks for `-march=rv64imafdcv0p7_zfh_xtheadc -mtune=c920`, and the
+SGEMM/DGEMM kernels emit RVV 0.7 mnemonics (`vle.v`, `vfmacc.vv`). GCC 14 accepts
+`-march=rv64gc_xtheadvector` and binutils 2.44 names those instructions `th.*`.
+Build used:
+
+- `CCOMMON_OPT` / `TARGET_FLAGS`: `-march=rv64gc_xtheadvector -mabi=lp64d`
+- `common_riscv64.h`: `#include <riscv_th_vector.h>` for `C910V`
+- prefix `th.` on `vsetvli`, `vle.v`, `vse.v`, `vfmv.v.f`, `vfmacc.vv`, `vfadd.vv`, `vfmul.vv`, `vrgather.vi` in `sgemm_kernel_16x4_c910v.c` and `dgemm_kernel_8x4_c910v.c`
+- `NO_LAPACK=1 NO_LAPACKE=1 NOFORTRAN=1`
+
+Library: `libopenblas_c910vp-r0.3.34.so`. `openblas_get_corename` still prints
+`RISCV64_GENERIC` because `/proc/cpuinfo` has no `T-HEAD C910` model string; the
+linked GEMM objects contain `th.vfmacc.vv`.
+
+Square all-ones GEMM, best of 3 for N≤1024, one rep above that. `C[0] = N` on every
+point. Governor `performance`, **1.848 GHz**.
+
+| | 1 core | 4 cores |
+|---|--:|--:|
+| DGEMM N=512 | 2.92 | |
+| DGEMM N=1024 | 2.77 | |
+| DGEMM N=2048 | 2.56 | 7.42 |
+| DGEMM N=3072 | 2.73 | |
+| DGEMM N=4096 | | **7.42** |
+| SGEMM N=512 | 6.31 | |
+| SGEMM N=1024 | 6.10 | |
+| SGEMM N=2048 | 5.72 | 16.69 |
+| SGEMM N=3072 | 5.77 | |
+| SGEMM N=4096 | | **16.58** |
+
+GFLOP/s. Four cores are about 2.7× one core. Single is a bit over 2× double, matching a 128-bit `th.vfmacc` (four floats or two doubles).
+
+CBLAS `ctest` (`OPENBLAS_NUM_THREADS=2`, stop-on-failure off):
+
+| Suite | Result |
+|---|---|
+| L2 S/D/C/Z | computational **PASS** |
+| L3 C/Z | computational **PASS** |
+| L3 S/D `trmm` / `trsm` | computational **PASS** (3528 calls each) |
+| L3 S/D `gemm` / `symm` / `syrk` / `syr2k` | **FAIL**, “less than half accurate”, including small shapes (`sgemm` M=1,N=9,K=2) and K=0 with β=0 |
+
+The all-ones microbench above still matches `C[0] = N`. The CBLAS failures are shape-specific, not a total GEMM outage.
+
 ## SpacemiT K3 A100 — `RISCV64_ZVL1024B` (2026-09)
 
 New OpenBLAS target for **VLEN=1024** (A100 cluster on BPI-SM10). See

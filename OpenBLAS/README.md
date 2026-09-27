@@ -131,6 +131,17 @@ still ships 0.3.29/0.3.30 only; needs GCC ≥14.3 to build 0.3.34 locally.
 — both ahead of patched 0.3.30 on the same day (7.72 / 10.27). See
 [`../hpl/`](../hpl/) [`run-hpl-034.sh`](../hpl/run-hpl-034.sh).
 
+**EESSI interim backport:** until the stack can ship ≥ 0.3.34, use
+[`OpenBLAS-0.3.30_backport-riscv64-zvl256b-from-0.3.34.patch`](OpenBLAS-0.3.30_backport-riscv64-zvl256b-from-0.3.34.patch)
+(notes: [`PATCH-0.3.30-riscv-zvl256b.md`](PATCH-0.3.30-riscv-zvl256b.md)) — GEMV_N/T,
+RVV TRSM, packing, ROTM/omatcopy on top of 0.3.30's known-good DGEMM. Wired into
+`opensolvers/riscv` `OpenBLAS-0.3.30-GCC-14.3.0-x60.eb` (supersedes gemv_n-only).
+
+**Validated on RV2 (2026-08-27):** build + `difftest`/`SYRK`/`CTRSM` PASS; DGEMM
+**17.21 GFLOP/s** @ t8; HPL `HPL.dat` **12.45 GFLOP/s PASSED** (vs gemv-only
+patch **9.06**, native 0.3.34 **12.11**). Harness:
+[`run-build-validate-030-bp.sh`](run-build-validate-030-bp.sh).
+
 ## Cross-board confirmation - Banana Pi BPI-F3 (same K1 / X60 SoC)
 
 The [Banana Pi BPI-F3](https://www.banana-pi.org/) uses the same SpaceMiT K1
@@ -216,3 +227,10 @@ original `_rvv_v1`, MFlops:
 > fast, usually faster. On `ZVL256B` / `x280` (`VSETVL_MAX == GEMM_UNROLL_M ==
 > 16`) the tile width is unchanged, so the rewrite is a structural no-op for
 > throughput there.
+
+## SpacemiT K3 A100 — `RISCV64_ZVL1024B` (2026-09)
+
+New OpenBLAS target for **VLEN=1024** (A100 cluster on BPI-SM10). See
+[`PATCH-0.3.34-riscv-zvl1024b.md`](PATCH-0.3.34-riscv-zvl1024b.md) and
+`OpenBLAS-0.3.34_add-riscv64-zvl1024b.patch`. A100-only HPL ~**36 GF** @ N=12000;
+hetero 8×X100+8×A100 ~**57.5 GF** (beats X100-only).

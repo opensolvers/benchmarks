@@ -13,6 +13,7 @@ and the expected results.
 | `HPL.dat` | 1x8 | 8000 | quick A/B (~1 min/run) |
 | `HPL_big.dat` | 1x8 | 28672 | large run (needs ~6.6 GB RAM) |
 | `HPL-sweep.dat` | 2x4 | 20000 | near-peak, squarer grid |
+| `HPL_ahead.dat` | 2x2 | 18816 | BeagleV-Ahead full-memory stock EESSI (~2.8 GB matrix) |
 | `run-hpl-ab.sh` | - | - | scalar-vs-RVV A/B driver (FlexiBLAS backend swap) |
 | `run-hpl-034.sh` | - | - | HPL with OpenBLAS 0.3.34 vs patched 0.3.30 |
 | `Make.rv64_blis` | - | - | HPL make config linking `xhpl` against static BLIS |
@@ -121,6 +122,25 @@ Same `xhpl`, `HPL.dat` (N=8000, `1x8`), EESSI `2025.06-001` on a
 (11.64 GFLOP/s) but NaN - correctness needs the fixed build, exactly as on the
 RV2. `HPL_big.dat` (N=28672, ~6.6 GB) and `HPL-sweep.dat` (N=20000, ~3.2 GB) were
 skipped here: they exceed this BPI-F3's 3.7 GB RAM.
+
+## BeagleV-Ahead — stock EESSI on Ubuntu 6.15 (2026-09-28)
+
+TH1520, 4× C910. Ubuntu 24.04.3, kernel `6.15.11-20251216+`. That kernel's
+GhostWrite mitigation hides `xtheadvector`, so this is the generic EESSI tree,
+not the local C910 OpenBLAS. EESSI `2025.06-001` selects `riscv64/generic`.
+`HPL/2.3-foss-2025b`, 4 MPI ranks, `OMP_NUM_THREADS=1`, NB=192, 2×2. No swap.
+[`HPL_ahead.dat`](HPL_ahead.dat) is N=18816, the largest multiple of 192 whose
+matrix (~2.8 GB) left about 0.9 GB `MemAvailable` on a 4 GB board.
+
+| Problem | Time | GFLOP/s | residual | result |
+|---|--:|--:|--:|---|
+| N=2000 (cache) | 3.67 s | 1.45 | — | PASSED |
+| N=18816 (`HPL_ahead.dat`) | 2069.87 s | **2.15** | 3.95e-03 | PASSED |
+
+The same N=2000 problem on the factory 5.10 kernel, which still exposes
+`xtheadvector`, was **3.77 GFLOP/s**, PASSED. That rate is not this Ubuntu run.
+The GEMM numbers for the local `xtheadvector` OpenBLAS are in
+[`../OpenBLAS/README.md`](../OpenBLAS/README.md).
 
 ---
 

@@ -232,8 +232,14 @@ original `_rvv_v1`, MFlops:
 
 TH1520, 4× Xuantie C910, factory Yocto (glibc 2.31). EESSI `2025.06-001` is
 mounted and selects `riscv64/generic` (RVV 1.0 compatibility layer). Stock
-`HPL/2.3-foss-2025b` runs on that generic OpenBLAS: N=2000, 2×2, **3.77 GFLOP/s**,
-residual PASSED. That problem fits in cache.
+`HPL/2.3-foss-2025b` on that kernel: N=2000, 2×2, **3.77 GFLOP/s**, residual
+PASSED. That problem fits in cache.
+
+The same module on Ubuntu 24.04.3 / kernel 6.15 (GhostWrite mitigation hides
+`xtheadvector`) is slower: N=2000 is **1.45 GFLOP/s**, and the full-memory run
+is N=18816, 2×2, **2.15 GFLOP/s**, residual 3.95e-03 PASSED. Notes and
+`HPL_ahead.dat` are in [`../hpl/README.md`](../hpl/README.md). The GEMM numbers
+below are still the factory-kernel C910 build.
 
 OpenBLAS **0.3.34** `TARGET=C910V` does not build as shipped on EESSI GCC 14.3.
 The makefile asks for `-march=rv64imafdcv0p7_zfh_xtheadc -mtune=c920`, and the

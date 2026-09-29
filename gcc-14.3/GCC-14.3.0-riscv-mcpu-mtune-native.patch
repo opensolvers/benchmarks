@@ -1,0 +1,171 @@
+# GCC 14.3.0 RISC-V -mcpu=native / -mtune=native follow-on.
+# REQUIRES: GCC-14.3.0-riscv-march-native.patch applied first.
+# Recommended full EasyBuild order (SpacemiT first so CPU names exist):
+#   GCC-14.3.0-spacemit-x60.patch
+#   GCC-14.3.0-spacemit-x100-a100.patch
+#   GCC-14.3.0-riscv-march-native.patch
+#   GCC-14.3.0-riscv-mcpu-mtune-native.patch
+# CORE macro stays 3-arg; SpacemiT and native patches are independent.
+# Apply with: patch -p1 < this-file
+#
+--- a/gcc/config/riscv/driver-riscv.cc
++++ b/gcc/config/riscv/driver-riscv.cc
+@@ -337,10 +337,100 @@
+   return xstrdup (isa.c_str ());
+ }
+ 
++/* Hardcoded identification registers.  Keeps RISCV_CORE 3-arg so SpacemiT
++   patches still apply.  Names must exist as -mtune/-mcpu values in this
++   compiler (apply SpacemiT X60 + X100/A100 patches before relying on
++   spacemit-* native detection).  */
++
++struct riscv_core_id
++{
++  const char *name;
++  struct riscv_cpuid id;
++};
++
++static const struct riscv_core_id riscv_core_ids[] = {
++  /* SiFive (stock GCC 14.3 names).  */
++  { "sifive-u74",
++    riscv_cpuid (0x489, 0x8000000000000007ULL, 0x4210427ULL) },
++  { "sifive-p550",
++    riscv_cpuid (0x489, 0x8000000000000008ULL, 0x6220425ULL) },
++  /* SpacemiT (requires SpacemiT GCC patches).  */
++  { "spacemit-x60",
++    riscv_cpuid (0x710, 0x8000000058000001ULL, 0x1000000049772200ULL) },
++  { "spacemit-x100",
++    riscv_cpuid (0x710, 0x8000000058000002ULL, 0x33d8a600ULL) },
++  { "spacemit-a100",
++    riscv_cpuid (0x710, 0x8000000041000002ULL, 0x10000000d5686200ULL) },
++};
++
+ static const char *
+-riscv_native_tune (void)
++riscv_core_from_cpuid (const struct riscv_cpuid &id)
+ {
++  for (size_t i = 0; i < ARRAY_SIZE (riscv_core_ids); i++)
++    if (riscv_core_ids[i].id.match (id))
++      return riscv_core_ids[i].name;
++
+   return NULL;
++}
++
++static bool
++riscv_cpuid_from_pairs (const struct riscv_hwprobe *pairs, size_t npairs,
++			struct riscv_cpuid &id)
++{
++  id = riscv_cpuid (riscv_hwprobe_value (pairs, npairs,
++					 RISCV_HWPROBE_KEY_MVENDORID),
++		    riscv_hwprobe_value (pairs, npairs,
++					 RISCV_HWPROBE_KEY_MARCHID),
++		    riscv_hwprobe_value (pairs, npairs,
++					 RISCV_HWPROBE_KEY_MIMPID));
++
++  return id.valid_p ();
++}
++
++static bool
++riscv_cpuid_from_hwprobe (struct riscv_cpuid &id)
++{
++  struct riscv_hwprobe pairs[] = {
++    { RISCV_HWPROBE_KEY_MVENDORID, 0 },
++    { RISCV_HWPROBE_KEY_MARCHID, 0 },
++    { RISCV_HWPROBE_KEY_MIMPID, 0 }
++  };
++  size_t npairs = ARRAY_SIZE (pairs);
++
++  if (riscv_hwprobe_affinity (pairs, npairs)
++      && riscv_cpuid_from_pairs (pairs, npairs, id))
++    return true;
++
++  return (riscv_hwprobe_this_core (pairs, npairs)
++	  && riscv_cpuid_from_pairs (pairs, npairs, id));
++}
++
++static bool
++riscv_cpuid_from_cpuinfo (struct riscv_cpuid &id)
++{
++  struct riscv_cpuinfo info;
++
++  if (!riscv_cpuinfo (&info))
++    return false;
++
++  id = info.id;
++
++  return id.valid_p ();
++}
++
++static const char *
++riscv_native_tune (void)
++{
++  struct riscv_cpuid id;
++  const char *core;
++
++  if ((riscv_cpuinfo_forced () || !riscv_cpuid_from_hwprobe (id))
++      && !riscv_cpuid_from_cpuinfo (id))
++    return NULL;
++
++  core = riscv_core_from_cpuid (id);
++
++  return core != NULL ? xstrdup (core) : NULL;
+ }
+ 
+ #else /* !__linux__ */
+--- a/gcc/config/riscv/riscv.h
++++ b/gcc/config/riscv/riscv.h
+@@ -57,7 +57,11 @@
+ # define RISCV_NATIVE_SPEC_FUNCTIONS					\
+   { "local_cpu_detect", host_detect_local_cpu },
+ # define RISCV_NATIVE_SPECS						\
+-  "%{march=native:%<march=native %:local_cpu_detect(arch)} "
++  "%{march=native:%<march=native %:local_cpu_detect(arch)} "		\
++  "%{mtune=native:%<mtune=native %:local_cpu_detect(tune)} "		\
++  "%{mcpu=native:%<mcpu=native "					\
++    "%{!march=*:%:local_cpu_detect(arch)} "				\
++    "%{!mtune=*:%:local_cpu_detect(tune)}} "
+ #else
+ # define RISCV_NATIVE_SPEC_FUNCTIONS
+ # define RISCV_NATIVE_SPECS ""
+@@ -79,11 +83,13 @@
+    --with-tls is ignored if -mtls-dialect is specified.
+ 
+    But using default -march/-mtune value if -mcpu don't have valid option.  */
++/* -mcpu=native is handled by RISCV_NATIVE_SPECS; keep defaults from
++   rewriting it into an unknown CPU name.  */
+ #define OPTION_DEFAULT_SPECS \
+-  {"tune", "%{!mtune=*:"						\
++  {"tune", "%{!mtune=*:%{!mcpu=native:"					\
+ 	   "  %{!mcpu=*:-mtune=%(VALUE)}"				\
+-	   "  %{mcpu=*:-mtune=%:riscv_default_mtune(%* %(VALUE))}}" },	\
+-  {"arch", "%{!march=*:"						\
++	   "  %{mcpu=*:-mtune=%:riscv_default_mtune(%* %(VALUE))}}}" },	\
++  {"arch", "%{!march=*:%{!mcpu=native:"					\
+ 	   "  %{!mcpu=*:-march=%(VALUE)}"				\
+ 	   "  %{mcpu=*:%:riscv_expand_arch_from_cpu(%* %(VALUE))}}" },	\
+   {"abi", "%{!mabi=*:-mabi=%(VALUE)}" },				\
+--- a/gcc/doc/invoke.texi
++++ b/gcc/doc/invoke.texi
+@@ -31027,6 +31027,13 @@
+ 
+ Note that @option{-mcpu} does not override @option{-march} or @option{-mtune}.
+ 
++On RISC-V Linux, @option{-mcpu=native} expands to @option{-march=native} plus
++@option{-mtune=native} when those are not already set.  @option{-mtune=native}
++matches the running core against a small hardcoded table of
++@code{mvendorid}/@code{marchid}/@code{mimpid} values (SiFive @samp{u74}/
++@samp{p550}; SpacemiT @samp{x60}/@samp{x100}/@samp{a100} when those CPU names
++are present in this compiler).
++
+ @opindex mtune
+ @item -mtune=@var{processor-string}
+ Optimize the output for the given processor, specified by microarchitecture or
+@@ -31037,6 +31044,8 @@
+ 
+ When @option{-mtune=} is not specified, use the setting from @option{-mcpu},
+ the default is @samp{rocket} if both are not specified.
++
++@option{-mtune=native} is accepted on RISC-V Linux; see @option{-mcpu=native}.
+ 
+ The @samp{size} choice is not intended for use by end-users.  This is used
+ when @option{-Os} is specified.  It overrides the instruction cost info

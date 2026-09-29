@@ -62,12 +62,17 @@ Apply from the extracted `gcc-14.3.0` source root (EasyBuild via
 ```bash
 patch -p1 < GCC-14.3.0-spacemit-x60.patch
 patch -p1 < GCC-14.3.0-spacemit-x100-a100.patch
+# optional native backport (below):
+patch -p1 < GCC-14.3.0-riscv-march-native.patch
+patch -p1 < GCC-14.3.0-riscv-mcpu-mtune-native.patch
 ```
 
 Pristine apply proof (`--fuzz=0`):
 [`results/easybuild-unified-14.3-verify.log`](results/easybuild-unified-14.3-verify.log)
 (layered walkthrough:
-[`results/pristine-apply-14.3.log`](results/pristine-apply-14.3.log)).
+[`results/pristine-apply-14.3.log`](results/pristine-apply-14.3.log);
+native+SpacemiT:
+[`results/native-after-spacemit-verify.log`](results/native-after-spacemit-verify.log)).
 
 EasyBuild sketch:
 
@@ -76,6 +81,8 @@ EasyBuild sketch:
 patches = [
     'GCC-14.3.0-spacemit-x60.patch',
     'GCC-14.3.0-spacemit-x100-a100.patch',
+    'GCC-14.3.0-riscv-march-native.patch',
+    'GCC-14.3.0-riscv-mcpu-mtune-native.patch',
 ]
 ```
 
@@ -83,6 +90,38 @@ See also [`EASYBUILD-NOTE.md`](EASYBUILD-NOTE.md) (still need binutils IME encod
 separately; do not set `EASYBUILD_OPTARCH=-mtune=spacemit-x60` until hosts use
 this patched GCCcore).
 
+---
+
+## Patch (RISC-V `-march`/`-mcpu`/`-mtune=native`)
+
+Stock GCC 14.3 rejects `native` on RISC-V. Trunk (GCC 16) added a full
+hwprobe + 6-arg `RISCV_CORE` ID stack — too invasive to drop onto 14.3 without
+breaking the SpacemiT patches (which keep the 3-arg `RISCV_CORE`).
+
+Self-contained backport (does **not** change `riscv-cores.def` shape):
+
+| Patch | Adds |
+|-------|------|
+| [`GCC-14.3.0-riscv-march-native.patch`](GCC-14.3.0-riscv-march-native.patch) | `driver-riscv.cc`, minimal `riscv-hwprobe.h`, `riscv_ext_is_known_p`, `-march=native` via `/proc/cpuinfo` (+ `vlenb` → `zvl*b`) |
+| [`GCC-14.3.0-riscv-mcpu-mtune-native.patch`](GCC-14.3.0-riscv-mcpu-mtune-native.patch) | `-mcpu=native` / `-mtune=native`; hardcoded ID table |
+
+**`-march=native`:** reads `hart isa` / `isa` from cpuinfo, drops unknown
+extensions, appends `zvl*b` from CSR `vlenb` when vector is present.
+
+**`-mtune=native` / `-mcpu=native`:** matches
+`mvendorid`/`marchid`/`mimpid` (hwprobe first, cpuinfo fallback) against:
+
+| Name | Notes |
+|------|-------|
+| `sifive-u74`, `sifive-p550` | stock GCC 14.3 names |
+| `spacemit-x60`, `spacemit-x100`, `spacemit-a100` | need SpacemiT patches above |
+
+On K3 hetero boards, affinity/this-core probing follows trunk: prefer the
+CPU the process is on. Override for testing with `GCC_CPUINFO` /
+`GCC_CPUINFO_CPU`.
+
+Either apply order (SpacemiT ↔ native) is `--fuzz=0` clean; recommended
+SpacemiT first so native can resolve SpacemiT names.
 ---
 
 ## Results (Orange Pi RV2)
@@ -124,10 +163,15 @@ static OpenBLAS `.a`.
 gcc-14.3/
   README.md
   GCC-14.3.0-spacemit-x60.patch
+  GCC-14.3.0-spacemit-x100-a100.patch
+  GCC-14.3.0-riscv-march-native.patch
+  GCC-14.3.0-riscv-mcpu-mtune-native.patch
   EASYBUILD-NOTE.md
   results/
     easybuild-unified-14.3-verify.log
     pristine-apply-14.3.log
+    native-after-spacemit-verify.log
+    native-only-verify.log
     canaries/          # scheduler A/B (no ELF bins)
     openblas-hpl/      # DGEMM + modest HPL mtune A/B
 ```

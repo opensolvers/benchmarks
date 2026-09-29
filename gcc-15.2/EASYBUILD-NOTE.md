@@ -1,4 +1,4 @@
-# EasyBuild / GCCcore — SpacemiT patches (GCC 15.2.0)
+# EasyBuild / GCCcore — SpacemiT + RISC-V native patches (GCC 15.2.0)
 
 ## Patches (apply in order)
 
@@ -6,12 +6,16 @@
 |-------|-------|---------|
 | 1 | [`GCC-15.2.0-spacemit-x60.patch`](GCC-15.2.0-spacemit-x60.patch) | X60 DFA + `xsmtvdot` / Layer B costs (RV2) |
 | 2 | [`GCC-15.2.0-spacemit-x100-a100.patch`](GCC-15.2.0-spacemit-x100-a100.patch) | K3 `-mcpu`/`-mtune` for X100 + A100 |
+| 3 | [`GCC-15.2.0-riscv-march-native.patch`](GCC-15.2.0-riscv-march-native.patch) | `-march=native` (cpuinfo + `vlenb`) |
+| 4 | [`GCC-15.2.0-riscv-mcpu-mtune-native.patch`](GCC-15.2.0-riscv-mcpu-mtune-native.patch) | `-mcpu=native` / `-mtune=native` + SpacemiT/SiFive IDs |
 
-Both apply with `patch -p1` on stock **GCC 15.2.0** (`--fuzz=0` verified).
+All apply with `patch -p1` on stock **GCC 15.2.0** (`--fuzz=0` verified;
+native↔SpacemiT either order). Native keeps `RISCV_CORE` 3-arg so SpacemiT
+patches still apply.
 
 **EESSI note:** RISC-V EESSI currently ships GCCcore **14.x** only. This 15.2
-pair is for EasyBuild / future GCCcore-15. Do **not** reuse the 14.3 X100/A100
-patch here — `riscv_tune_param` gained fields in 15.2.
+set is for EasyBuild / future GCCcore-15. Do **not** reuse the 14.3 X100/A100
+or native patches here — `riscv_tune_param` and source context differ.
 
 ### X60 (patch 1)
 
@@ -36,18 +40,26 @@ A100-only / hetero A100 ranks: `-mcpu=spacemit-a100`.
 patches = [
     'GCC-15.2.0-spacemit-x60.patch',
     'GCC-15.2.0-spacemit-x100-a100.patch',
+    'GCC-15.2.0-riscv-march-native.patch',
+    'GCC-15.2.0-riscv-mcpu-mtune-native.patch',
 ]
 ```
 
 Place the patches next to the easyconfig (or in EasyBuild’s patch path).
 
+With the native pair, hosts can use `EASYBUILD_OPTARCH='-mcpu=native'` (or
+`-march=native -mtune=native`) once this GCCcore is what builds run under.
+On K3, pin ranks to X100 or A100 if hetero scheduling would otherwise pick
+the “wrong” native core.
+
 ## Still separate / still missing for EESSI
 
 - **Binutils** IME encode: `patches/binutils/binutils-2.46.1_add-spacemit-xsmtvdot.patch`
   (GCC alone never encodes `smt.vmadot`).
-- **`EASYBUILD_OPTARCH`**: only pass `-mtune=spacemit-x100` (or `-x60`) once
-  this patched GCCcore is what hosts use; until then keep march-only (see
-  `notes/eessi-wiring.md`).
+- **`EASYBUILD_OPTARCH`**: with the native pair applied, `-mcpu=native` is
+  viable on RISC-V Linux hosts; until then keep march-only (see
+  `notes/eessi-wiring.md`). Explicit `-mtune=spacemit-x100` still preferred
+  for reproducible K3 X100 ranks.
 - **GCC 14.3**: sibling patches in [`../gcc-14.3/`](../gcc-14.3/).
 - **`type=shadd`**: still deferred (`patches/deferred/0005b-…`).
 

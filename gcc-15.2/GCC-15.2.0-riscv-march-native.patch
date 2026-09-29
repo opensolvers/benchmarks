@@ -1,0 +1,599 @@
+# GCC 15.2.0 RISC-V -march=native backport (opensolvers/benchmarks).
+# Apply on stock GCC 15.2.0 with: patch -p1 < this-file
+# Optional: apply SpacemiT X60 / X100-A100 patches first (independent).
+# See README.md for apply order with the mtune/mcpu follow-on patch.
+#
+--- a/gcc/common/config/riscv/riscv-common.cc
++++ b/gcc/common/config/riscv/riscv-common.cc
+@@ -446,6 +446,23 @@
+   {NULL, ISA_SPEC_CLASS_NONE, 0, 0}
+ };
+ 
++/* True if EXT is a standard extension this compiler knows about.  Used by
++   the -march=native driver to drop kernel-reported names that would make
++   -march= fail.  */
++
++bool
++riscv_ext_is_known_p (const char *ext)
++{
++  const struct riscv_ext_version *ext_ver;
++
++  for (ext_ver = &riscv_ext_version_table[0];
++       ext_ver->name != NULL; ++ext_ver)
++    if (strcmp (ext_ver->name, ext) == 0)
++      return true;
++
++  return false;
++}
++
+ /* Combine extensions defined in this table  */
+ static const struct riscv_ext_version riscv_combine_info[] =
+ {
+--- a/gcc/config/riscv/driver-riscv.cc
++++ b/gcc/config/riscv/driver-riscv.cc
+@@ -0,0 +1,392 @@
++/* Native CPU detection for RISC-V (GCC 15.2 backport).
++   Copyright (C) 2026 Free Software Foundation, Inc.
++   Adapted for GCC 15.2 by opensolvers/benchmarks from trunk's
++   -march=native / -mcpu=native / -mtune=native work (Aug 2026).
++
++   This backport keeps RISCV_CORE as the 14.3 3-argument form so existing
++   SpacemiT patches still apply. Core identification uses a hardcoded ID
++   table in this file rather than extending riscv-cores.def.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3, or (at your option)
++any later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with GCC; see the file COPYING3.  If not see
++<http://www.gnu.org/licenses/>.  */
++
++#define IN_TARGET_CODE 1
++
++#include "config.h"
++#define INCLUDE_STRING
++#include "system.h"
++#include "coretypes.h"
++#include "tm.h"
++#include "riscv-subset.h"
++
++#ifdef __linux__
++#include <sched.h>
++#include "riscv-hwprobe.h"
++
++#ifndef __NR_getcpu
++#define __NR_getcpu 168
++#endif
++
++/* What the mvendorid, marchid and mimpid CSRs read on one core.  */
++
++struct riscv_cpuid
++{
++  riscv_cpuid ()
++    : mvendorid (UNKNOWN_ID), marchid (UNKNOWN_ID), mimpid (UNKNOWN_ID)
++  {
++  }
++
++  riscv_cpuid (riscv_core_id_t vendor, riscv_core_id_t arch,
++	       riscv_core_id_t impl)
++    : mvendorid (vendor), marchid (arch), mimpid (impl)
++  {
++  }
++
++  bool valid_p () const;
++  bool match (const struct riscv_cpuid &other) const;
++
++  riscv_core_id_t mvendorid;
++  riscv_core_id_t marchid;
++  riscv_core_id_t mimpid;
++};
++
++bool
++riscv_cpuid::valid_p () const
++{
++  return (mvendorid != UNKNOWN_ID
++	  && marchid != UNKNOWN_ID
++	  && mimpid != UNKNOWN_ID);
++}
++
++bool
++riscv_cpuid::match (const struct riscv_cpuid &other) const
++{
++  return (valid_p ()
++	  && other.valid_p ()
++	  && mvendorid == other.mvendorid
++	  && marchid == other.marchid
++	  && mimpid == other.mimpid);
++}
++
++static int
++riscv_current_cpu (void)
++{
++  unsigned int cpu = 0;
++
++  if (syscall_5_args (__NR_getcpu, (long) &cpu, 0, 0, 0, 0) != 0)
++    return -1;
++
++  return (int) cpu;
++}
++
++static bool
++riscv_hwprobe_cpus (struct riscv_hwprobe *pairs, size_t npairs,
++		    const cpu_set_t *cpus)
++{
++  return syscall_5_args (__NR_riscv_hwprobe, (long) pairs, (long) npairs,
++			 (long) sizeof (*cpus), (long) cpus, 0) == 0;
++}
++
++static bool
++riscv_hwprobe_affinity (struct riscv_hwprobe *pairs, size_t npairs)
++{
++  cpu_set_t cpus;
++
++  if (sched_getaffinity (0, sizeof (cpus), &cpus) != 0)
++    return false;
++
++  return riscv_hwprobe_cpus (pairs, npairs, &cpus);
++}
++
++static bool
++riscv_hwprobe_this_core (struct riscv_hwprobe *pairs, size_t npairs)
++{
++  cpu_set_t cpus;
++  int cpu = riscv_current_cpu ();
++
++  if (cpu < 0 || cpu >= CPU_SETSIZE)
++    return false;
++
++  CPU_ZERO (&cpus);
++  CPU_SET (cpu, &cpus);
++
++  return riscv_hwprobe_cpus (pairs, npairs, &cpus);
++}
++
++static void
++riscv_add_vlen (std::string &isa)
++{
++  unsigned long vlenb;
++  unsigned long vlen;
++  char buf[32];
++
++  __asm__ volatile ("csrr %0, 0xc22" : "=r" (vlenb));
++
++  vlen = vlenb * 8;
++
++  if (!(vlen >= 32 && vlen <= 65536 && (vlen & (vlen - 1)) == 0))
++    return;
++
++  snprintf (buf, sizeof (buf), "_zvl%lub", vlen);
++  isa += buf;
++}
++
++struct riscv_cpuinfo
++{
++  std::string isa;
++  struct riscv_cpuid id;
++};
++
++static const char *
++riscv_cpuinfo_file (void)
++{
++  const char *path = getenv ("GCC_CPUINFO");
++
++  return path != NULL ? path : "/proc/cpuinfo";
++}
++
++static bool
++riscv_cpuinfo_forced (void)
++{
++  return getenv ("GCC_CPUINFO") != NULL;
++}
++
++static int
++riscv_cpuinfo_cpu (void)
++{
++  const char *forced = getenv ("GCC_CPUINFO_CPU");
++
++  return forced != NULL ? atoi (forced) : riscv_current_cpu ();
++}
++
++static const char *
++riscv_cpuinfo_field (char *line, std::string &name)
++{
++  char *colon = strchr (line, ':');
++  char *end;
++
++  if (colon == NULL)
++    return NULL;
++
++  end = colon;
++  while (end > line && ISSPACE (end[-1]))
++    end--;
++  name.assign (line, end - line);
++
++  colon++;
++  while (ISSPACE (*colon))
++    colon++;
++
++  end = colon + strlen (colon);
++  while (end > colon && ISSPACE (end[-1]))
++    end--;
++  *end = '\0';
++
++  return colon;
++}
++
++static bool
++riscv_read_cpuinfo (int want, struct riscv_cpuinfo *out)
++{
++  FILE *f = fopen (riscv_cpuinfo_file (), "r");
++  char line[1024];
++  bool in_block = false;
++  bool hart_isa_p = false;
++
++  if (f == NULL)
++    return false;
++
++  out->isa.clear ();
++  out->id = riscv_cpuid ();
++
++  while (fgets (line, sizeof (line), f) != NULL)
++    {
++      std::string name;
++      const char *value = riscv_cpuinfo_field (line, name);
++
++      if (value == NULL)
++	continue;
++
++      if (name == "processor")
++	{
++	  if (in_block)
++	    break;
++	  in_block = want < 0 || atoi (value) == want;
++	  continue;
++	}
++
++      if (!in_block)
++	continue;
++
++      if (name == "hart isa")
++	{
++	  out->isa = value;
++	  hart_isa_p = true;
++	}
++      else if (name == "isa" && !hart_isa_p)
++	out->isa = value;
++      else if (name == "mvendorid")
++	out->id.mvendorid = strtoull (value, NULL, 0);
++      else if (name == "marchid")
++	out->id.marchid = strtoull (value, NULL, 0);
++      else if (name == "mimpid")
++	out->id.mimpid = strtoull (value, NULL, 0);
++    }
++
++  fclose (f);
++
++  return !out->isa.empty ();
++}
++
++static bool
++riscv_cpuinfo (struct riscv_cpuinfo *out)
++{
++  return (riscv_read_cpuinfo (riscv_cpuinfo_cpu (), out)
++	  || riscv_read_cpuinfo (-1, out));
++}
++
++static bool
++riscv_filter_isa (const char *kernel_isa, std::string &isa, bool *vector_p)
++{
++  const char *base = __riscv_xlen == 32 ? "rv32" : "rv64";
++  const char *p = kernel_isa;
++
++  if (strncmp (p, base, 4) != 0)
++    return false;
++  p += 4;
++
++  if (*p != 'i' && *p != 'e' && *p != 'g')
++    return false;
++
++  isa = base;
++  isa += *p++;
++
++  for (; *p != '\0' && *p != '_'; p++)
++    {
++      const char name[2] = { *p, '\0' };
++
++      if (!riscv_ext_is_known_p (name))
++	continue;
++
++      isa += '_';
++      isa += *p;
++      if (*p == 'v')
++	*vector_p = true;
++    }
++
++  while (*p == '_')
++    {
++      const char *end = ++p;
++
++      while (*end != '\0' && *end != '_')
++	end++;
++
++      std::string name (p, end - p);
++      p = end;
++
++      if (name.empty () || !riscv_ext_is_known_p (name.c_str ()))
++	continue;
++
++      isa += '_';
++      isa += name;
++      if (name.compare (0, 3, "zve") == 0)
++	*vector_p = true;
++    }
++
++  return true;
++}
++
++static bool
++riscv_arch_from_cpuinfo (std::string &isa, bool *vector_p)
++{
++  struct riscv_cpuinfo info;
++
++  if (!riscv_cpuinfo (&info))
++    return false;
++
++  return riscv_filter_isa (info.isa.c_str (), isa, vector_p);
++}
++
++static const char *
++riscv_native_arch (void)
++{
++  std::string isa;
++  bool vector_p = false;
++  bool forced = riscv_cpuinfo_forced ();
++
++  /* 15.2 backport: cpuinfo only for ISA (no hwprobe extension bitmap).  */
++  if (!riscv_arch_from_cpuinfo (isa, &vector_p))
++    return NULL;
++
++  if (vector_p && !forced)
++    riscv_add_vlen (isa);
++
++  return xstrdup (isa.c_str ());
++}
++
++static const char *
++riscv_native_tune (void)
++{
++  return NULL;
++}
++
++#else /* !__linux__ */
++
++static const char *
++riscv_native_arch (void)
++{
++  return NULL;
++}
++
++static const char *
++riscv_native_tune (void)
++{
++  return NULL;
++}
++
++#endif /* __linux__ */
++
++/* Implement the local_cpu_detect spec function.  ARGV[0] selects what to
++   report: "arch" for an -march= option, "tune" for an -mtune= one.  */
++
++const char *
++host_detect_local_cpu (int argc, const char **argv)
++{
++  if (argc < 1 || argv[0] == NULL)
++    return NULL;
++
++  if (strcmp (argv[0], "arch") == 0)
++    {
++      const char *isa = riscv_native_arch ();
++
++      if (isa == NULL)
++	return NULL;
++
++      return concat ("-march=", isa, NULL);
++    }
++
++  if (strcmp (argv[0], "tune") == 0)
++    {
++      const char *core = riscv_native_tune ();
++
++      if (core == NULL)
++	return NULL;
++
++      return concat ("-mtune=", core, NULL);
++    }
++
++  return NULL;
++}
+--- a/gcc/config/riscv/riscv-hwprobe.h
++++ b/gcc/config/riscv/riscv-hwprobe.h
+@@ -0,0 +1,85 @@
++/* Minimal Linux riscv_hwprobe interface for GCC 15.2 native detection.
++   Backport helper (not upstream). Transcribes stable ABI keys used for
++   core identification; ISA bits are not needed (cpuinfo drives -march).
++
++   Copyright (C) 2026 Free Software Foundation, Inc.
++   Adapted for GCC 15.2 by opensolvers/benchmarks.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify it under
++the terms of the GNU General Public License as published by the Free
++Software Foundation; either version 3, or (at your option) any later
++version.
++
++GCC is distributed in the hope that it will be useful, but WITHOUT ANY
++WARRANTY; without even the implied warranty of MERCHANTABILITY or
++FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++for more details.
++
++You should have received a copy of the GNU General Public License
++along with GCC; see the file COPYING3.  If not see
++<http://www.gnu.org/licenses/>.  */
++
++#ifndef GCC_RISCV_HWPROBE_H
++#define GCC_RISCV_HWPROBE_H
++
++#ifndef __NR_riscv_hwprobe
++#define __NR_riscv_hwprobe 258
++#endif
++
++enum {
++  RISCV_HWPROBE_KEY_MVENDORID = 0,
++  RISCV_HWPROBE_KEY_MARCHID = 1,
++  RISCV_HWPROBE_KEY_MIMPID = 2
++};
++
++typedef unsigned long long riscv_core_id_t;
++
++#ifndef UNKNOWN_ID
++#define UNKNOWN_ID ((riscv_core_id_t) -1)
++#endif
++
++struct riscv_hwprobe {
++  long long key;
++  unsigned long long value;
++};
++
++static inline long
++syscall_5_args (long number, long arg1, long arg2, long arg3,
++		long arg4, long arg5)
++{
++  register long a7 __asm__ ("a7") = number;
++  register long a0 __asm__ ("a0") = arg1;
++  register long a1 __asm__ ("a1") = arg2;
++  register long a2 __asm__ ("a2") = arg3;
++  register long a3 __asm__ ("a3") = arg4;
++  register long a4 __asm__ ("a4") = arg5;
++  __asm__ __volatile__ ("ecall\n\t"
++			: "=r"(a0)
++			: "r"(a7), "r"(a0), "r"(a1), "r"(a2), "r"(a3), "r"(a4)
++			: "memory");
++  return a0;
++}
++
++static inline long
++riscv_hwprobe (struct riscv_hwprobe *hwprobes, long npairs)
++{
++  return syscall_5_args (__NR_riscv_hwprobe, (long) hwprobes, npairs, 0,
++			 0, 0);
++}
++
++static inline unsigned long long
++riscv_hwprobe_value (const struct riscv_hwprobe *pairs, int npairs,
++		     long long key)
++{
++  int i;
++
++  for (i = 0; i < npairs; i++)
++    if (pairs[i].key == key)
++      return pairs[i].value;
++
++  return 0;
++}
++
++#endif /* GCC_RISCV_HWPROBE_H */
+--- a/gcc/config/riscv/riscv-subset.h
++++ b/gcc/config/riscv/riscv-subset.h
+@@ -119,6 +119,7 @@
+   void finalize ();
+ };
+ 
++extern bool riscv_ext_is_known_p (const char *);
+ extern const riscv_subset_list *riscv_cmdline_subset_list (void);
+ extern void
+ riscv_set_arch_by_subset_list (riscv_subset_list *, struct gcc_options *);
+--- a/gcc/config/riscv/riscv.h
++++ b/gcc/config/riscv/riscv.h
+@@ -52,12 +52,24 @@
+ extern const char *riscv_multi_lib_check (int argc, const char **argv);
+ extern const char *riscv_arch_help (int argc, const char **argv);
+ 
++#if defined (__riscv) && defined (__linux__)
++extern const char *host_detect_local_cpu (int argc, const char **argv);
++# define RISCV_NATIVE_SPEC_FUNCTIONS					\
++  { "local_cpu_detect", host_detect_local_cpu },
++# define RISCV_NATIVE_SPECS						\
++  "%{march=native:%<march=native %:local_cpu_detect(arch)} "
++#else
++# define RISCV_NATIVE_SPEC_FUNCTIONS
++# define RISCV_NATIVE_SPECS ""
++#endif
++
+ # define EXTRA_SPEC_FUNCTIONS						\
+   { "riscv_expand_arch", riscv_expand_arch },				\
+   { "riscv_expand_arch_from_cpu", riscv_expand_arch_from_cpu },		\
+   { "riscv_default_mtune", riscv_default_mtune },			\
+   { "riscv_multi_lib_check", riscv_multi_lib_check },			\
+-  { "riscv_arch_help", riscv_arch_help },
++  { "riscv_arch_help", riscv_arch_help },				\
++  RISCV_NATIVE_SPEC_FUNCTIONS
+ 
+ /* Support for a compile-time default CPU, et cetera.  The rules are:
+    --with-arch is ignored if -march or -mcpu is specified.
+@@ -113,6 +125,7 @@
+ 
+ #undef DRIVER_SELF_SPECS
+ #define DRIVER_SELF_SPECS					\
++RISCV_NATIVE_SPECS						\
+ "%{march=help:%:riscv_arch_help()} "				\
+ "%{print-supported-extensions:%:riscv_arch_help()} "		\
+ "%{-print-supported-extensions:%:riscv_arch_help()} "		\
+--- a/gcc/config/riscv/x-riscv
++++ b/gcc/config/riscv/x-riscv
+@@ -0,0 +1,5 @@
++driver-riscv.o: $(srcdir)/config/riscv/driver-riscv.cc \
++  $(CONFIG_H) $(SYSTEM_H) $(TM_H) $(CORETYPES_H) \
++  $(srcdir)/config/riscv/riscv-subset.h \
++  $(srcdir)/config/riscv/riscv-hwprobe.h
++	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
+--- a/gcc/config.host
++++ b/gcc/config.host
+@@ -142,6 +142,14 @@
+       ;;
+     esac
+     ;;
++  riscv*-*-linux*)
++    case ${target} in
++      riscv*-*-*)
++	host_extra_gcc_objs="driver-riscv.o"
++	host_xmake_file="${host_xmake_file} riscv/x-riscv"
++	;;
++    esac
++    ;;
+   rs6000-*-* \
+   | powerpc*-*-* )
+     case ${target} in
+--- a/gcc/doc/invoke.texi
++++ b/gcc/doc/invoke.texi
+@@ -31087,6 +31087,11 @@
+ lower-case.  Examples include @samp{rv64i}, @samp{rv32g}, @samp{rv32e}, and
+ @samp{rv32imaf}. Additionally, a special value @option{help}
+ (@option{-march=help}) is accepted to list all supported extensions.
++On Linux, @option{-march=native} causes GCC to detect the running core's ISA
++from @file{/proc/cpuinfo} (filtered to extensions this compiler knows) and,
++when vector is present, append a matching @samp{zvl*b} from the @code{vlenb}
++CSR.  Native detection is available only when the compiler itself runs on
++RISC-V Linux.
+ 
+ The syntax of the ISA string is defined as follows:
+ 

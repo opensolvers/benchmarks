@@ -60,10 +60,15 @@ Apply from the extracted `gcc-15.2.0` source root (EasyBuild via
 ```bash
 patch -p1 < GCC-15.2.0-spacemit-x60.patch
 patch -p1 < GCC-15.2.0-spacemit-x100-a100.patch
+# optional native backport (below):
+patch -p1 < GCC-15.2.0-riscv-march-native.patch
+patch -p1 < GCC-15.2.0-riscv-mcpu-mtune-native.patch
 ```
 
 Pristine apply proof (`--fuzz=0`):
-[`results/easybuild-unified-verify.log`](results/easybuild-unified-verify.log).
+[`results/easybuild-unified-verify.log`](results/easybuild-unified-verify.log)
+(native+SpacemiT:
+[`results/native-after-spacemit-verify.log`](results/native-after-spacemit-verify.log)).
 
 EasyBuild sketch:
 
@@ -72,12 +77,31 @@ EasyBuild sketch:
 patches = [
     'GCC-15.2.0-spacemit-x60.patch',
     'GCC-15.2.0-spacemit-x100-a100.patch',
+    'GCC-15.2.0-riscv-march-native.patch',
+    'GCC-15.2.0-riscv-mcpu-mtune-native.patch',
 ]
 ```
 
 See also [`EASYBUILD-NOTE.md`](EASYBUILD-NOTE.md) (still need binutils IME encode
 separately; do not set `EASYBUILD_OPTARCH=-mtune=spacemit-x60` until hosts use
 this patched GCCcore).
+
+---
+
+## Patch (RISC-V `-march`/`-mcpu`/`-mtune=native`)
+
+Same approach as [`../gcc-14.3/`](../gcc-14.3/): stock 15.2 rejects `native` on
+RISC-V; trunk’s hwprobe + 6-arg `RISCV_CORE` stack is too invasive here.
+Self-contained backport (does **not** change `riscv-cores.def` shape):
+
+| Patch | Adds |
+|-------|------|
+| [`GCC-15.2.0-riscv-march-native.patch`](GCC-15.2.0-riscv-march-native.patch) | `driver-riscv.cc`, minimal `riscv-hwprobe.h`, `riscv_ext_is_known_p`, `-march=native` via `/proc/cpuinfo` (+ `vlenb` → `zvl*b`) |
+| [`GCC-15.2.0-riscv-mcpu-mtune-native.patch`](GCC-15.2.0-riscv-mcpu-mtune-native.patch) | `-mcpu=native` / `-mtune=native`; hardcoded ID table (SiFive u74/p550; SpacemiT x60/x100/a100) |
+
+Either apply order (SpacemiT ↔ native) is `--fuzz=0` clean; recommended
+SpacemiT first so native can resolve SpacemiT names. Do **not** reuse the
+14.3 native patches on 15.2 (and vice versa) — source context differs.
 
 ---
 
@@ -119,9 +143,14 @@ Summaries, raw outs, harness: [`results/openblas-hpl/`](results/openblas-hpl/).
 gcc-15.2/
   README.md
   GCC-15.2.0-spacemit-x60.patch
+  GCC-15.2.0-spacemit-x100-a100.patch
+  GCC-15.2.0-riscv-march-native.patch
+  GCC-15.2.0-riscv-mcpu-mtune-native.patch
   EASYBUILD-NOTE.md
   results/
     easybuild-unified-verify.log
+    native-after-spacemit-verify.log
+    native-only-verify.log
     canaries/          # clean scheduler A/B
     openblas-hpl/      # OpenBLAS + HPL mtune A/B
 ```

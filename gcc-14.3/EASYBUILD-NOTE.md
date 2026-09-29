@@ -48,12 +48,16 @@ Place the patches next to the easyconfig (or in EasyBuild’s patch path).
 
 ## Still separate / still missing for EESSI
 
-- **Binutils** IME encode: `patches/binutils/binutils-2.46.1_add-spacemit-xsmtvdot.patch`
-  (GCC alone never encodes `smt.vmadot`).
+- **Binutils** IME asm (apply IME1 then IME2 on binutils 2.46.1):
+  `patches/binutils/binutils-2.46.1_add-spacemit-xsmtvdot.patch` (X60 / `xsmtvdot`),
+  then `patches/binutils/binutils-2.46.1_add-spacemit-xsmtvdotii.patch` (A100 /
+  `xsmtvdotii`: `smt.vfwmadot*`, `smt.vpack.vv`, …). GCC only adds `-march` /
+  `__riscv_*`; it does not assemble IME opcodes.
 - **`EASYBUILD_OPTARCH`**: with the native pair applied, `-mcpu=native` is
   viable on RISC-V Linux hosts; until then keep march-only (see
   `notes/eessi-wiring.md` in `spacemit-x60-gcc-tune`). Explicit
-  `-mtune=spacemit-x100` still preferred for reproducible K3 X100 ranks.- **GCC 15.2**: sibling unified patch in [`../gcc-15.2/`](../gcc-15.2/).
+  `-mtune=spacemit-x100` still preferred for reproducible K3 X100 ranks.
+- **GCC 15.2**: sibling unified patch in [`../gcc-15.2/`](../gcc-15.2/).
 - **`type=shadd`**: still deferred (`patches/deferred/0005b-…`).
 
 Do **not** treat local RV2 / K3 proof as an EESSI PR.

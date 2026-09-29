@@ -54,8 +54,11 @@ the “wrong” native core.
 
 ## Still separate / still missing for EESSI
 
-- **Binutils** IME encode: `patches/binutils/binutils-2.46.1_add-spacemit-xsmtvdot.patch`
-  (GCC alone never encodes `smt.vmadot`).
+- **Binutils** IME asm (apply IME1 then IME2 on binutils 2.46.1):
+  `patches/binutils/binutils-2.46.1_add-spacemit-xsmtvdot.patch` (X60 / `xsmtvdot`),
+  then `patches/binutils/binutils-2.46.1_add-spacemit-xsmtvdotii.patch` (A100 /
+  `xsmtvdotii`: `smt.vfwmadot*`, `smt.vpack.vv`, …). GCC only adds `-march` /
+  `__riscv_*`; it does not assemble IME opcodes.
 - **`EASYBUILD_OPTARCH`**: with the native pair applied, `-mcpu=native` is
   viable on RISC-V Linux hosts; until then keep march-only (see
   `notes/eessi-wiring.md`). Explicit `-mtune=spacemit-x100` still preferred

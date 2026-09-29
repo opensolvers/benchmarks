@@ -82,9 +82,9 @@ patches = [
 ]
 ```
 
-See also [`EASYBUILD-NOTE.md`](EASYBUILD-NOTE.md) (still need binutils IME encode
-separately; do not set `EASYBUILD_OPTARCH=-mtune=spacemit-x60` until hosts use
-this patched GCCcore).
+See also [`EASYBUILD-NOTE.md`](EASYBUILD-NOTE.md) (binutils IME1+IME2 asm under
+`../patches/binutils/`; do not set `EASYBUILD_OPTARCH=-mtune=spacemit-x60`
+until hosts use this patched GCCcore).
 
 ---
 

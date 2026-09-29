@@ -17,6 +17,28 @@ artifact** + key result tables for the benchmarks repo.
 
 ---
 
+## Patch (K3 X100 / A100)
+
+[`GCC-15.2.0-spacemit-x100-a100.patch`](GCC-15.2.0-spacemit-x100-a100.patch) —
+adds `-mcpu`/`-mtune=spacemit-x100` and `spacemit-a100` for SpacemiT K3.
+**Requires** the X60 patch first (A100 reuses the X60 DFA). Uses the GCC 15.2
+`riscv_tune_param` layout (extra fields vs 14.3).
+
+| `-mcpu` / `-mtune` | Pipeline | Costs |
+|--------------------|----------|-------|
+| `spacemit-x100` | `generic_ooo` | LLVM/trunk (`issue_rate=4`) |
+| `spacemit-a100` | `spacemit_x60` | K3-measured (`issue_rate=2`) |
+
+```bash
+patch -p1 < GCC-15.2.0-spacemit-x60.patch
+patch -p1 < GCC-15.2.0-spacemit-x100-a100.patch
+```
+
+EESSI RISC-V currently has GCCcore 14.x only — this pair is for EasyBuild /
+future 15.x.
+
+---
+
 ## Patch
 
 [`GCC-15.2.0-spacemit-x60.patch`](GCC-15.2.0-spacemit-x60.patch) — one file for
@@ -37,6 +59,7 @@ Apply from the extracted `gcc-15.2.0` source root (EasyBuild via
 
 ```bash
 patch -p1 < GCC-15.2.0-spacemit-x60.patch
+patch -p1 < GCC-15.2.0-spacemit-x100-a100.patch
 ```
 
 Pristine apply proof (`--fuzz=0`):
@@ -48,6 +71,7 @@ EasyBuild sketch:
 # In a GCCcore-15.2.0 / GCC-15.2.0 easyconfig (illustrative — not submitted):
 patches = [
     'GCC-15.2.0-spacemit-x60.patch',
+    'GCC-15.2.0-spacemit-x100-a100.patch',
 ]
 ```
 

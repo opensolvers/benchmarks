@@ -19,6 +19,28 @@ line).
 
 ---
 
+## Patch (K3 X100 / A100)
+
+[`GCC-14.3.0-spacemit-x100-a100.patch`](GCC-14.3.0-spacemit-x100-a100.patch) —
+adds `-mcpu=spacemit-x100` / `-mcpu=spacemit-a100` (and matching `-mtune`) for
+SpacemiT K3. **Requires** the X60 patch first (A100 reuses the X60 DFA):
+
+| Core | VLEN | Default `-march` highlight |
+|------|------|----------------------------|
+| `spacemit-x100` | 256 (`zvl256b`) | `rv64gcv` + bitmanip/crypto/vector subset from cpuinfo |
+| `spacemit-a100` | 1024 (`zvl1024b`) | same subset with `zvl1024b` |
+
+**Apply after** the X60 patch (`patch -p1` twice). Wiring:
+
+| `-mcpu` | Pipeline | Costs | Notes |
+|---------|----------|-------|-------|
+| `spacemit-x100` | `generic_ooo` | own table (`issue_rate=4`) | matches trunk + LLVM `RISCVSchedSpacemitX100` |
+| `spacemit-a100` | `spacemit_x60` | **K3-measured A100 table** (`issue_rate=2`) | X60 DFA; costs refined from asm probes (not X100, not stock trunk X60 copy) |
+
+A100 cost check (BPI-SM10 A100 @1.8 GHz, dep-chain asm): fadd.s/d≈4, fmul.s/d≈5, fdiv.d≈25, mulw≈2, mul≈4 — table matches. `issue_rate=2` (dual-issue / X60-class), not X100’s 4.
+
+---
+
 ## Patch
 
 [`GCC-14.3.0-spacemit-x60.patch`](GCC-14.3.0-spacemit-x60.patch) — one file for
@@ -39,6 +61,7 @@ Apply from the extracted `gcc-14.3.0` source root (EasyBuild via
 
 ```bash
 patch -p1 < GCC-14.3.0-spacemit-x60.patch
+patch -p1 < GCC-14.3.0-spacemit-x100-a100.patch
 ```
 
 Pristine apply proof (`--fuzz=0`):
@@ -52,6 +75,7 @@ EasyBuild sketch:
 # In a GCCcore-14.3.0 / GCC-14.3.0 easyconfig (illustrative — not submitted):
 patches = [
     'GCC-14.3.0-spacemit-x60.patch',
+    'GCC-14.3.0-spacemit-x100-a100.patch',
 ]
 ```
 

@@ -1,0 +1,117 @@
+# Follow-on to GCC-14.3.0-spacemit-x60.patch (apply X60 first).
+#
+# -mcpu=spacemit-x100  VLEN=256, 4-issue OoO (LLVM/trunk costs)
+# -mcpu=spacemit-a100  VLEN=1024, spacemit-x60 DFA + K3-measured A100 costs
+#
+# Apply:
+#   patch -p1 < GCC-14.3.0-spacemit-x60.patch
+#   patch -p1 < GCC-14.3.0-spacemit-x100-a100.patch
+#
+--- a/gcc/config/riscv/riscv-cores.def
++++ b/gcc/config/riscv/riscv-cores.def
+@@ -42,6 +42,10 @@
+ RISCV_TUNE("thead-c906", generic, thead_c906_tune_info)
+ RISCV_TUNE("xiangshan-nanhu", xiangshan, xiangshan_nanhu_tune_info)
+ RISCV_TUNE("spacemit-x60", spacemit_x60, spacemit_x60_tune_info)
++/* X100: 4-issue OoO — own cost table, generic_ooo DFA (LLVM/trunk). */
++RISCV_TUNE("spacemit-x100", generic_ooo, spacemit_x100_tune_info)
++/* A100: 2-issue in-order, X60 DFA; costs from K3 A100 probes (not X100). */
++RISCV_TUNE("spacemit-a100", spacemit_x60, spacemit_a100_tune_info)
+ RISCV_TUNE("generic-ooo", generic_ooo, generic_ooo_tune_info)
+ RISCV_TUNE("size", generic, optimize_size_tune_info)
+ 
+@@ -100,4 +104,22 @@
+ RISCV_CORE("spacemit-x60",    "rv64imafdcv_zba_zbb_zbc_zbs_zicboz_zicond_"
+ 			      "zbkc_zfh_zvfh_zvkt_zvl256b_sscofpmf_xsmtvdot",
+ 			      "spacemit-x60")
++
++/* SpacemiT K3 (BPI-SM10). ISA = GCC 14.3-known subset + xsmtvdot (X60 patch). */
++RISCV_CORE("spacemit-x100",   "rv64imafdcv_zicbom_zicbop_zicboz_zicntr_zicond_"
++			      "zicsr_zifencei_zihintntl_zihintpause_zihpm_zawrs_"
++			      "zfa_zfh_zfhmin_zca_zcb_zcd_zba_zbb_zbc_zbs_zkt_"
++			      "zvbb_zvbc_zve32f_zve32x_zve64d_zve64f_zve64x_"
++			      "zvfbfmin_zvfh_zvfhmin_zvkb_zvkg_zvkned_zvknha_"
++			      "zvknhb_zvksed_zvksh_zvkt_zvl256b_smaia_smstateen_"
++			      "ssaia_sscofpmf_sstc_svinval_svnapot_svpbmt_xsmtvdot",
++			      "spacemit-x100")
++RISCV_CORE("spacemit-a100",   "rv64imafdcv_zicbom_zicbop_zicboz_zicntr_zicond_"
++			      "zicsr_zifencei_zihintntl_zihintpause_zihpm_zawrs_"
++			      "zfa_zfh_zfhmin_zca_zcb_zcd_zba_zbb_zbc_zbs_zkt_"
++			      "zvbb_zvbc_zve32f_zve32x_zve64d_zve64f_zve64x_"
++			      "zvfbfmin_zvfh_zvfhmin_zvkb_zvkg_zvkned_zvknha_"
++			      "zvknhb_zvksed_zvksh_zvkt_zvl1024b_smaia_smstateen_"
++			      "ssaia_sscofpmf_sstc_svinval_svnapot_svpbmt_xsmtvdot",
++			      "spacemit-a100")
+ #undef RISCV_CORE
+--- a/gcc/config/riscv/riscv.cc
++++ b/gcc/config/riscv/riscv.cc
+@@ -541,6 +541,44 @@
+   3,						/* branch_cost */
+   4,						/* memory_cost */
+   6,						/* fmv_cost */
++  false,					/* slow_unaligned_access */
++  false,					/* use_divmod_expansion */
++  RISCV_FUSE_NOTHING,				/* fusible_ops */
++  &spacemit_x60_vector_cost,			/* vector cost */
++};
++
++/* SpacemiT X100 — validated vs LLVM RISCVSchedSpacemitX100 / trunk. */
++static const struct riscv_tune_param spacemit_x100_tune_info = {
++  {COSTS_N_INSNS (3), COSTS_N_INSNS (3)},	/* fp_add */
++  {COSTS_N_INSNS (4), COSTS_N_INSNS (4)},	/* fp_mul */
++  {COSTS_N_INSNS (12), COSTS_N_INSNS (20)},	/* fp_div */
++  {COSTS_N_INSNS (2), COSTS_N_INSNS (3)},	/* int_mul */
++  {COSTS_N_INSNS (14), COSTS_N_INSNS (22)},	/* int_div */
++  4,						/* issue_rate */
++  3,						/* branch_cost */
++  3,						/* memory_cost */
++  3,						/* fmv_cost */
++  false,					/* slow_unaligned_access */
++  false,					/* use_divmod_expansion */
++  RISCV_FUSE_NOTHING,				/* fusible_ops */
++  &generic_vector_cost,				/* vector cost */
++};
++
++/* SpacemiT A100 — K3 AI cluster (VLEN=1024), 2-issue in-order / X60-derived.
++   Costs from asm dependency-chain probes on BPI-SM10 A100 @1.8GHz
++   (2026-09-28): fadd.s/d≈4, fmul.s/d≈5, fdiv.d≈25, mulw≈2, mul≈4,
++   div≈5 typical (keep X60-like worst-case div). issue_rate=2 confirmed
++   (add IPC≪X100; camel-cdr mul thr≈3.5). DFA stays spacemit_x60. */
++static const struct riscv_tune_param spacemit_a100_tune_info = {
++  {COSTS_N_INSNS (4), COSTS_N_INSNS (4)},	/* fp_add SF/DF ≈4/4 measured */
++  {COSTS_N_INSNS (5), COSTS_N_INSNS (5)},	/* fp_mul SF/DF ≈5/5 measured */
++  {COSTS_N_INSNS (15), COSTS_N_INSNS (25)},	/* fp_div; DF≈25 measured */
++  {COSTS_N_INSNS (2), COSTS_N_INSNS (4)},	/* int_mul 32/64 ≈2/4 measured */
++  {COSTS_N_INSNS (12), COSTS_N_INSNS (20)},	/* int_div worst-case (X60) */
++  2,						/* issue_rate (dual-issue) */
++  3,						/* branch_cost */
++  4,						/* memory_cost (X60/OpenSolvers) */
++  6,						/* fmv_cost (X60) */
+   false,					/* slow_unaligned_access */
+   false,					/* use_divmod_expansion */
+   RISCV_FUSE_NOTHING,				/* fusible_ops */
+--- a/gcc/doc/invoke.texi
++++ b/gcc/doc/invoke.texi
+@@ -31018,7 +31018,8 @@
+ @samp{sifive-e24}, @samp{sifive-e31}, @samp{sifive-e34}, @samp{sifive-e76},
+ @samp{sifive-s21}, @samp{sifive-s51}, @samp{sifive-s54}, @samp{sifive-s76},
+ @samp{sifive-u54}, @samp{sifive-u74}, @samp{sifive-x280}, @samp{sifive-xp450},
+-@samp{sifive-x670}.
++@samp{sifive-x670}, @samp{thead-c906}, @samp{xiangshan-nanhu},
++@samp{spacemit-x60}, @samp{spacemit-x100}, @samp{spacemit-a100}.
+ 
+ Note that @option{-mcpu} does not override @option{-march} or @option{-mtune}.
+ 
+@@ -31027,8 +31028,10 @@
+ Optimize the output for the given processor, specified by microarchitecture or
+ particular CPU name.  Permissible values for this option are: @samp{rocket},
+ @samp{sifive-3-series}, @samp{sifive-5-series}, @samp{sifive-7-series},
+-@samp{thead-c906}, @samp{size}, @samp{sifive-p400-series},
+-@samp{sifive-p600-series}, and all valid options for @option{-mcpu=}.
++@samp{thead-c906}, @samp{xiangshan-nanhu}, @samp{generic-ooo},
++@samp{size}, @samp{sifive-p400-series}, @samp{sifive-p600-series},
++@samp{spacemit-x60}, @samp{spacemit-x100}, @samp{spacemit-a100}, and all
++valid options for @option{-mcpu=}.
+ 
+ When @option{-mtune=} is not specified, use the setting from @option{-mcpu},
+ the default is @samp{rocket} if both are not specified.

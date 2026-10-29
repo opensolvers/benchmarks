@@ -14,7 +14,7 @@ Q8_0 tensor.
 | | |
 | --- | --- |
 | Board | Banana Pi BPI-SM10, SpacemiT K3, Bianbu 4.0.6 |
-| Fork | `opensolvers/llama.cpp` branch `x60-ime-rvv` @ `4239429` |
+| Fork | `opensolvers/llama.cpp` branch `x60-ime-rvv` @ `0e90371` |
 | Toolchain | Bianbu GCC 15.2.0, binutils 2.46 |
 | IME build | `-DGGML_CPU_RISCV64_SPACEMIT=ON`. Startup: `use_ime2: 1`, `use_ime1: 0`, `cpu_mask: ff00` |
 | Bench | `llama-bench -p 128 -n 32 -r 3` |
@@ -22,7 +22,34 @@ Q8_0 tensor.
 | Launch | `echo $$ > /proc/set_ai_thread` before `exec`, then `taskset -c 8-15` |
 | TCM | `SPACEMIT_DISABLE_TCM=1`. `/dev/tcm_sync_mem` is absent; the init barrier falls back to the heap |
 
-Tokens per second, IME2, A100. Repetitions: 3.
+Tokens per second, IME2, A100. Repetitions: 3. Q5_0, Q5_1, and Q5_K go through
+`gemm_kernel_i8i5` (`m4` when the row count is at least 4, `m1` otherwise).
+
+| Threads | pp128 | tg32 |
+| --- | ---: | ---: |
+| 1 | 12.50 ± 0.01 | 8.66 ± 0.00 |
+| 4 | 101.41 ± 0.02 | 37.30 ± 0.01 |
+| 8 | 187.64 ± 0.08 | 48.96 ± 0.01 |
+
+The same model’s Q4_0 file on this board, IME2, 8 threads, is **525.96 / 38.78**.
+This file’s prefill is **2.8×** below that. Decode at 8 threads is **48.96**,
+above the Q4_0 8-thread decode and below the Q4_0 peak at 4 threads (**58.67**).
+
+Q4_K and the Q8_0 head use IME2 (`gemm_kernel_i8i4`, `gemm_kernel_i8i8`).
+Q5 uses the IME2 vmadot kernel too. The high-bit plane is one bit per element
+in column-major order, and that is the `v0.t` mask applied after the nibble
+unpack. IQ4_NL does not use vmadot. At VLEN=1024 the repack selects a
+64-column RVV kernel when the row count is divisible by 64, which every
+IQ4_NL tensor here is.
+
+Leaving Q5_0 out of `compute_forward` after repack makes this model repeat
+one token. With Q5_0 on the vmadot path, a greedy `llama-cli` completion
+(`-n 32 -t 1 --temp 0`) began: “RISC-V vector extensions are a set of
+instructions that allow a CPU to perform operations on multiple data items
+simultaneously, rather than processing them sequentially.”
+
+Before `0e90371`, Q5_0 used a scalar reference on the same IME2 build
+(IQ4_NL already on the 64-column kernel). Same protocol:
 
 | Threads | pp128 | tg32 |
 | --- | ---: | ---: |
@@ -30,37 +57,15 @@ Tokens per second, IME2, A100. Repetitions: 3.
 | 4 | 20.93 ± 0.00 | 15.37 ± 0.00 |
 | 8 | 41.16 ± 0.00 | 22.29 ± 0.00 |
 
-The same model’s Q4_0 file on this board, IME2, 8 threads, is **525.96 / 38.78**.
-This file is about **13×** slower on prefill. Q4_K and the Q8_0 head use IME2
-(`gemm_kernel_i8i4`, `gemm_kernel_i8i8`). IQ4_NL does not. At VLEN=1024 the
-repack selects a 64-column RVV kernel when the row count is divisible by 64,
-which every IQ4_NL tensor here is. Q5_0 uses a scalar reference: the asm Q5
-kernel consumes the high-bit plane as a predicate over an LMUL=8 group, and
-that does not match the per-column repack. Q5_1 and Q5_K stay on the asm path.
+The vmadot dispatch is **4.6×** on 8-thread prefill and **2.2×** on decode.
 
-If Q5_0 is repacked and then left out of `compute_forward`, this model repeats
-one token. Dispatching it through the scalar reference produces coherent
-English. A greedy `llama-cli` completion (`-n 32 -t 1 --temp 0`) began:
-“RISC-V vector extensions are a set of instructions that allow a CPU to
-perform operations on multiple data items simultaneously, rather than
-processing them sequentially.”
-
-The 16-column IQ4 kernel on the same IME2 build, before `4239429` selected
-the 64-column kernel, same protocol (means of 3 repetitions):
-
-| Threads | pp128 | tg32 |
-| --- | ---: | ---: |
-| 1 | 4.71 | 3.43 |
-| 4 | 19.05 | 13.37 |
-| 8 | 37.63 | 20.16 |
-
-Widening IQ4_NL from 16 to 64 lanes is about **10%** at 8 threads. One-thread
-prefill is slightly slower. The nibble table has 16 entries. Loading only
-those into a 64-lane register made columns 16–63 gather empty lanes, and the
-model repeated one token. The table is copied into every 16-lane slice.
-VLEN=256 still uses the 16-column kernel.
+The 16-column IQ4 kernel, still with scalar Q5_0, was **37.63 / 20.16** at
+8 threads. Widening IQ4_NL from 16 to 64 lanes was about **10%** while Q5_0
+stayed scalar. The nibble table has 16 entries; it is copied into every
+16-lane slice so a 64-lane gather reads it. VLEN=256 still uses the
+16-column kernel.
 
 An RVV build (`GGML_CPU_RISCV64_SPACEMIT=OFF`) on the A100 at 8 threads, with
-the 16-lane VLEN=1024 IQ4 kernel, was **18.25 ± 0.00 / 7.67 ± 0.00**. Q4_K
-and Q8_0 are not on IME2 in that build. Threads 1 and 4 were not measured.
+the 16-lane VLEN=1024 IQ4 kernel, was **18.25 ± 0.00 / 7.67 ± 0.00**. Q4_K,
+Q5, and Q8_0 are not on IME2 in that build. Threads 1 and 4 were not measured.
 The BXM-4-64 GPU is still unmeasured.

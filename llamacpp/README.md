@@ -4,6 +4,10 @@
 > Qwen2.5-0.5B-Instruct, `llama-bench -p 128 -n 32`. IME2 pp128 **525.96** t/s at 8 threads;
 > tg32 peaks at 4 threads (**58.67**). X100 RVV at 8 threads is **193.68 / 41.95**.
 
+> **K3 / A100 IME2, Q3_K_M of the same model (2026-10-29):** [`results_sm10_q3_k_m.md`](results_sm10_q3_k_m.md).
+> The file is mostly **IQ4_NL**, not Q3_K. IME2 at 8 threads is pp128 **41.16** / tg32 **22.29**.
+> About **13×** below the Q4_0 prefill: Q5_0 is still a scalar kernel, and IQ4_NL is RVV, not IME2.
+
 End-to-end validation of the X60 **IME `smt.vmadot` Q4_0** path in llama.cpp on
 the Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz),
 against the plain **RVV** build as the control arm. Ten Q4_0 GGUF models from
@@ -56,6 +60,7 @@ A/B): where `ime/` isolates the `smt.vmadot` kernel, this directory answers
 | File | Purpose |
 |---|---|
 | [`results_sm10_q4_0.md`](results_sm10_q4_0.md) | K3 A100 IME2 vs X100 RVV, one Q4_0 model (pp128/tg32, thread sweep) |
+| [`results_sm10_q3_k_m.md`](results_sm10_q3_k_m.md) | K3 A100 IME2, same model at Q3_K_M (mostly IQ4_NL; Q5_0 still scalar) |
 | [`models.md`](models.md) | full write-up: board constraints, recommended set, measured IME-vs-RVV table, per-model procedure |
 | `model_validation.tsv` | raw results (10 rows: pp128/tg32 for IME and RVV) |
 | `validate_model.sh` | per-model harness: download → coherence (IME) → bench IME + RVV → append TSV row → reclaim RAM |

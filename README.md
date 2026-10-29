@@ -41,7 +41,7 @@ RV2 numbers.
 | [`lammps/`](lammps) | RVV-Kokkos whole-app MD (5 upstream benches × serial/Kokkos/MPI, RV2 + F3) + hand RVV `lj/cut` / `eam` plugins | Pair / parallel back-end | whole-app + plugin A/B |
 | [`openfoam/`](openfoam) | OpenFOAM v2506 motorBike / `simpleFoam`: auto-vec + hand RVV Amul / GS A/B (RV2) | sparse Amul / GS | real-application A/B (negative) |
 | [`walberla/`](walberla) | waLBerla 7.2: BasicLBM ISA A/B, HeatEquation / UniformGrid auto-vec, hand RVV simd + SoA microbenches (RV2) | ISA / auto-vec / simd | HeatEq **1.64×**; UG collide **1.54×**; hand simd loses |
-| [`ime/`](ime) | int8 (`s8s8s32`) GEMM on X60 **IME** (`smt.vmadot`) vs RVV (RV2 + F3) | int8 kernel | microkernel + verification |
+| [`ime/`](ime) | int8 (`s8s8s32`) GEMM: X60 **IME1** (RV2 + F3) and A100 **IME2** (K3, **103 GOP/s** full @ 768×768×512) vs RVV | int8 kernel | microkernel + verification |
 | [`llamacpp/`](llamacpp) | llama.cpp Q4_0 / Q4_K_M end-to-end: IME vs RVV (model validation + m1gemv study) | IME / RVV | application A/B |
 | [`onnx/`](onnx) | int4 `MatMulNBits` via ORT MLAS IME: FFN microbench + **Qwen2.5-0.5B** (~17× decode) | int4 / IME | application + MLAS patches |
 | [`gpu/`](gpu) | PowerVR BXE-2-32 GPU compute: vendor stack closed + deferred open Mesa `pvr` route | GPU | characterization / negative result |
@@ -130,8 +130,10 @@ Common ground for reproducing any of these:
   slower than FORCE_SCALAR; plain SoA auto-vec microbench ~**2.4×** vs novec
   (~**9×** vs hand simd). Collide/stream split BasicLBM loses to fused — see
   [`walberla`](walberla).
-- **IME** (`smt.vmadot`) int8 peaks **~42–45 GOP/s** (~6–7× RVV int8) on both
-  boards; end-to-end int4 wins live in [`onnx`](onnx) / [`llamacpp`](llamacpp).
+- **IME** (`smt.vmadot`) int8 peaks **~42–45 GOP/s** (~6–7× RVV int8) on X60
+  (RV2 + F3). One A100 on the K3 reaches **103 GOP/s** full GEMM at
+  768×768×512 (**13.7×** that core's RVV); see [`ime`](ime). End-to-end int4
+  wins live in [`onnx`](onnx) / [`llamacpp`](llamacpp).
 - **GPU (BXE-2-32):** vendor GPGPU path is **closed** (BXM-only DDK); open Mesa
   deferred — see [`gpu`](gpu).
 

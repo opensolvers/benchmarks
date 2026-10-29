@@ -40,8 +40,13 @@ board-tcm-probe: tcm_probe.c tcm.c
 board-mc: bench_mc.c gemm_ref.c gemm_ime.c
 	$(CC) $(CFLAGS) -fopenmp -march=$(BOARD_MARCH) bench_mc.c gemm_ref.c gemm_ime.c -o ime-bench-mc
 
+# A100 IME2. Same smt.vmadot encoding as X60; the core's tile is 8x8x16.
+# Run via run-ime2-a100.sh (set_ai_thread before exec, pin core 8).
+a100: ime2_bench.c
+	$(CC) $(CFLAGS) -march=rv64gcv_zvl256b -o ime2-bench ime2_bench.c
+
 clean:
 	rm -f ime-bench ime-bench-host ime-bench-mc ime-bench-peak ime-bench-gap \
-	      ime-bench-panel ime-tcm-probe
+	      ime-bench-panel ime-tcm-probe ime2-bench
 
-.PHONY: host board board-rvv board-peak board-gap board-panel board-tcm-probe board-mc clean
+.PHONY: host board board-rvv board-peak board-gap board-panel board-tcm-probe board-mc a100 clean

@@ -126,6 +126,35 @@ scalar reference. The clean peak crests at 768³ (~42) then settles to ~32–34 
 alone is 4 MB): the large sizes are turning memory-bound, the main tuning lead
 from here.
 
+## Results (measured — BPI-SM10 / A100 IME2, 2026-10-28)
+
+Same `smt.vmadot` encoding, different tile. On the K3 **A100** (VLEN=1024,
+`vlenb=128`) one instruction is **8×8×16** int8→int32, not the X60 4×4×8.
+[`ime2_bench.c`](ime2_bench.c) packs 8×16 tiles and issues four `vmadot`s per
+K-step of 16 inside a 16×16 register block. Every path below is bit-exact
+against the scalar reference, including a one-instruction tile self-test.
+
+A100 is fenced. `make a100`, then [`run-ime2-a100.sh`](run-ime2-a100.sh), which
+writes `/proc/set_ai_thread` **before** `exec` and pins core 8. Clock was
+userspace **1.800 GHz**. Throughput is single-core GOP/s (`2·M·N·K / t`),
+**median of 15 reps**, one launch.
+
+| M×N×K | scalar | RVV int8 | IME2 compute | **IME2 full** | full / RVV |
+|---|--:|--:|--:|--:|--:|
+| 512×512×512 | 5.94 | 7.58 | 102.5 | **91.6** | 12.1× |
+| 768×768×512 | 5.90 | 7.52 | 109.1 | **103.3** | 13.7× |
+| 1024×1024×512 | 5.90 | 7.38 | 64.2 | **61.8** | 8.4× |
+
+**Full** is pack + compute. **Compute** is the kernel on already-packed tiles.
+The crest is again 768×768×512; 1024×1024×512 drops the same way the X60 table
+does once the working set leaves L2.
+
+The same binary with IME off (`taskset -c 0 ./ime2-bench M N K 8 0`) on one
+**X100** at userspace **2.000 GHz** (`vlenb=32`): scalar **9.2–9.3** GOP/s,
+RVV int8 **15.9** GOP/s on all three shapes. Plain RVV on the A100 is slower
+than on the X100. The RVV column is the same untuned widening-dot baseline as
+the X60 table, not a tuned GEMM.
+
 ## RV2 re-verify (2026-08-22)
 
 Quick sanity run via [`run-part-a-v2.sh`](../run-part-a-v2.sh) (`taskset -c 0`,
@@ -543,7 +572,8 @@ quieter board or an IME part whose matrix unit spans more cores.
 ## Caveats
 
 - **qemu-user cannot run this.** It does not emulate the SpaceMiT custom
-  `vmadot` — the IME path only executes on real X60 silicon.
+  `vmadot` — the IME path only executes on real X60 or A100 silicon
+  (`ime2_bench.c` for the A100 8×8×16 tile).
 - The RVV baseline is correct and representative but **not** cache-tuned (it
   reloads B rows); it is the honest "plain RVV int8" floor the IME kernel beats,
   not a state-of-the-art RVV GEMM.

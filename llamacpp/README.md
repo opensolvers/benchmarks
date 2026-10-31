@@ -8,6 +8,10 @@
 > The file is mostly **IQ4_NL**, not Q3_K. With IQ4_NL and Q5 on IME2 vmadot, 8 threads is
 > pp128 **502.10** / tg32 **46.18**. Prefill is **4.5%** below the Q4_0 result.
 
+> **K3 / A100 IME2, 10 Q4_0 and 17 Q4_K_M models (2026-10-31):** [`results_sm10_model_suite.md`](results_sm10_model_suite.md).
+> Fork `107ead2f2`, `llama-bench -p 128 -n 32 -t 8 -r 1`. Nine of ten Q4_0 models
+> are coherent. Qwen2.5-3B Q4_0 repeats one character. All 17 Q4_K_M models are coherent.
+
 End-to-end validation of the X60 **IME `smt.vmadot` Q4_0** path in llama.cpp on
 the Orange Pi RV2 (SpaceMiT X60, `rv64gcv`, RVV 1.0, VLEN=256, 8× @ 1.6 GHz),
 against the plain **RVV** build as the control arm. Ten Q4_0 GGUF models from
@@ -60,6 +64,8 @@ A/B): where `ime/` isolates the `smt.vmadot` kernel, this directory answers
 | File | Purpose |
 |---|---|
 | [`results_sm10_q4_0.md`](results_sm10_q4_0.md) | K3 A100 IME2 vs X100 RVV, one Q4_0 model (pp128/tg32, thread sweep) |
+| [`results_sm10_model_suite.md`](results_sm10_model_suite.md) | K3 A100 IME2, the 10 Q4_0 models and the 17 Q4_K_M models (one repeat, 8 threads) |
+| `results_sm10_model_suite.tsv` | raw rows for that suite |
 | [`results_sm10_q3_k_m.md`](results_sm10_q3_k_m.md) | K3 A100 IME2, same model at Q3_K_M (mostly IQ4_NL; IQ4 and Q5 on vmadot) |
 | [`models.md`](models.md) | full write-up: board constraints, recommended set, measured IME-vs-RVV table, per-model procedure |
 | `model_validation.tsv` | raw results (10 rows: pp128/tg32 for IME and RVV) |

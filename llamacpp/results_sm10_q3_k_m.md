@@ -45,6 +45,25 @@ completion (`-n 32 -t 1 --temp 0`) began: “RISC-V vector extensions are a set
 of instructions that allow a CPU to execute multiple instructions in parallel,
 rather than executing them sequentially.”
 
+## Packed IQ4_NL decode (2026-10-31)
+
+Same file and protocol, fork `x60-ime-rvv` at `107ead2f2`. Prefill still
+expands IQ4_NL into the Q8_0 tile and uses `gemm_kernel_i8i8`. At 8 threads,
+a generated token dots a packed nibble tail (`gemm_kernel_iq4nl`) instead of
+that expanded tile. This file has no Q3_K tensors, so the Q3_K kernel in the
+same commit does not run here.
+
+| Threads | pp128 | tg32 |
+| --- | ---: | ---: |
+| 1 | 69.04 ± 0.02 | 19.14 ± 0.00 |
+| 4 | 266.35 ± 0.20 | 45.56 ± 0.05 |
+| 8 | 499.23 ± 0.22 | 47.95 ± 0.02 |
+
+Eight-thread prefill is **499.23**, just under the `fbcc41c` result (**502.10**),
+and **5.1%** below this board’s Q4_0 IME2 prefill (525.96). Decode now peaks
+at 8 threads (**47.95**). The previous peak was 4 threads (**46.61**). The
+greedy completion is the same sentence as the `fbcc41c` run.
+
 Before `fbcc41c`, at `0e90371`, IQ4_NL stayed on the 64-column RVV kernel and
 Q5 was already on vmadot. Same protocol:
 
